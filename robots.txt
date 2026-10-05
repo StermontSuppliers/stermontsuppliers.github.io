@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://stermontsuppliers.github.io/sitemap.xml
+Sitemap: https://stermontmall.github.io/sitemap.xml
