@@ -124,6 +124,15 @@
       html { scroll-behavior: auto; }
       .btn { transition: none; }
     }
+
+    .feat { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); align-items: center; }
+    .feat img { display: block; width: 100%; height: auto; border-radius: 10px; background: var(--line); }
+    .feat h3 { font-size: 1.3rem; margin-bottom: 0.4rem; }
+    .feat .price { font-family: Georgia, serif; font-size: 2rem; font-weight: 700; color: var(--signal); }
+    .feat .note { color: var(--muted); margin: 0.25rem 0 1.25rem; }
+    .feat .specs { list-style: none; margin: 0 0 1rem; }
+    .feat .specs li { padding: 0.35rem 0; border-bottom: 1px solid var(--line); color: var(--muted); }
+    .feat .deal { margin-bottom: 1.25rem; }
   </style>
 </head>
 <body>
@@ -151,6 +160,32 @@
         </div>
       </div>
     </div>
+
+    <section id="featured">
+      <div class="wrap">
+        <h2>Featured product</h2>
+        <div class="feat">
+          <a href="mika-washer.html"><img src="washer.jpg" alt="MIKA 10KG fully automatic top load washing machine" width="1024" height="1024" loading="lazy"></a>
+          <div>
+            <h3>MIKA 10KG Fully Automatic Top Load Washing Machine</h3>
+            <p class="price">KSh 46,999</p>
+            <p class="note">Model MWATL3510DS</p>
+            <ul class="specs">
+              <li>Storm Wash pulsator for tough stains</li>
+              <li>Inverter motor, spin up to 700 RPM</li>
+              <li>Stainless-steel drum, hot and cold water</li>
+              <li>Fast Clean: up to 40% shorter wash</li>
+              <li>Self-clean tub, delay start, 15-minute quick wash</li>
+              <li>Power-out auto restart and child lock</li>
+            </ul>
+            <p class="deal"><strong>Delivery:</strong> all 47 counties<br><strong>Payment:</strong> M-Pesa<br><strong>Visit us:</strong> Sarit Centre, Westlands, Nairobi</p>
+            <div class="actions">
+              <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Suppliers%2C%20I%20would%20like%20to%20order%20the%20MIKA%2010KG%20washing%20machine." target="_blank" rel="noopener">Order on WhatsApp</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <section id="range">
       <div class="wrap">
