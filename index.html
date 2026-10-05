@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#7c3aed">
   <title>Stermont Suppliers | Everything you need, one trusted store.</title>
   <meta name="description" content="Stermont Suppliers, Sarit Centre, Westlands, Nairobi. Buy agrovet supplies, phones, laptops, TVs, appliances, fashion and home goods. Order on WhatsApp. Delivery to all 47 counties in Kenya.">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <meta property="og:image" content="https://stermontsuppliers.github.io/logo.png">
   <link rel="canonical" href="https://stermontsuppliers.github.io/">
   <meta name="robots" content="index, follow">
   <meta property="og:type" content="website">
@@ -18,6 +21,7 @@
     "@type": "Store",
     "name": "Stermont Suppliers",
     "url": "https://stermontsuppliers.github.io/",
+    "logo": "https://stermontsuppliers.github.io/logo.png",
     "telephone": "+254748888230",
     "description": "Agrovet supplies, phones, computers, TVs, appliances, fashion and home goods with countrywide delivery in Kenya.",
     "address": {
@@ -37,159 +41,184 @@
   }
   </script>
   <style>
-    :root {
-      --paper: #f4f6f1;
-      --ink: #10231c;
-      --leaf: #2f7d4a;
-      --signal: #e4572e;
-      --muted: #52645a;
-      --line: #cdd8cf;
-      --night: #10231c;
+    :root{--paper:#fff;--ink:#282828;--muted:#6b6b6b;--line:#e3e3e3;--panel:#f1f1f2;--card:#fff;--orange:#7c3aed;--red:#5b21b6;--navy:#2a0e5c;--gold:#c8f31d;--green:#8fd400;--tint:#f1e8ff}
+    @media (prefers-color-scheme:dark){:root{--paper:#121212;--ink:#f1f1f1;--muted:#a8a8a8;--line:#2c2c2c;--panel:#1d1d1d;--card:#1d1d1d;--tint:#2b1d4d}}
+    *{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth;scroll-padding-top:120px}
+    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--ink);line-height:1.5;font-size:1rem;padding-bottom:76px}
+    a{color:var(--orange)}
+    :focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+    .wrap{max-width:980px;margin:0 auto;padding:0 1rem}
+    .hidden{display:none!important}
+    header{position:sticky;top:0;z-index:20;background:var(--paper);padding:.6rem 0 .7rem;border-bottom:1px solid var(--line)}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.6rem}
+    .logo{display:inline-flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.1rem;text-decoration:none;color:var(--ink)}
+    .logo img{display:block;width:40px;height:40px;border-radius:50%}
+    nav.desk{display:none}
+    nav.desk a{margin-left:1.1rem;text-decoration:none;color:var(--ink);font-weight:600}
+    nav.desk a:hover{color:var(--orange)}
+    .search{display:flex;align-items:center;gap:.75rem;background:var(--panel);border-radius:999px;padding:0 .5rem 0 1.1rem}
+    .search svg{flex:none;width:22px;height:22px;stroke:var(--ink);fill:none;stroke-width:2.2;stroke-linecap:round}
+    .search input{flex:1;min-width:0;border:0;background:transparent;font:inherit;color:var(--ink);padding:.8rem 0}
+    .search input:focus-visible{outline:0}
+    .search:focus-within{outline:3px solid var(--orange)}
+    .search button{border:0;background:linear-gradient(135deg,#9d5cff,#7c3aed);color:#fff;font:inherit;font-weight:700;border-radius:999px;padding:.5rem 1.1rem;cursor:pointer}
+    .search-msg{margin:.6rem 0 0;color:var(--muted);font-size:.95rem}
+    .search-msg:empty{display:none}
+    .search-msg a{font-weight:700}
+    .btn{display:inline-block;padding:.75rem 1.4rem;border-radius:10px;font-weight:700;text-decoration:none;transition:transform .15s}
+    .btn:hover{transform:translateY(-2px)}
+    .btn-main{background:linear-gradient(135deg,#9d5cff,#7c3aed);color:#fff;box-shadow:0 3px 10px rgba(124,58,237,.35)}
+    .btn-alt{border:2px solid currentColor;color:var(--ink)}
+    .actions{margin-top:1rem;display:flex;flex-wrap:wrap;gap:.6rem}
+    .slides{display:flex;gap:.75rem;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;margin-top:1rem;padding:0 1rem}
+    .slides::-webkit-scrollbar{display:none}
+    .slide{flex:0 0 88%;max-width:560px;scroll-snap-align:center;position:relative;overflow:hidden;border-radius:20px;color:#fff;min-height:210px;padding:1.25rem;display:flex;flex-direction:column;justify-content:center;text-decoration:none}
+    .slide .live{font-size:.75rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase}
+    .slide .live::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;margin-right:.5rem}
+    .slide h2{font-size:2rem;line-height:1.05;margin:.35rem 0;font-weight:900;max-width:9ch}
+    .slide p{max-width:20ch;font-size:.95rem;font-weight:500}
+    .slide .go{margin-top:.8rem;font-weight:700}
+    .slide img{position:absolute;right:0;top:0;bottom:0;width:44%;height:100%;object-fit:cover;border-radius:60px 0 0 60px}
+    .s1{background:linear-gradient(135deg,#a855f7,#5b21b6 60%,#3b0f8c)}.s2{background:linear-gradient(135deg,#3b0f8c,#1d0745);border:3px solid var(--gold);box-shadow:0 0 18px rgba(200,243,29,.35)}.s3{background:linear-gradient(135deg,#e6ff5c,#c8f31d 45%,#8fd400);color:#1b1230}.s3 .live::before{background:#1b1230}
+    .slide::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.28) 0,rgba(255,255,255,0) 35%);pointer-events:none}
+    .s2 .go{color:var(--gold)}
+    .dots{display:flex;justify-content:center;gap:.5rem;margin:.8rem 0 1rem}
+    .dots i{width:12px;height:12px;border-radius:999px;border:2px solid var(--ink);transition:width .2s}
+    .dots i.on{width:38px;background:var(--ink)}
+    .cats{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem .4rem;background:var(--panel);border-radius:20px;padding:1rem .6rem}
+    .cat{border:0;background:none;font:inherit;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.4rem;font-weight:600;font-size:.85rem;line-height:1.2}
+    .ring{width:100%;max-width:84px;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:2.1rem;background:var(--card);border:2px solid var(--orange)}
+    .cat:nth-child(3n+2) .ring{border-color:var(--green)}.cat:nth-child(3n) .ring{border-color:#a855f7}
+    .rec{background:linear-gradient(135deg,#9d5cff,#7c3aed 50%,#5b21b6);box-shadow:0 6px 20px rgba(124,58,237,.35);border-radius:20px;padding:1rem 0 1rem 1rem;margin-top:1.25rem;overflow:hidden}
+    .rec-head{display:flex;justify-content:space-between;align-items:center;padding-right:1rem}
+    .rec h2{color:#fff;font-size:1.5rem;font-weight:800}
+    .pill{background:var(--gold);color:#2a0e5c;border-radius:999px;padding:.35rem 1.4rem;font-weight:800;text-decoration:none;font-size:1.2rem}
+    .row{display:flex;gap:.75rem;overflow-x:auto;scroll-snap-type:x mandatory;padding:1rem 1rem .25rem 0;scrollbar-width:none}
+    .row::-webkit-scrollbar{display:none}
+    .pcard{flex:0 0 72%;max-width:300px;scroll-snap-align:start;background:var(--card);color:var(--ink);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+    .pcard>a.img{display:block;background:#fff}
+    .pcard img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:cover}
+    .pcard .b{padding:.8rem;display:flex;flex-direction:column;gap:.25rem;flex:1}
+    .pcard h3{font-size:.95rem;line-height:1.3}
+    .price{font-size:1.35rem;font-weight:800}
+    .note{color:var(--muted);font-size:.85rem}
+    .pcard .btn{margin-top:auto;text-align:center;padding:.6rem}
+    .pcard.cta{background:var(--tint);padding:1rem;justify-content:center;gap:.5rem;color:#282828}
+    .pcard.cta .btn{margin-top:.5rem}.pcard.cta{color:var(--ink)}
+    section{padding:2rem 0 .5rem}
+    section h2.t{font-size:1.4rem;font-weight:800;margin-bottom:.4rem}
+    .lead{color:var(--muted);margin-bottom:1.1rem}
+    .range{display:grid;gap:.75rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+    .range>div{background:var(--panel);border-radius:16px;padding:1rem}
+    .range h3{font-size:1.05rem;margin-bottom:.5rem;border-left:4px solid var(--green);padding-left:.6rem}
+    .range ul{list-style:none}
+    .range li{padding:.3rem 0;border-bottom:1px solid var(--line);color:var(--muted);font-size:.95rem}
+    .range li:last-child{border-bottom:0}
+    .how{display:grid;gap:.75rem;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));counter-reset:n}
+    .how>div{background:var(--panel);border-radius:16px;padding:1rem;counter-increment:n}
+    .how>div::before{content:counter(n);display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--gold);color:#2a0e5c;font-weight:800;margin-bottom:.5rem}
+    .how h3{font-size:1.05rem}.how p{color:var(--muted)}
+    .counties{list-style:none;display:flex;flex-wrap:wrap;gap:.45rem}
+    .counties li{background:var(--panel);border-radius:999px;padding:.25rem .8rem;font-size:.9rem;color:var(--muted)}
+    .contact{background:var(--navy);color:#eef3ee;margin-top:2rem;padding:2rem 0}
+    .contact a{color:var(--gold)}
+    .contact .btn-main{background:var(--gold);color:#2a0e5c;box-shadow:0 0 14px rgba(200,243,29,.4)}
+    .contact .btn-alt{color:#eef3ee}
+    .contact address{font-style:normal;margin:.75rem 0 1rem}
+    footer{padding:1.25rem 0;font-size:.9rem;color:var(--muted)}
+    .bar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:space-around;background:var(--paper);border-top:1px solid var(--line);padding:.45rem 0 calc(.45rem + env(safe-area-inset-bottom,0px))}
+    .bar a{display:flex;flex-direction:column;align-items:center;gap:.15rem;text-decoration:none;color:var(--ink);font-size:.78rem;font-weight:500;min-width:62px}
+    .bar svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+    .bar a.on{color:var(--orange)}.bar a.on svg{fill:rgba(124,58,237,.2)}
+    @media(min-width:760px){
+      body{padding-bottom:0}.bar{display:none}nav.desk{display:block}
+      .slides{padding:0;margin-left:auto;margin-right:auto;max-width:980px;padding:0 1rem}
+      .slide{flex-basis:48%}
+      .cats{grid-template-columns:repeat(8,1fr)}
+      .ring{font-size:1.8rem}
+      .pcard{flex-basis:260px}
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --paper: #0e1a15;
-        --ink: #eef3ee;
-        --muted: #a6b5ab;
-        --line: #26382f;
-        --night: #07110d;
-      }
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      background: var(--paper);
-      color: var(--ink);
-      line-height: 1.6;
-      font-size: 1.05rem;
-    }
-    a { color: var(--leaf); }
-    :focus-visible { outline: 3px solid var(--signal); outline-offset: 3px; }
-    .wrap { max-width: 980px; margin: 0 auto; padding: 0 1.25rem; }
-
-    header { padding: 1rem 0; border-bottom: 1px solid var(--line); }
-    header .wrap { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; }
-    .logo { font-family: Georgia, serif; font-weight: 700; font-size: 1.3rem; text-decoration: none; color: var(--ink); }
-    nav a { margin-left: 1.1rem; text-decoration: none; color: var(--ink); font-weight: 500; }
-    nav a:hover { color: var(--leaf); }
-
-    .hero { padding: 4rem 0 3rem; }
-    .hero h1 {
-      font-family: Georgia, serif;
-      font-size: clamp(2.2rem, 7vw, 4.2rem);
-      line-height: 1.08;
-      letter-spacing: -0.02em;
-      max-width: 17ch;
-    }
-    .hero p { margin-top: 1.25rem; max-width: 52ch; color: var(--muted); font-size: 1.12rem; }
-    .actions { margin-top: 1.75rem; display: flex; flex-wrap: wrap; gap: 0.75rem; }
-    .btn {
-      display: inline-block;
-      padding: 0.85rem 1.5rem;
-      border-radius: 6px;
-      font-weight: 700;
-      text-decoration: none;
-      transition: transform 0.15s;
-    }
-    .btn:hover { transform: translateY(-2px); }
-    .btn-main { background: var(--signal); color: #fff; }
-    .btn-alt { border: 2px solid var(--ink); color: var(--ink); }
-
-    section { padding: 3rem 0; border-top: 1px solid var(--line); }
-    h2 { font-family: Georgia, serif; font-size: 1.8rem; margin-bottom: 0.5rem; }
-    .lead { color: var(--muted); margin-bottom: 1.75rem; max-width: 55ch; }
-
-    .range { display: grid; gap: 2.5rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-    .range h3 { font-size: 1.2rem; margin-bottom: 0.75rem; border-left: 4px solid var(--leaf); padding-left: 0.75rem; }
-    .range .digital h3 { border-color: var(--signal); }
-    .range .general h3 { border-color: var(--ink); }
-    .range ul { list-style: none; }
-    .range li { padding: 0.35rem 0; border-bottom: 1px solid var(--line); color: var(--muted); }
-
-    .how { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-    .how h3 { font-size: 1.05rem; margin-bottom: 0.3rem; }
-    .how p { color: var(--muted); }
-
-    .counties { list-style: none; display: flex; flex-wrap: wrap; gap: 0.5rem; }
-    .counties li { border: 1px solid var(--line); border-radius: 999px; padding: 0.2rem 0.8rem; font-size: 0.95rem; color: var(--muted); }
-    .contact { background: var(--night); color: #eef3ee; border-top: none; }
-    .contact a { color: #ffb199; }
-    .contact address { font-style: normal; margin: 1rem 0 1.5rem; }
-    .contact .btn-alt { border-color: #eef3ee; color: #eef3ee; }
-
-    footer { padding: 1.5rem 0; font-size: 0.9rem; color: var(--muted); }
-
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      .btn { transition: none; }
-    }
-
-    .feat { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); align-items: center; }
-    .feat img { display: block; width: 100%; height: auto; border-radius: 10px; background: var(--line); }
-    .feat h3 { font-size: 1.3rem; margin-bottom: 0.4rem; }
-    .feat .price { font-family: Georgia, serif; font-size: 2rem; font-weight: 700; color: var(--signal); }
-    .feat .note { color: var(--muted); margin: 0.25rem 0 1.25rem; }
-    .feat .specs { list-style: none; margin: 0 0 1rem; }
-    .feat .specs li { padding: 0.35rem 0; border-bottom: 1px solid var(--line); color: var(--muted); }
-    .feat .deal { margin-bottom: 1.25rem; }
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn,.dots i{transition:none}}
   </style>
 </head>
 <body>
-
   <header>
     <div class="wrap">
-      <a class="logo" href="#top">Stermont Suppliers</a>
-      <nav aria-label="Main">
-        <a href="#range">Products</a>
-        <a href="#order">How to order</a>
-        <a href="#delivery">Delivery</a>
-        <a href="#contact">Contact</a>
-      </nav>
+      <div class="top">
+        <a class="logo" href="#top" aria-label="Stermont Suppliers home"><img src="logo.png" alt="Stermont Suppliers logo" width="40" height="40"><span>Stermont Suppliers</span></a>
+        <nav class="desk" aria-label="Main"><a href="#range">Products</a><a href="#order">How to order</a><a href="#delivery">Delivery</a><a href="#contact">Contact</a></nav>
+      </div>
+      <form class="search" role="search" id="search-form">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6"/></svg>
+        <label for="q" style="position:absolute;left:-9999px">Search products</label>
+        <input id="q" type="search" placeholder="Search Stermont Suppliers" autocomplete="off">
+        <button type="submit">Search</button>
+      </form>
+      <p class="search-msg" id="search-msg" aria-live="polite"></p>
     </div>
   </header>
 
   <main id="top">
-    <div class="hero">
-      <div class="wrap">
-        <h1>Everything you need, one trusted store.</h1>
-        <p>One supplier for agrovet, electronics, fashion, home and everyday goods. Order on WhatsApp and we deliver to all 47 counties in Kenya.</p>
-        <div class="actions">
-          <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Suppliers%2C%20I%20would%20like%20to%20order%3A%20" target="_blank" rel="noopener">Order on WhatsApp</a>
-          <a class="btn btn-alt" href="tel:+254748888230">Call 0748 888 230</a>
+    <div class="slides" id="slides">
+      <a class="slide s1" href="mika-washer.html">
+        <span class="live">Live now</span>
+        <h2>Hot Deal</h2>
+        <p>MIKA 10KG washing machine, KSh 46,999</p>
+        <span class="go">Shop now &rarr;</span>
+        <img src="washer.jpg" alt="" width="1024" height="1024">
+      </a>
+      <a class="slide s2" href="#delivery">
+        <span class="live">Countrywide</span>
+        <h2>Delivery to all 47 counties</h2>
+        <p>Pay by M-Pesa. Collect or we deliver.</p>
+        <span class="go">See counties &rarr;</span>
+      </a>
+      <a class="slide s3" href="https://wa.me/254748888230?text=Hello%20Stermont%20Suppliers%2C%20I%20would%20like%20to%20order%3A%20" target="_blank" rel="noopener">
+        <span class="live">Order fast</span>
+        <h2>Order on WhatsApp</h2>
+        <p>Agrovet, electronics, fashion and home goods.</p>
+        <span class="go">Chat now &rarr;</span>
+      </a>
+    </div>
+    <div class="dots" id="dots" aria-hidden="true"></div>
+
+    <div class="wrap">
+      <div class="cats" id="cats">
+        <button class="cat" data-q="agrovet"><span class="ring">&#127806;</span>Agrovet</button>
+        <button class="cat" data-q="phones"><span class="ring">&#128241;</span>Phones &amp; Tablets</button>
+        <button class="cat" data-q="tvs"><span class="ring">&#128250;</span>TVs &amp; Audio</button>
+        <button class="cat" data-q="appliances"><span class="ring">&#129530;</span>Appliances</button>
+        <button class="cat" data-q="fashion"><span class="ring">&#128085;</span>Fashion</button>
+        <button class="cat" data-q="home office"><span class="ring">&#128715;&#65039;</span>Home &amp; Office</button>
+        <button class="cat" data-q="computing"><span class="ring">&#128187;</span>Computing</button>
+        <button class="cat" data-q="supermarket"><span class="ring">&#128722;</span>Supermarket</button>
+      </div>
+
+      <div class="rec" id="featured">
+        <div class="rec-head"><h2>Recommended for you</h2><a class="pill" href="#range" aria-label="See all products">&rarr;</a></div>
+        <div class="row">
+          <div class="pcard">
+            <a class="img" href="mika-washer.html"><img src="washer.jpg" alt="MIKA 10KG fully automatic top load washing machine" width="1024" height="1024" loading="lazy"></a>
+            <div class="b">
+              <h3>MIKA 10KG Fully Automatic Top Load Washing Machine</h3>
+              <p class="price">KSh 46,999</p>
+              <p class="note">Model MWATL3510DS. Inverter motor, stainless-steel drum, 15-minute quick wash. Delivery to all 47 counties, pay by M-Pesa.</p>
+              <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Suppliers%2C%20I%20would%20like%20to%20order%20the%20MIKA%2010KG%20washing%20machine." target="_blank" rel="noopener">Order on WhatsApp</a>
+            </div>
+          </div>
+          <div class="pcard cta">
+            <h3>Can't see what you need?</h3>
+            <p class="note">Ask us. If it is not in stock, we will source it for you.</p>
+            <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Suppliers%2C%20do%20you%20have%3A%20" target="_blank" rel="noopener">Ask on WhatsApp</a>
+          </div>
         </div>
       </div>
     </div>
 
-    <section id="featured">
-      <div class="wrap">
-        <h2>Featured product</h2>
-        <div class="feat">
-          <a href="mika-washer.html"><img src="washer.jpg" alt="MIKA 10KG fully automatic top load washing machine" width="1024" height="1024" loading="lazy"></a>
-          <div>
-            <h3>MIKA 10KG Fully Automatic Top Load Washing Machine</h3>
-            <p class="price">KSh 46,999</p>
-            <p class="note">Model MWATL3510DS</p>
-            <ul class="specs">
-              <li>Storm Wash pulsator for tough stains</li>
-              <li>Inverter motor, spin up to 700 RPM</li>
-              <li>Stainless-steel drum, hot and cold water</li>
-              <li>Fast Clean: up to 40% shorter wash</li>
-              <li>Self-clean tub, delay start, 15-minute quick wash</li>
-              <li>Power-out auto restart and child lock</li>
-            </ul>
-            <p class="deal"><strong>Delivery:</strong> all 47 counties<br><strong>Payment:</strong> M-Pesa<br><strong>Visit us:</strong> Sarit Centre, Westlands, Nairobi</p>
-            <div class="actions">
-              <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Suppliers%2C%20I%20would%20like%20to%20order%20the%20MIKA%2010KG%20washing%20machine." target="_blank" rel="noopener">Order on WhatsApp</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <section id="range">
       <div class="wrap">
-        <h2>What we sell</h2>
+        <h2 class="t">What we sell</h2>
         <p class="lead">Ask for anything on this list. If it is not in stock, we will source it for you.</p>
         <div class="range">
           <div>
@@ -203,6 +232,10 @@
               <li>Sprayers and farm tools</li>
               <li>Poultry and dairy equipment</li>
               <li>Water tanks and irrigation kits</li>
+              <li>Greenhouse and farm nets</li>
+              <li>Protective wear, gumboots and gloves</li>
+              <li>Beehives and bee-keeping gear</li>
+              <li>Fish farming supplies</li>
             </ul>
           </div>
           <div>
@@ -212,6 +245,9 @@
               <li>Cases and screen protectors</li>
               <li>Chargers and power banks</li>
               <li>Earphones and smartwatches</li>
+              <li>Phone holders and tripods</li>
+              <li>Memory cards</li>
+              <li>Phone repair parts</li>
             </ul>
           </div>
           <div>
@@ -221,6 +257,10 @@
               <li>Home theatres and soundbars</li>
               <li>Speakers</li>
               <li>Decoders and accessories</li>
+              <li>TV wall mounts and stands</li>
+              <li>Projectors and screens</li>
+              <li>Microphones</li>
+              <li>Headphones</li>
             </ul>
           </div>
           <div>
@@ -231,6 +271,12 @@
               <li>Cookers and microwaves</li>
               <li>Blenders, kettles and irons</li>
               <li>Fans and heaters</li>
+              <li>Air fryers and rice cookers</li>
+              <li>Water dispensers</li>
+              <li>Vacuum cleaners</li>
+              <li>Sandwich makers and toasters</li>
+              <li>Electric pressure cookers</li>
+              <li>Hot plates and gas cookers</li>
             </ul>
           </div>
           <div>
@@ -241,6 +287,10 @@
               <li>Hair care and wigs</li>
               <li>Vitamins and supplements</li>
               <li>Shavers and grooming</li>
+              <li>Nail care and beauty tools</li>
+              <li>Blood pressure monitors and thermometers</li>
+              <li>First-aid and personal protection</li>
+              <li>Massagers</li>
             </ul>
           </div>
           <div>
@@ -251,6 +301,11 @@
               <li>Kitchenware</li>
               <li>Cleaning supplies</li>
               <li>Stationery and office furniture</li>
+              <li>Mattresses and pillows</li>
+              <li>Shelves, shoe racks and wardrobes</li>
+              <li>Carpets, rugs and towels</li>
+              <li>Mirrors and home decor</li>
+              <li>Office chairs and desks</li>
             </ul>
           </div>
           <div>
@@ -261,6 +316,10 @@
               <li>Kids' clothing</li>
               <li>Shoes and bags</li>
               <li>Watches and jewelry</li>
+              <li>Underwear and socks</li>
+              <li>Sportswear and sneakers</li>
+              <li>Sunglasses and belts</li>
+              <li>School and work uniforms</li>
             </ul>
           </div>
           <div>
@@ -271,6 +330,11 @@
               <li>Routers and cables</li>
               <li>Flash drives and hard drives</li>
               <li>Keyboards and mice</li>
+              <li>Monitors</li>
+              <li>Laptop bags and accessories</li>
+              <li>Webcams and headsets</li>
+              <li>Networking and Wi-Fi gear</li>
+              <li>Software and antivirus</li>
             </ul>
           </div>
           <div>
@@ -279,6 +343,8 @@
               <li>Consoles</li>
               <li>Controllers</li>
               <li>Games and accessories</li>
+              <li>Gaming chairs and headsets</li>
+              <li>VR and gaming PCs</li>
             </ul>
           </div>
           <div>
@@ -288,6 +354,9 @@
               <li>Drinks and snacks</li>
               <li>Detergents</li>
               <li>Toiletries and personal care</li>
+              <li>Tea, coffee and spices</li>
+              <li>Bottled water and juices</li>
+              <li>Cereals, pasta and canned foods</li>
             </ul>
           </div>
           <div>
@@ -297,6 +366,9 @@
               <li>Baby clothes</li>
               <li>Toys</li>
               <li>Strollers and car seats</li>
+              <li>Feeding bottles and sterilizers</li>
+              <li>Baby cots and bath sets</li>
+              <li>Baby care and nappy bags</li>
             </ul>
           </div>
           <div>
@@ -306,6 +378,55 @@
               <li>Solar panels and lights</li>
               <li>Batteries and inverters</li>
               <li>Generators</li>
+              <li>Alarm systems and smart door locks</li>
+              <li>Electric fences and gate motors</li>
+              <li>UPS, surge protectors and stabilizers</li>
+              <li>Extension cables and sockets</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Building &amp; Hardware</h3>
+            <ul>
+              <li>Paint and brushes</li>
+              <li>Door locks, hinges and handles</li>
+              <li>Plumbing pipes, taps and fittings</li>
+              <li>Ladders and tool boxes</li>
+              <li>Tiles and floor accessories</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Lighting &amp; Electricals</h3>
+            <ul>
+              <li>LED bulbs and tube lights</li>
+              <li>Security and solar floodlights</li>
+              <li>Switches, sockets and cables</li>
+              <li>Decorative and ceiling lights</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Garden &amp; Outdoor</h3>
+            <ul>
+              <li>Garden hoses and sprinklers</li>
+              <li>Lawn mowers and trimmers</li>
+              <li>Outdoor furniture</li>
+              <li>Camping and picnic gear</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Music &amp; Entertainment</h3>
+            <ul>
+              <li>Guitars and keyboards</li>
+              <li>DJ and PA equipment</li>
+              <li>Karaoke machines</li>
+              <li>Studio microphones</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Bags &amp; Travel</h3>
+            <ul>
+              <li>Suitcases and travel bags</li>
+              <li>School bags and backpacks</li>
+              <li>Laptop and camera bags</li>
             </ul>
           </div>
           <div>
@@ -317,6 +438,8 @@
               <li>Books</li>
               <li>Pet supplies</li>
               <li>Custom printing and gifts</li>
+              <li>Bicycles and fitness equipment</li>
+              <li>Packaging and shop supplies</li>
             </ul>
           </div>
         </div>
@@ -325,7 +448,7 @@
 
     <section id="order">
       <div class="wrap">
-        <h2>How to order</h2>
+        <h2 class="t">How to order</h2>
         <div class="how">
           <div>
             <h3>Message us</h3>
@@ -345,7 +468,7 @@
 
     <section id="delivery">
       <div class="wrap">
-        <h2>Countrywide delivery in Kenya</h2>
+        <h2 class="t">Countrywide delivery in Kenya</h2>
         <p class="lead">We deliver agrovet supplies, electronics, fashion and home goods to all 47 counties, including:</p>
         <ul class="counties">
           <li>Nairobi</li>
@@ -401,7 +524,7 @@
 
     <section id="contact" class="contact">
       <div class="wrap">
-        <h2>Contact Stermont Suppliers</h2>
+        <h2 class="t">Contact Stermont Suppliers</h2>
         <address>
           Sarit Centre, Karuna Road<br>
           Westlands, Nairobi, Kenya<br>
@@ -420,5 +543,106 @@
     <div class="wrap">&copy; 2026 Stermont Suppliers. All rights reserved.</div>
   </footer>
 
+  <nav class="bar" aria-label="Quick navigation" id="bar">
+    <a href="#top" class="on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</a>
+    <a href="#range"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 12h8M8 15h5"/></svg>Categories</a>
+    <a href="#order"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h11L21 7H6"/></svg>Order</a>
+    <a href="#delivery"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6h12v10H2zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/></svg>Delivery</a>
+    <a href="#contact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>Contact</a>
+  </nav>
+
+  <script>
+    (function () {
+      var form = document.getElementById('search-form');
+      var input = document.getElementById('q');
+      var msg = document.getElementById('search-msg');
+      var featured = document.getElementById('featured');
+      var cats = document.querySelectorAll('#range .range > div');
+      var base = 'https://wa.me/254748888230?text=';
+
+      function run(scroll) {
+        var q = input.value.trim().toLowerCase();
+        var found = 0;
+        if (!q) {
+          featured.classList.remove('hidden');
+          cats.forEach(function (c) {
+            c.classList.remove('hidden');
+            c.querySelectorAll('li').forEach(function (li) { li.classList.remove('hidden'); });
+          });
+          msg.textContent = '';
+          return;
+        }
+        var words = q.split(/\s+/);
+        function matches(text) {
+          text = text.toLowerCase();
+          return words.every(function (w) { return text.indexOf(w) !== -1; });
+        }
+        if (matches(featured.textContent)) { featured.classList.remove('hidden'); found++; }
+        else { featured.classList.add('hidden'); }
+        cats.forEach(function (c) {
+          var catMatch = matches(c.querySelector('h3').textContent);
+          var any = 0;
+          c.querySelectorAll('li').forEach(function (li) {
+            var ok = catMatch || matches(li.textContent);
+            li.classList.toggle('hidden', !ok);
+            if (ok) any++;
+          });
+          c.classList.toggle('hidden', any === 0);
+          found += any;
+        });
+        if (found) {
+          msg.textContent = 'Showing results for "' + input.value.trim() + '". Clear the box to see everything.';
+          if (scroll) {
+            var target = featured.classList.contains('hidden') ? document.getElementById('range') : featured;
+            target.scrollIntoView({ behavior: 'smooth' });
+          }
+        } else {
+          msg.innerHTML = '';
+          msg.appendChild(document.createTextNode('Nothing listed for "' + input.value.trim() + '". We can still source it. '));
+          var a = document.createElement('a');
+          a.href = base + encodeURIComponent('Hello Stermont Suppliers, do you have: ' + input.value.trim());
+          a.target = '_blank'; a.rel = 'noopener';
+          a.textContent = 'Ask on WhatsApp';
+          msg.appendChild(a);
+        }
+      }
+      form.addEventListener('submit', function (e) { e.preventDefault(); run(true); });
+      input.addEventListener('input', function () { run(false); });
+    })();
+  </script>
+  <script>
+    (function () {
+      var sl = document.getElementById('slides'), dots = document.getElementById('dots');
+      var n = sl.children.length, i;
+      for (i = 0; i < n; i++) dots.appendChild(document.createElement('i'));
+      function mark() {
+        var k = Math.round(sl.scrollLeft / (sl.scrollWidth / n));
+        Array.prototype.forEach.call(dots.children, function (d, j) { d.classList.toggle('on', j === k); });
+      }
+      sl.addEventListener('scroll', mark, { passive: true }); mark();
+      var q = document.getElementById('q');
+      document.querySelectorAll('.cat').forEach(function (b) {
+        b.addEventListener('click', function () {
+          q.value = b.getAttribute('data-q');
+          q.dispatchEvent(new Event('input'));
+          document.getElementById('range').scrollIntoView({ behavior: 'smooth' });
+        });
+      });
+      var links = document.querySelectorAll('#bar a');
+      links.forEach(function (a) {
+        a.addEventListener('click', function () {
+          if (a.getAttribute('href') === '#top') { q.value = ''; q.dispatchEvent(new Event('input')); }
+        });
+      });
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (es) {
+          es.forEach(function (e) {
+            if (e.isIntersecting) links.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id); });
+          });
+        }, { rootMargin: '-45% 0px -50% 0px' });
+        ['top', 'range', 'order', 'delivery', 'contact'].forEach(function (id) { io.observe(document.getElementById(id)); });
+      }
+    })();
+  </script>
 </body>
 </html>
