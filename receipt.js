@@ -9,8 +9,8 @@
   var EMAILJS = {
     serviceId: 'service_fdp81n2', // e.g. 'service_abc123'   (EmailJS > Email Services)
     templateId: '',         // receipt template        (EmailJS > Email Templates)
-    statusTemplateId: '',   // order-status template   (Confirmed / Packed / On the way / Delivered)
-    publicKey: ''           // EmailJS > Account > Public Key
+    statusTemplateId: 'template_cv2qjgm',   // order-status template   (Confirmed / Packed / On the way / Delivered)
+    publicKey: 'PayiXKhM6gVQLHYAE'// EmailJS > Account > Public Key
   };
 
   /* ---- 2. Business details printed on the receipt ---- */
@@ -464,7 +464,7 @@
     if (!EMAILJS.serviceId || !EMAILJS.templateId || !EMAILJS.publicKey) return Promise.reject(new Error('Email is not set up yet'));
     if (!o.email) return Promise.reject(new Error('This order has no customer email.'));
     var params = {
-      to_email: o.email, to_name: o.customer_name || 'Customer', business: BIZ.name, phone: BIZ.phone, receipt_no: receiptNo(o), order_ref: o.ref,
+      to_email: o.email, to_name: o.customer_name || 'Customer', name: o.customer_name || 'Customer', customer_name: o.customer_name || 'Customer', user_name: o.customer_name || 'Customer', email: o.email, order_id: o.ref, order_number: o.ref, business: BIZ.name, phone: BIZ.phone, receipt_no: receiptNo(o), order_ref: o.ref,
       date: when(o.handled_at || o.created_at), items: lines(o).join('\n'), total: money(paidAmount(o)), subtotal: money(o.subtotal), balance: money(balance(o)),
       paybill: BIZ.paybill, account: BIZ.account, pay_code: code(o), amount_words: words(paidAmount(o)),
       delivery: o.method === 'delivery' ? [o.address, o.county].filter(Boolean).join(', ') : 'Store pickup'
@@ -496,7 +496,7 @@
     if (pickup && stage === 'out_for_delivery') { msg = 'Your order is ready and waiting for you at our store. Come pick up your goodies whenever you like!'; }
     if (pickup && stage === 'delivered') msg = 'Your order has been collected. Thank you for choosing Stermont Mall, we hope you love it! Need anything? Just reply to this email. See you again soon!';
     var params = {
-      to_email: o.email, to_name: o.customer_name || 'Customer', business: BIZ.name, phone: BIZ.phone, web: BIZ.web,
+      to_email: o.email, to_name: o.customer_name || 'Customer', name: o.customer_name || 'Customer', customer_name: o.customer_name || 'Customer', user_name: o.customer_name || 'Customer', email: o.email, order_id: o.ref, order_number: o.ref, business: BIZ.name, phone: BIZ.phone, web: BIZ.web,
       order_ref: o.ref, status: m.label, subject: BIZ.name + ': ' + m.label + ' (' + o.ref + ')',
       headline: m.head, message: msg, items: lines(o).join('\n'), total: money(o.subtotal),
       delivery: o.method === 'delivery' ? [o.address, o.county].filter(Boolean).join(', ') : 'Store pickup',
