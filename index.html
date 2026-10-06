@@ -166,6 +166,10 @@
     .om-card .price{margin:.3rem 0}.om-card .note{margin-bottom:.6rem}
     .om-x{float:right;border:0;background:var(--panel);color:var(--ink);width:36px;height:36px;border-radius:50%;font-size:1.3rem;cursor:pointer}
     .om-card .btn{display:block;text-align:center;width:100%;margin-top:.5rem;border:0;font:inherit;font-weight:700;cursor:pointer}
+    .wm{display:inline-flex;align-items:baseline;font-size:2rem;font-weight:800;letter-spacing:-.04em;line-height:1.1}
+    .wm b{color:var(--navy);font-weight:800}
+    .wm i{font-style:normal;background:var(--gold);color:#121212;padding:0 .12em;margin-left:.04em;border-radius:3px}
+    @media (prefers-color-scheme:dark){.wm b{color:#e9ddff}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn,.dots i{transition:none}}
   </style>
 </head>
@@ -173,7 +177,7 @@
   <header>
     <div class="wrap">
       <div class="top">
-        <a class="logo" href="#top" aria-label="Stermont Mall home"><img src="logo.png" alt="Stermont Mall" width="160" height="34"></a>
+        <a class="logo" href="#top" aria-label="Stermont Mall home"><span class="wm" aria-hidden="true"><b>Stermont</b><i>Mall</i></span></a>
         <nav class="desk" aria-label="Main"><a href="#range">Products</a><a href="#order">How to order</a><a href="#delivery">Delivery</a><a href="#contact">Contact</a></nav>
       </div>
       <form class="search" role="search" id="search-form">
