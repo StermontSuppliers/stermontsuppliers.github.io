@@ -173,6 +173,8 @@
     .pcard .btn+.btn{margin-top:.5rem}
     .om-card .btn-alt{border:2px solid currentColor}
     .btn.ok{background:var(--green);color:#1b1230;box-shadow:none}
+    .pcard button.btn-main.in-cart{background:var(--green);color:#1b1230;box-shadow:0 3px 10px rgba(143,212,0,.4)}
+    .pcard.in-cart{outline:3px solid var(--green);outline-offset:-3px}
     button.btn{border:0;font:inherit;font-weight:700;cursor:pointer}
     .cartbtn{position:relative;border:0;background:var(--panel);color:var(--ink);width:44px;height:44px;border-radius:50%;display:grid;place-items:center;cursor:pointer;flex:none}
     .cartbtn svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
@@ -1044,12 +1046,16 @@
         D.getElementById('cartbar-l').textContent = 'View cart \u00b7 ' + T.n + (T.n === 1 ? ' item' : ' items');
         D.getElementById('cartbar-t').textContent = money(T.s);
         cb.classList.toggle('on', T.n > 0 && !isOpen);
+        D.querySelectorAll('.pcard[id^="p-"]').forEach(function (c) {
+          var b = c.querySelector('button.btn-main'), q = cart[c.id] || 0;
+          c.classList.toggle('in-cart', q > 0);
+          if (b) { b.classList.toggle('in-cart', q > 0); b.textContent = q > 0 ? '\u2713 In cart \u00b7 ' + q : 'Add to cart'; }
+        });
         if (isOpen) render();
       }
       function bump() { D.querySelectorAll('.cb').forEach(function (b) { b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); }); }
       function add(el, btn, q) {
         var id = el.id; cart[id] = Math.min(99, (cart[id] || 0) + (q || 1)); store(); sync(); bump(); toast('Added to cart');
-        if (btn) { var t = btn.textContent; btn.textContent = 'Added \u2713'; btn.classList.add('ok'); setTimeout(function () { btn.textContent = t; btn.classList.remove('ok'); }, 900); }
       }
       function setQ(id, q) { if (q <= 0) delete cart[id]; else cart[id] = Math.min(99, q); store(); sync(); }
       window.STM = { add: add, open: function () { openDr('cart'); } };
