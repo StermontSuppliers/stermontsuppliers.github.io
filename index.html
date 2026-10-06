@@ -1192,7 +1192,7 @@
           if (form.method === 'delivery') { if (!form.county) errs.county = 'Choose your county.'; if (!form.addr || form.addr.trim().length < 3) errs.addr = 'Enter your town / area and street.'; }
           var k = Object.keys(errs);
           if (k.length) { render(); var e = D.getElementById(k[0]); if (e) e.focus(); return; }
-          ref = ref || 'STM-' + Date.now().toString(36).slice(-5).toUpperCase(); go('review');
+          ref = newRef(); go('review');
         });
       }
       function where() { return form.method === 'pickup' ? 'Collect at ' + CFG.pickup : form.addr.trim() + ', ' + form.county; }
@@ -1249,6 +1249,12 @@
               body: JSON.stringify({ access_key: k, subject: 'New order ' + ref + ' - ' + money(T.s), from_name: 'Stermont Mall website', message: msg }) }).catch(function () {});
           });
         } catch (e) {}
+      }
+      function newRef() {
+        var A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', out = '', i, b = new Uint8Array(6);
+        try { (window.crypto || window.msCrypto).getRandomValues(b); } catch (e) { for (i = 0; i < 6; i++) b[i] = Math.floor(Math.random() * 256); }
+        for (i = 0; i < 6; i++) out += A.charAt(b[i] % A.length);
+        return 'STM-' + out;
       }
       function place(T) {
         if (sending) return;
