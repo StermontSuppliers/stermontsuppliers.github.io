@@ -142,7 +142,7 @@
       .then(function () { b.disabled = false; b.textContent = 'Sign in'; });
   });
   $('out').addEventListener('click', function () { sess = null; save(null); show('login'); });
-  $('refresh').addEventListener('click', fetchOrders);
+  $('refresh').addEventListener('click', function () { q = ''; $('q').value = ''; fetchOrders(); });
   setInterval(function () { if (sess && !$('app').hidden && $('cf').hidden && !D.hidden) fetchOrders(); }, 30000);
 
   function fetchOrders() {
@@ -350,6 +350,7 @@
     var o = orders.filter(function (x) { return x.ref === want.ref; })[0];
     if (!o) { var er = $('aerr'); er.textContent = 'Order ' + want.ref + ' was not found.'; er.hidden = false; return; }
     tab = 'all'; q = want.ref; $('q').value = q; render();
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
     if ((want.action === 'approve' || want.action === 'decline') && (o.status || 'pending') === 'pending') confirmAct(o, want.action);
     else if (want.action === 'approve' || want.action === 'decline') { var e2 = $('aerr'); e2.textContent = 'Order ' + o.ref + ' is already ' + LABEL[o.status] + '.'; e2.hidden = false; }
   }
