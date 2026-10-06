@@ -55,6 +55,18 @@
     .badge{width:72px;height:72px;border-radius:50%;background:var(--green);color:#1b1230;display:grid;place-items:center;font-size:2.2rem;font-weight:800;margin:.5rem auto 1rem}
     .center{text-align:center}
     .email-chip{display:inline-block;background:var(--tint);border-radius:999px;padding:.1rem .7rem;font-weight:700;word-break:break-all}
+    .orders{text-align:left;margin:1.2rem 0 .2rem}
+    .orders h2{font-size:1.1rem;margin-bottom:.5rem}
+    .ord{border:1px solid var(--line);border-radius:14px;padding:.8rem .9rem;margin-bottom:.6rem;background:var(--paper)}
+    .ord .top{display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+    .ord .ref{font-weight:800}
+    .ord .when{color:var(--muted);font-size:.82rem}
+    .ord ul{list-style:none;margin:.5rem 0;font-size:.92rem}
+    .ord li{display:flex;justify-content:space-between;gap:.6rem;padding:.15rem 0}
+    .ord .tot{display:flex;justify-content:space-between;font-weight:700}
+    .st{font-size:.75rem;font-weight:800;padding:.2rem .6rem;border-radius:999px;white-space:nowrap}
+    .st-pending{background:#fef3c7;color:#92400e}.st-paid{background:#dcfce7;color:#15803d}.st-declined{background:#fee2e2;color:#b91c1c}
+    .ord .note{font-size:.85rem;color:var(--muted);margin-top:.4rem}
     @media(prefers-reduced-motion:reduce){.btn{transition:none}}
   </style>
 </head>
@@ -146,6 +158,7 @@
         <div class="badge" aria-hidden="true">&#10003;</div>
         <h1 id="done-title">You're signed in</h1>
         <p class="sub" id="done-sub"></p>
+        <div class="orders" id="orders" hidden><h2>My orders</h2><div id="orders-list"></div></div>
         <a class="btn btn-main" href="index.html">Continue shopping</a>
         <button class="btn btn-alt" type="button" id="b-logout">Log out</button>
       </section>
@@ -223,12 +236,41 @@
       };
     });
 
+    /* ---------- my orders ---------- */
+    var STATUS = { pending: ['Pending', 'We are confirming your payment. We will contact you on WhatsApp.'], paid: ['Order confirmed \u2705', 'Payment received. Your order is confirmed.'], declined: ['Declined', 'We could not confirm payment for this order. Contact us on WhatsApp.'] };
+    function money(n) { return 'KSh ' + Number(n || 0).toLocaleString('en-KE'); }
+    async function loadOrders() {
+      var box = $('orders'), list = $('orders-list');
+      try {
+        var r = await sb.from('orders').select('ref,created_at,status,subtotal,items').order('created_at', { ascending: false }).limit(30);
+        if (r.error || !r.data || !r.data.length) { box.hidden = true; return; }
+        list.textContent = '';
+        r.data.forEach(function (o) {
+          var st = STATUS[o.status || 'pending'] || STATUS.pending, c = document.createElement('div'); c.className = 'ord';
+          var top = document.createElement('div'); top.className = 'top';
+          var l = document.createElement('div'), ref = document.createElement('div'), w = document.createElement('div');
+          ref.className = 'ref'; ref.textContent = o.ref; w.className = 'when'; w.textContent = o.created_at ? new Date(o.created_at).toLocaleString('en-KE') : '';
+          l.appendChild(ref); l.appendChild(w);
+          var b = document.createElement('span'); b.className = 'st st-' + (o.status || 'pending'); b.textContent = st[0];
+          top.appendChild(l); top.appendChild(b); c.appendChild(top);
+          var ul = document.createElement('ul');
+          (o.items || []).forEach(function (i) { var li = document.createElement('li'), a1 = document.createElement('span'), a2 = document.createElement('span'); a1.textContent = i.qty + ' \u00d7 ' + i.name; a2.textContent = money(i.total); li.appendChild(a1); li.appendChild(a2); ul.appendChild(li); });
+          c.appendChild(ul);
+          var t = document.createElement('div'); t.className = 'tot'; var t1 = document.createElement('span'), t2 = document.createElement('span'); t1.textContent = 'Total'; t2.textContent = money(o.subtotal); t.appendChild(t1); t.appendChild(t2); c.appendChild(t);
+          var n = document.createElement('div'); n.className = 'note'; n.textContent = st[1]; c.appendChild(n);
+          list.appendChild(c);
+        });
+        box.hidden = false;
+      } catch (e) { box.hidden = true; }
+    }
+
     /* ---------- signed-in view ---------- */
     function showSignedIn(user) {
       var name = user && user.user_metadata && user.user_metadata.full_name;
       $('done-title').textContent = name ? 'Hi, ' + name.split(' ')[0] : "You're signed in";
       $('done-sub').textContent = user && user.email ? user.email : '';
       show('done');
+      loadOrders();
     }
 
     /* ---------- log in ---------- */
