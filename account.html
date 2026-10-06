@@ -66,6 +66,9 @@
     .ord .tot{display:flex;justify-content:space-between;font-weight:700}
     .st{font-size:.75rem;font-weight:800;padding:.2rem .6rem;border-radius:999px;white-space:nowrap}
     .st-pending{background:#fef3c7;color:#92400e}.st-paid{background:#dcfce7;color:#15803d}.st-declined{background:#fee2e2;color:#b91c1c}
+    .track{display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;margin-top:.6rem}
+    .stp{font-size:.72rem;text-align:center;padding:.35rem .1rem;border-radius:8px;background:var(--panel);color:var(--muted);font-weight:700}
+    .stp.on{background:#dcfce7;color:#15803d}
     .ord .note{font-size:.85rem;color:var(--muted);margin-top:.4rem}
     @media(prefers-reduced-motion:reduce){.btn{transition:none}}
   </style>
@@ -242,7 +245,7 @@
     async function loadOrders() {
       var box = $('orders'), list = $('orders-list');
       try {
-        var r = await sb.from('orders').select('ref,created_at,status,subtotal,items').order('created_at', { ascending: false }).limit(30);
+        var r = await sb.from('orders').select('ref,created_at,status,stage,subtotal,items').order('created_at', { ascending: false }).limit(30);
         if (r.error || !r.data || !r.data.length) { box.hidden = true; return; }
         list.textContent = '';
         r.data.forEach(function (o) {
@@ -257,6 +260,12 @@
           (o.items || []).forEach(function (i) { var li = document.createElement('li'), a1 = document.createElement('span'), a2 = document.createElement('span'); a1.textContent = i.qty + ' \u00d7 ' + i.name; a2.textContent = money(i.total); li.appendChild(a1); li.appendChild(a2); ul.appendChild(li); });
           c.appendChild(ul);
           var t = document.createElement('div'); t.className = 'tot'; var t1 = document.createElement('span'), t2 = document.createElement('span'); t1.textContent = 'Total'; t2.textContent = money(o.subtotal); t.appendChild(t1); t.appendChild(t2); c.appendChild(t);
+          if ((o.status || 'pending') === 'paid') {
+            var steps = [['paid', 'Confirmed'], ['packed', 'Packed'], ['out_for_delivery', 'On the way'], ['delivered', 'Delivered']], at = o.stage ? steps.findIndex(function (x) { return x[0] === o.stage; }) : 0;
+            var tr = document.createElement('div'); tr.className = 'track';
+            steps.forEach(function (x, i) { var d = document.createElement('div'); d.className = 'stp' + (i <= at ? ' on' : ''); d.textContent = (i <= at ? '\u2713 ' : '') + x[1]; tr.appendChild(d); });
+            c.appendChild(tr);
+          }
           var n = document.createElement('div'); n.className = 'note'; n.textContent = st[1]; c.appendChild(n);
           list.appendChild(c);
         });

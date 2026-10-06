@@ -80,6 +80,7 @@
   var D = document, SB = 'https://oewvtbnmyombbtggamor.supabase.co', KEY = 'sb_publishable_CQiZr-INuot9C4fbdJDz1Q_4OiWEQL7', SK = 'stm_admin_session';
   var sess = null, orders = [], tab = 'pending', q = '';
   var qs = new URLSearchParams(location.search), want = { ref: qs.get('ref'), action: qs.get('action') };
+  var STAGE = { packed: 'Packed 📦', out_for_delivery: 'Out for delivery 🚚', delivered: 'Delivered 🎉' };
   var LABEL = { pending: 'Pending', paid: 'Order confirmed ✅', declined: 'Declined' };
 
   function $(id) { return D.getElementById(id); }
@@ -139,14 +140,16 @@
   function count(s) { return orders.filter(function (o) { return (o.status || 'pending') === s; }).length; }
   function renderTabs() {
     var t = $('tabs'); t.textContent = '';
-    [['pending', 'Pending'], ['paid', 'Confirmed ✅'], ['declined', 'Declined'], ['all', 'All']].forEach(function (x) {
-      var b = h('button', tab === x[0] ? 'on' : '', x[1] + ' (' + (x[0] === 'all' ? orders.length : count(x[0])) + ')'); b.type = 'button';
+    [['pending', 'Pending'], ['paid', 'Confirmed ✅'], ['declined', 'Declined'], ['all', 'All'], ['stock', 'Stock 📦']].forEach(function (x) {
+      var b = h('button', tab === x[0] ? 'on' : '', x[1] + (x[0] === 'stock' ? '' : ' (' + (x[0] === 'all' ? orders.length : count(x[0])) + ')')); b.type = 'button';
       b.onclick = function () { tab = x[0]; render(); }; t.appendChild(b);
     });
   }
   function render() {
     renderTabs();
     var L = $('list'); L.textContent = '';
+    $('q').hidden = tab === 'stock';
+    if (tab === 'stock') { renderStock(L); return; }
     var needle = q.trim().toLowerCase();
     var rows = orders.filter(function (o) {
       if (tab !== 'all' && (o.status || 'pending') !== tab) return false;
@@ -177,13 +180,21 @@
       var de = h('button', 'btn no', 'Decline (not paid)'); de.type = 'button'; de.onclick = function () { confirmAct(o, 'decline'); };
       a.appendChild(ap); a.appendChild(de);
     } else {
+      if (st === 'paid') {
+        if (o.stage) meta('Progress', STAGE[o.stage]);
+        [['packed', 'Mark packed'], ['out_for_delivery', 'Out for delivery'], ['delivered', 'Delivered']].forEach(function (x) {
+          if (o.stage === x[0]) return;
+          var sb = h('button', 'btn alt sm', x[1]); sb.type = 'button'; sb.onclick = function () { confirmAct(o, x[0]); }; a.appendChild(sb);
+        });
+      }
       var rv = h('button', 'btn alt sm', 'Move back to pending'); rv.type = 'button'; rv.onclick = function () { confirmAct(o, 'pending'); }; a.appendChild(rv);
     }
     c.appendChild(a); return c;
   }
 
-  var NEW = { approve: 'paid', decline: 'declined', pending: 'pending' };
-  var TITLE = { approve: 'Confirm this order?', decline: 'Decline this order?', pending: 'Move back to pending?' };
+  var NEW = { approve: { status: 'paid', stage: null }, decline: { status: 'declined', stage: null }, pending: { status: 'pending', stage: null },
+    packed: { stage: 'packed' }, out_for_delivery: { stage: 'out_for_delivery' }, delivered: { stage: 'delivered' } };
+  var TITLE = { approve: 'Confirm this order?', decline: 'Decline this order?', pending: 'Move back to pending?', packed: 'Mark as packed?', out_for_delivery: 'Mark as out for delivery?', delivered: 'Mark as delivered?' };
   function confirmAct(o, action) {
     $('cf-t').textContent = TITLE[action];
     var b = $('cf-b'); b.textContent = '';
@@ -195,8 +206,8 @@
     $('cf').hidden = false;
     y.onclick = function () {
       y.disabled = true; y.textContent = 'Saving...';
-      var patch = { status: NEW[action], handled_by: sess.email || null, handled_at: action === 'pending' ? null : new Date().toISOString() };
-      if (action === 'pending') patch.handled_by = null;
+      var patch = Object.assign({}, NEW[action]);
+      if (patch.status) { patch.handled_by = action === 'pending' ? null : (sess.email || null); patch.handled_at = action === 'pending' ? null : new Date().toISOString(); }
       ready().then(function () { return api('/rest/v1/orders?ref=eq.' + encodeURIComponent(o.ref) + '&select=ref,status', { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: patch }); })
         .then(function (r) { if (!r.ok) throw 0; return r.json(); })
         .then(function (rows) { if (!rows.length) throw 0; $('cf').hidden = true; return fetchOrders(); })
@@ -204,6 +215,33 @@
     };
   }
   $('cf-n').addEventListener('click', function () { $('cf').hidden = true; });
+
+  /* ---------- stock ---------- */
+  var slug = function (t) { return t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); };
+  function renderStock(L) {
+    L.appendChild(h('div', 'empty', 'Loading products...'));
+    Promise.all([
+      fetch('index.html', { cache: 'no-store' }).then(function (r) { return r.text(); }),
+      ready().then(function () { return api('/rest/v1/stock?select=product,in_stock'); }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+    ]).then(function (res) {
+      var doc = new DOMParser().parseFromString(res[0], 'text/html'), out = {};
+      res[1].forEach(function (x) { if (x.in_stock === false) out[x.product] = true; });
+      L.textContent = '';
+      L.appendChild(h('p', 'meta', 'Mark a product as sold out and customers will not be able to add it to the cart.'));
+      doc.querySelectorAll('#featured .pcard:not(.cta)').forEach(function (c) {
+        var n = c.querySelector('h3'); if (!n) return;
+        var name = n.textContent.trim(), id = slug(name), sold = !!out[id], card = h('div', 'card'), top = h('div', 'top');
+        top.appendChild(h('div', 'ref', name)); top.appendChild(h('span', 'badge ' + (sold ? 'b-declined' : 'b-paid'), sold ? 'Sold out' : 'In stock')); card.appendChild(top);
+        var b = h('button', 'btn ' + (sold ? 'ok' : 'no') + ' sm', sold ? 'Mark back in stock' : 'Mark sold out'); b.type = 'button'; b.style.marginTop = '.6rem';
+        b.onclick = function () {
+          b.disabled = true;
+          api('/rest/v1/stock?on_conflict=product', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: { product: id, in_stock: sold } })
+            .then(function (r) { if (!r.ok) throw 0; render(); }).catch(function () { b.disabled = false; var er = $('aerr'); er.textContent = 'Could not update stock. Run setup-extras.sql in Supabase first.'; er.hidden = false; });
+        };
+        card.appendChild(b); L.appendChild(card);
+      });
+    }).catch(function () { L.textContent = ''; var er = $('aerr'); er.textContent = 'Could not load stock. Run setup-extras.sql in Supabase first.'; er.hidden = false; });
+  }
 
   var handled = false;
   function handleDeepLink() {

@@ -1029,7 +1029,9 @@
         /* Free key from https://web3forms.com (enter the email that should receive order alerts) */
         mailKey: '2c55cbd0-5ec1-4603-a6a0-293b8a68faab',
         /* Optional second inbox: paste a key made with the other email here */
-        mailKey2: '' };
+        mailKey2: '',
+        /* Delivery fee per county in KSh, e.g. { 'Nairobi': 300, 'Kiambu': 400 }. Counties not listed say the fee is confirmed on WhatsApp. */
+        fees: {} };
       function slug(t) { return t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
       function ls(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k)); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} return null; }
       function h(t, c, x) { var e = D.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
@@ -1079,7 +1081,7 @@
         D.querySelectorAll('.pcard[id^="p-"]').forEach(function (c) {
           var b = c.querySelector('button.btn-main'), q = cart[c.id] || 0;
           c.classList.toggle('in-cart', q > 0);
-          if (b) { b.classList.toggle('in-cart', q > 0); b.textContent = q > 0 ? '\u2713 In cart \u00b7 ' + q : 'Add to cart'; }
+          if (b && !b.dataset.sold) { b.classList.toggle('in-cart', q > 0); b.textContent = q > 0 ? '\u2713 In cart \u00b7 ' + q : 'Add to cart'; }
         });
         if (isOpen) render();
       }
@@ -1132,6 +1134,8 @@
         if (form.method === 'delivery') {
           var s = h('select'); s.appendChild(new Option('Select county', '')); counties.forEach(function (c) { s.appendChild(new Option(c, c)); });
           fld(b, 'county', 'County', s); s.value = form.county;
+          var fe = h('div', 'note'); fe.id = 'fee-note'; var showFee = function () { var f = CFG.fees[form.county]; fe.textContent = form.county ? (f ? 'Estimated delivery fee to ' + form.county + ': ' + money(f) + '. We confirm the final amount on WhatsApp.' : 'We will confirm your delivery fee to ' + form.county + ' on WhatsApp.') : ''; };
+          s.addEventListener('change', showFee); showFee(); s.parentNode.appendChild(fe);
           fld(b, 'addr', 'Town / area and street', inp('text', 'e.g. Kitale, Kenyatta Street', 'street-address'));
         }
         var ta = h('textarea'); ta.rows = 2; ta.placeholder = 'Anything we should know?'; fld(b, 'notes', 'Notes (optional)', ta);
@@ -1262,6 +1266,20 @@
       window.addEventListener('popstate', function () { if (isOpen) closeDr(true); });
       var ob = D.querySelector('#bar a[href="#order"]');
       if (ob) { var sp = h('span', 'cb', '0'); sp.hidden = true; ob.appendChild(sp); ob.addEventListener('click', function (e) { e.preventDefault(); openDr('cart'); }); }
+      /* Sold-out products (set by customer care in the admin page) */
+      try {
+        fetch(CFG.sbUrl + '/rest/v1/stock?select=product&in_stock=eq.false', { headers: { apikey: CFG.sbKey } })
+          .then(function (r) { return r.ok ? r.json() : []; })
+          .then(function (rows) {
+            rows.forEach(function (x) {
+              var c = D.getElementById('p-' + x.product); if (!c) return;
+              var b = c.querySelector('button.btn-main'); if (b) { b.dataset.sold = '1'; b.disabled = true; b.textContent = 'Sold out'; b.style.opacity = '.55'; }
+              var im = c.querySelector('.img'); if (im && !im.querySelector('.soldtag')) { var t = h('span', 'soldtag', 'Sold out'); t.style.cssText = 'position:absolute;top:.5rem;left:.5rem;background:#b91c1c;color:#fff;font-weight:800;font-size:.75rem;padding:.2rem .6rem;border-radius:999px'; if (getComputedStyle(im).position === 'static') im.style.position = 'relative'; im.appendChild(t); }
+              delete cart['p-' + x.product];
+            });
+            store(); sync();
+          }).catch(function () {});
+      } catch (e) {}
       sync();
     })();
   </script>
