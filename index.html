@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#7c3aed">
   <title>Stermont Mall | Everything you need, one trusted store.</title>
-  <meta name="description" content="Stermont Mall, Sarit Centre, Westlands, Nairobi. Buy agrovet supplies, phones, laptops, TVs, appliances, fashion and home goods. Order on WhatsApp. Delivery to all 47 counties in Kenya.">
+  <meta name="description" content="Stermont Mall, an online shopping mall in Kenya. Buy agrovet supplies, phones, laptops, TVs, appliances, fashion and home goods. Order on WhatsApp. Delivery to all 47 counties in Kenya.">
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -27,18 +27,6 @@
     "telephone": "+254748888230",
     "email": "stermontmall@gmail.com",
     "description": "Agrovet supplies, phones, computers, TVs, appliances, fashion and home goods with countrywide delivery in Kenya.",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "Sarit Centre, Karuna Road, Westlands",
-      "addressLocality": "Nairobi",
-      "addressCountry": "KE"
-    },
-    "openingHoursSpecification": {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
-      "opens": "00:00",
-      "closes": "23:59"
-    },
     "areaServed": { "@type": "Country", "name": "Kenya" },
     "priceRange": "KSh"
   }
@@ -276,7 +264,7 @@
       <a class="slide s2" href="#delivery">
         <span class="live">Countrywide</span>
         <h2>Delivery to all 47 counties</h2>
-        <p>Pay by M-Pesa. Collect or we deliver.</p>
+        <p>Pay by M-Pesa. We deliver to you.</p>
         <span class="go">See counties &rarr;</span>
       </a>
       <a class="slide s3" href="https://wa.me/254748888230?text=Hello%20Stermont%20Mall%2C%20I%20would%20like%20to%20order%3A%20" target="_blank" rel="noopener">
@@ -737,7 +725,7 @@
           </div>
           <div>
             <h3>Pay and receive</h3>
-            <p>Pay by M-Pesa, then collect at Sarit Centre or get countrywide delivery.</p>
+            <p>Pay by M-Pesa and we deliver to your location countrywide.</p>
           </div>
         </div>
       </div>
@@ -803,15 +791,13 @@
       <div class="wrap">
         <h2 class="t">Contact Stermont Mall</h2>
         <address>
-          Sarit Centre, Karuna Road<br>
-          Westlands, Nairobi, Kenya<br>
-          Open 24 hours, every day<br>
+          Online store serving all 47 counties in Kenya<br>
+          Orders answered 8:00 AM to 9:00 PM, every day<br>
           Phone and WhatsApp: <a href="tel:+254748888230">+254 748 888 230</a><br>
           Email for inquiries: <a href="mailto:stermontmall@gmail.com?subject=Inquiry%20from%20Stermont%20Mall%20website">stermontmall@gmail.com</a>
         </address>
         <div class="actions">
           <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Mall" target="_blank" rel="noopener">Chat on WhatsApp</a>
-          <a class="btn btn-alt" href="https://www.google.com/maps/search/?api=1&query=Sarit+Centre+Westlands+Nairobi" target="_blank" rel="noopener">Open in Maps</a>
           <a class="btn btn-alt" href="mailto:stermontmall@gmail.com?subject=Inquiry%20from%20Stermont%20Mall%20website">Email us</a>
         </div>
       </div>
@@ -1024,7 +1010,7 @@
     (function () {
       var D = document;
       /* ---- Settings: put your M-Pesa Till or Paybill here ---- */
-      var CFG = { paybill: '717777', payAcct: '0748888230', wa: '254748888230', pickup: 'Sarit Centre, Karuna Road, Westlands, Nairobi',
+      var CFG = { paybill: '717777', payAcct: '0748888230', wa: '254748888230',
         sbUrl: 'https://oewvtbnmyombbtggamor.supabase.co', sbKey: 'sb_publishable_CQiZr-INuot9C4fbdJDz1Q_4OiWEQL7', sbRef: 'oewvtbnmyombbtggamor',
         /* Free key from https://web3forms.com (enter the email that should receive order alerts) */
         mailKey: '2c55cbd0-5ec1-4603-a6a0-293b8a68faab',
@@ -1037,7 +1023,7 @@
       function h(t, c, x) { var e = D.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
       function money(n) { return 'KSh ' + n.toLocaleString('en-KE'); }
       var cart = ls('stm_cart') || {}, cust = ls('stm_cust') || {}, step = 'cart', isOpen = false, opener = null, ref = '', lastMsg = '', lastUrl = '', sending = false, sendErr = '', doneRef = '', doneTotal = 0;
-      var form = { method: cust.method || 'pickup', name: cust.name || '', phone: cust.phone || '', county: cust.county || '', addr: cust.addr || '', notes: '' }, errs = {};
+      var form = { method: 'delivery', name: cust.name || '', phone: cust.phone || '', county: cust.county || '', addr: cust.addr || '', notes: '' }, errs = {};
       function session() {
         try {
           var x = JSON.parse(localStorage.getItem('sb-' + CFG.sbRef + '-auth-token'));
@@ -1124,7 +1110,7 @@
       function inp(type, ph, ac, mode) { var i = h('input'); i.type = type; i.placeholder = ph || ''; if (ac) i.autocomplete = ac; if (mode) i.inputMode = mode; return i; }
       function rDetails(b, f, T) {
         var fs = h('div', 'fld'); fs.appendChild(h('label', null, 'How would you like to get your order?')); var os = h('div', 'opts');
-        [['pickup', 'Collect in store', 'Sarit Centre, Westlands, Nairobi. Open 24 hours.'], ['delivery', 'Delivery countrywide', 'All 47 counties. Delivery fee confirmed on WhatsApp.']].forEach(function (o) {
+        [['delivery', 'Delivery countrywide', 'All 47 counties. Delivery fee confirmed on WhatsApp.']].forEach(function (o) {
           var l = h('label', 'opt' + (form.method === o[0] ? ' sel' : '')), r = h('input'); r.type = 'radio'; r.name = 'method'; r.checked = form.method === o[0];
           r.onchange = function () { form.method = o[0]; errs = {}; render(); };
           var t = h('span'); t.appendChild(h('b', null, o[1])); t.appendChild(h('small', null, o[2])); l.appendChild(r); l.appendChild(t); os.appendChild(l);
