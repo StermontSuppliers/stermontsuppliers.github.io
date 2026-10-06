@@ -233,6 +233,14 @@
     .box a{font-weight:700}
     .done-ic{width:72px;height:72px;border-radius:50%;background:var(--green);color:#1b1230;display:grid;place-items:center;font-size:2.2rem;font-weight:800;margin:1rem auto .6rem}
     .center{text-align:center}
+    .pay{background:var(--tint);border:2px solid var(--orange);border-radius:14px;padding:.8rem .9rem;margin:.75rem 0;font-size:.95rem}
+    .pay h4{font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.4rem}
+    .pay .pl{display:flex;justify-content:space-between;align-items:center;gap:.6rem;padding:.3rem 0;border-bottom:1px solid var(--line)}
+    .pay .pl:last-of-type{border-bottom:0}
+    .pay .pv{font-weight:800;font-size:1.15rem;letter-spacing:.02em}
+    .pay .cp{border:0;background:var(--paper);color:var(--orange);font:inherit;font-weight:700;font-size:.8rem;border-radius:999px;padding:.25rem .8rem;cursor:pointer;border:1.5px solid var(--orange)}
+    .pay ol{margin:.5rem 0 0 1.1rem;color:var(--muted);font-size:.85rem}
+    .oerr{background:rgba(217,45,32,.1);color:#d92d20;border:1px solid #d92d20;border-radius:12px;padding:.6rem .8rem;font-size:.9rem;margin-bottom:.4rem}
     @media(prefers-reduced-motion:reduce){.dr-panel,.cb.bump{animation:none}.cartbar,.toast{transition:none}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn,.dots i{transition:none}}
   </style>
@@ -1013,13 +1021,24 @@
     (function () {
       var D = document;
       /* ---- Settings: put your M-Pesa Till or Paybill here ---- */
-      var CFG = { till: '', tillLabel: 'Till number', tillName: 'Stermont Mall', wa: '254748888230', pickup: 'Sarit Centre, Karuna Road, Westlands, Nairobi' };
+      var CFG = { paybill: '717777', payAcct: '0748888230', wa: '254748888230', pickup: 'Sarit Centre, Karuna Road, Westlands, Nairobi',
+        sbUrl: 'https://oewvtbnmyombbtggamor.supabase.co', sbKey: 'sb_publishable_CQiZr-INuot9C4fbdJDz1Q_4OiWEQL7', sbRef: 'oewvtbnmyombbtggamor',
+        /* Free key from https://web3forms.com (enter the email that should receive order alerts) */
+        mailKey: '' };
       function slug(t) { return t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
       function ls(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k)); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} return null; }
       function h(t, c, x) { var e = D.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
       function money(n) { return 'KSh ' + n.toLocaleString('en-KE'); }
-      var cart = ls('stm_cart') || {}, cust = ls('stm_cust') || {}, step = 'cart', isOpen = false, opener = null, ref = '', lastMsg = '', lastUrl = '';
+      var cart = ls('stm_cart') || {}, cust = ls('stm_cust') || {}, step = 'cart', isOpen = false, opener = null, ref = '', lastMsg = '', lastUrl = '', sending = false, sendErr = '', doneRef = '', doneTotal = 0;
       var form = { method: cust.method || 'pickup', name: cust.name || '', phone: cust.phone || '', county: cust.county || '', addr: cust.addr || '', notes: '' }, errs = {};
+      function session() {
+        try {
+          var x = JSON.parse(localStorage.getItem('sb-' + CFG.sbRef + '-auth-token'));
+          if (x && x.access_token && x.user && (!x.expires_at || x.expires_at * 1000 > Date.now() + 30000)) return x;
+        } catch (e) {}
+        return null;
+      }
+      (function () { var u = (session() || {}).user; if (u) { var md = u.user_metadata || {}; if (!form.name) form.name = md.full_name || ''; if (!form.phone) form.phone = md.phone || ''; } })();
       var counties = [].map.call(D.querySelectorAll('.counties li'), function (l) { return l.textContent; });
 
       D.querySelectorAll('#featured .pcard:not(.cta)').forEach(function (c) {
@@ -1130,39 +1149,86 @@
         b.appendChild(x);
       }
       function message(T) {
-        var L = ['Hello Stermont Mall, I would like to place an order.', '', '*Order ' + ref + '*'];
+        var L = ['Hello Stermont Mall, I would like to place an order.', '', '*Order ' + (ref || doneRef) + '*'];
         T.L.forEach(function (i, k) { L.push((k + 1) + '. ' + i.name + ' x' + i.qty + ' = ' + money(i.total)); });
         L.push('', '*Subtotal:* ' + money(T.s), '*Delivery:* ' + (form.method === 'pickup' ? where() : 'Deliver to ' + where() + ' (fee to be confirmed)'), '', '*Name:* ' + form.name.trim(), '*Phone:* +' + normPhone(form.phone));
         if (form.notes && form.notes.trim()) L.push('*Notes:* ' + form.notes.trim());
-        L.push('*Payment:* M-Pesa', '', 'Please confirm availability and the total including delivery. Thank you!');
+        L.push('*Payment:* M-Pesa Paybill ' + CFG.paybill + ', account ' + CFG.payAcct, '', 'Please confirm availability and the total including delivery. Thank you!');
         return L.join('\n');
       }
+      function copyBtn(v) { var c = h('button', 'cp', 'Copy'); c.type = 'button'; c.onclick = function () { try { navigator.clipboard.writeText(v).then(function () { toast('Copied'); }); } catch (e) {} }; return c; }
+      function payBox(b, amount) {
+        var x = h('div', 'pay'); x.appendChild(h('h4', null, 'Payment details: M-Pesa Paybill'));
+        [['Business number', CFG.paybill, 1], ['Account number', CFG.payAcct, 1]].concat(amount ? [['Amount', money(amount), 0]] : []).forEach(function (l) {
+          var r = h('div', 'pl'); r.appendChild(h('span', null, l[0])); var v = h('span', 'pv', l[1]);
+          if (l[2]) { var w = h('span'); w.style.cssText = 'display:flex;align-items:center;gap:.5rem'; w.appendChild(v); w.appendChild(copyBtn(l[1])); r.appendChild(w); } else r.appendChild(v);
+          x.appendChild(r);
+        });
+        var ol = h('ol'); ['Open M-Pesa, then Lipa na M-Pesa, then Pay Bill.', 'Enter the business number and account number above.', 'Enter the amount and your M-Pesa PIN.'].forEach(function (t) { ol.appendChild(h('li', null, t)); });
+        x.appendChild(ol); b.appendChild(x);
+      }
       function rReview(b, f, T) {
-        box(b, 'Items', T.L.map(function (i) { return [i.qty + ' \u00d7 ' + i.name, money(i.total)]; }), 'cart');
+        box(b, 'Items', T.L.map(function (i) { return [i.qty + ' × ' + i.name, money(i.total)]; }), 'cart');
         box(b, form.method === 'pickup' ? 'Collection' : 'Delivery', [[where()]], 'details');
         box(b, 'Contact', [[form.name.trim()], ['+' + normPhone(form.phone)]], 'details');
-        box(b, 'Payment', [['Pay by M-Pesa after we confirm stock and delivery.']]);
-        row(f, 'Subtotal', money(T.s), 'big'); f.appendChild(h('p', 'note', 'Delivery fee, if any, is added when we confirm.'));
-        btn(f, 'Send order on WhatsApp', function () {
-          lastMsg = message(T); lastUrl = 'https://wa.me/' + CFG.wa + '?text=' + encodeURIComponent(lastMsg);
-          ls('stm_cust', { name: form.name.trim(), phone: form.phone, county: form.county, addr: form.addr, method: form.method });
-          window.open(lastUrl, '_blank', 'noopener'); go('done');
-        });
+        payBox(b, T.s);
+        row(f, 'Subtotal', money(T.s), 'big'); f.appendChild(h('p', 'note', 'Delivery fee, if any, is confirmed with you on WhatsApp.'));
+        if (sendErr) f.appendChild(h('div', 'oerr', sendErr));
+        var pb = btn(f, sending ? 'Placing your order...' : 'Place order', function () { place(T); }); pb.disabled = sending;
+        if (sendErr) btn(f, 'Send on WhatsApp instead', function () { window.open('https://wa.me/' + CFG.wa + '?text=' + encodeURIComponent(message(T)), '_blank', 'noopener'); }, 'btn-alt');
+      }
+      function notify(T, s) {
+        if (!CFG.mailKey) return;
+        var lines = T.L.map(function (i, k) { return (k + 1) + '. ' + i.name + ' x' + i.qty + ' = ' + money(i.total); });
+        var msg = ['Order ' + ref, '', lines.join('\n'), '', 'Subtotal: ' + money(T.s), form.method === 'pickup' ? 'Collection: ' + where() : 'Deliver to: ' + where(),
+          '', 'Customer: ' + form.name.trim(), 'Phone: +' + normPhone(form.phone), s && s.user && s.user.email ? 'Account email: ' + s.user.email : '',
+          form.notes && form.notes.trim() ? 'Notes: ' + form.notes.trim() : '', '', 'Payment: M-Pesa Paybill ' + CFG.paybill + ', account ' + CFG.payAcct,
+          'WhatsApp the customer: https://wa.me/' + normPhone(form.phone)].filter(function (l, i, a) { return l !== '' || a[i - 1] !== ''; }).join('\n');
+        try {
+          fetch('https://api.web3forms.com/submit', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ access_key: CFG.mailKey, subject: 'New order ' + ref + ' - ' + money(T.s), from_name: 'Stermont Mall website', message: msg }) }).catch(function () {});
+        } catch (e) {}
+      }
+      function place(T) {
+        if (sending) return;
+        sending = true; sendErr = ''; render();
+        var s = session(), method = form.method;
+        var row = {
+          ref: ref, user_id: s ? s.user.id : null, customer_name: form.name.trim().slice(0, 120), phone: '+' + normPhone(form.phone),
+          email: s && s.user.email ? s.user.email : null, method: method, county: method === 'delivery' ? form.county : null,
+          address: method === 'delivery' ? form.addr.trim().slice(0, 200) : null, notes: form.notes && form.notes.trim() ? form.notes.trim().slice(0, 500) : null,
+          items: T.L.map(function (i) { return { name: i.name, qty: i.qty, price: i.price, total: i.total }; }), subtotal: T.s
+        };
+        var hd = { 'Content-Type': 'application/json', apikey: CFG.sbKey, Prefer: 'return=minimal' };
+        if (s) hd.Authorization = 'Bearer ' + s.access_token;
+        var ctl = window.AbortController ? new AbortController() : null, to = setTimeout(function () { if (ctl) ctl.abort(); }, 20000);
+        fetch(CFG.sbUrl + '/rest/v1/orders', { method: 'POST', headers: hd, body: JSON.stringify(row), signal: ctl ? ctl.signal : undefined })
+          .then(function (r) { clearTimeout(to); if (!r.ok) throw new Error('status ' + r.status); })
+          .then(function () {
+            lastMsg = message(T); lastUrl = 'https://wa.me/' + CFG.wa + '?text=' + encodeURIComponent(lastMsg);
+            notify(T, s);
+            ls('stm_cust', { name: form.name.trim(), phone: form.phone, county: form.county, addr: form.addr, method: form.method });
+            doneRef = ref; doneTotal = T.s; ref = ''; cart = {}; store(); sending = false; form.notes = ''; step = 'done'; sync(); if (!isOpen) render();
+          })
+          .catch(function () {
+            clearTimeout(to); sending = false;
+            sendErr = 'We could not place your order. Check your connection and try again, or send it on WhatsApp instead.'; render();
+          });
       }
       function rDone(b, f) {
-        var c = h('div', 'center'); c.appendChild(h('div', 'done-ic', '\u2713')); c.appendChild(h('h3', null, 'Your order is ready to send')); c.appendChild(h('p', 'note', 'Reference ' + ref));
-        c.appendChild(h('p', null, 'WhatsApp should have opened with your order. Tap Send there. We will confirm stock and delivery, then share payment details.')); b.appendChild(c);
-        if (CFG.till) box(b, 'Pay by M-Pesa', [[CFG.tillLabel, CFG.till], ['Name', CFG.tillName]]);
-        var a = h('a', 'btn btn-main', 'Open WhatsApp again'); a.href = lastUrl; a.target = '_blank'; a.rel = 'noopener'; f.appendChild(a);
+        var c = h('div', 'center'); c.appendChild(h('div', 'done-ic', '✓')); c.appendChild(h('h3', null, 'Order received')); c.appendChild(h('p', 'note', 'Reference ' + doneRef));
+        c.appendChild(h('p', null, 'Thank you! Pay with M-Pesa using the details below. We will contact you on WhatsApp to confirm your order and delivery.')); b.appendChild(c);
+        payBox(b, doneTotal);
+        var a = h('a', 'btn btn-main', 'Message us on WhatsApp'); a.href = lastUrl; a.target = '_blank'; a.rel = 'noopener'; f.appendChild(a);
         btn(f, 'Copy order details', function () { try { navigator.clipboard.writeText(lastMsg).then(function () { toast('Copied'); }); } catch (e) {} }, 'btn-alt');
-        btn(f, 'Done, start a new order', function () { cart = {}; store(); ref = ''; step = 'cart'; sync(); closeDr(); }, 'btn-alt');
+        btn(f, 'Close', function () { step = 'cart'; closeDr(); }, 'btn-alt');
       }
       function render() {
         var T = totals(), b = D.getElementById('dr-b'), f = D.getElementById('dr-f'), idx = { cart: 0, details: 1, review: 2, done: 3 }[step];
         b.textContent = ''; f.textContent = '';
         D.getElementById('dr-back').hidden = (step === 'cart' || step === 'done'); D.getElementById('steps').hidden = (step === 'done');
         [].forEach.call(D.getElementById('steps').children, function (li, i) { li.className = i < idx ? 'done' : i === idx ? 'on' : ''; });
-        D.getElementById('dr-t').textContent = { cart: 'Your cart', details: 'Delivery details', review: 'Review & send', done: 'Order ready' }[step];
+        D.getElementById('dr-t').textContent = { cart: 'Your cart', details: 'Delivery details', review: 'Review & pay', done: 'Order received' }[step];
         if (!T.n && step !== 'done') step = 'cart';
         ({ cart: rCart, details: rDetails, review: rReview, done: rDone })[step](b, f, T);
       }
