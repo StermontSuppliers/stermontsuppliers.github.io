@@ -1122,7 +1122,7 @@
           fld(b, 'county', 'County', s); s.value = form.county;
           var fe = h('div', 'note'); fe.id = 'fee-note'; var showFee = function () { var f = CFG.fees[form.county]; fe.textContent = form.county ? (f ? 'Estimated delivery fee to ' + form.county + ': ' + money(f) + '. We confirm the final amount on WhatsApp.' : 'We will confirm your delivery fee to ' + form.county + ' on WhatsApp.') : ''; };
           s.addEventListener('change', showFee); showFee(); s.parentNode.appendChild(fe);
-          fld(b, 'addr', 'Town / area and street', inp('text', 'e.g. Kitale, Kenyatta Street', 'street-address'));
+          fld(b, 'addr', 'Town / area and street', inp('text', 'e.g. Nairobi CBD, Tom Mboya Street, opposite Archives', 'street-address'));
         }
         var ta = h('textarea'); ta.rows = 2; ta.placeholder = 'Anything we should know?'; fld(b, 'notes', 'Notes (optional)', ta);
         row(f, 'Subtotal', money(T.s), 'big');
