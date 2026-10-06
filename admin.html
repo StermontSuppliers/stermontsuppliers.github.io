@@ -39,6 +39,15 @@
   .empty { text-align:center; color:var(--mu); padding:2rem 1rem; }
   .modal { position:fixed; inset:0; background:rgba(20,15,40,.6); display:flex; align-items:center; justify-content:center; padding:1rem; z-index:10; }
   .modal .card { max-width:420px; width:100%; margin:0; }
+  .card.done { border-color:#86efac; box-shadow:inset 4px 0 0 var(--ok); }
+  .track { display:grid; grid-template-columns:repeat(4,1fr); gap:.3rem; margin:.7rem 0 .3rem; }
+  .stp { font-size:.72rem; text-align:center; padding:.4rem .1rem; border-radius:8px; background:#eceaf5; color:var(--mu); font-weight:700; }
+  .stp.on { background:var(--okb); color:var(--ok); }
+  .tlog { margin:.2rem 0 .4rem; }
+  .tl { margin:.7rem 0 .2rem; border-left:3px solid var(--ln); padding-left:.8rem; }
+  .tl .st { margin:.35rem 0; color:var(--mu); font-size:.92rem; } .tl .st b { display:block; font-weight:600; }
+  .tl .st small { display:block; font-size:.8rem; }
+  .tl .st.on { color:var(--ok); } .tl .st.on b { font-weight:700; }
   [hidden] { display:none !important; }
 </style>
 </head>
@@ -81,6 +90,8 @@
   var sess = null, orders = [], tab = 'pending', q = '';
   var qs = new URLSearchParams(location.search), want = { ref: qs.get('ref'), action: qs.get('action') };
   var STAGE = { packed: 'Packed 📦', out_for_delivery: 'Out for delivery 🚚', delivered: 'Delivered 🎉' };
+  var STAGES = ['packed', 'out_for_delivery', 'delivered'];
+  function fmt(d) { try { return new Date(d).toLocaleString('en-KE'); } catch (e) { return ''; } }
   var LABEL = { pending: 'Pending', paid: 'Order confirmed ✅', declined: 'Declined' };
 
   function $(id) { return D.getElementById(id); }
@@ -115,6 +126,7 @@
   });
   $('out').addEventListener('click', function () { sess = null; save(null); show('login'); });
   $('refresh').addEventListener('click', fetchOrders);
+  setInterval(function () { if (sess && !$('app').hidden && $('cf').hidden && !D.hidden) fetchOrders(); }, 30000);
 
   function fetchOrders() {
     var er = $('aerr'); er.hidden = true;
@@ -165,7 +177,8 @@
     var st = o.status || 'pending', c = h('div', 'card');
     var top = h('div', 'top'), l = h('div'); l.appendChild(h('div', 'ref', o.ref));
     l.appendChild(h('div', 'when', o.created_at ? new Date(o.created_at).toLocaleString('en-KE') : ''));
-    top.appendChild(l); top.appendChild(h('span', 'badge b-' + st, LABEL[st] || st)); c.appendChild(top);
+    if (st === 'paid' && o.stage === 'delivered') c.className += ' done';
+    top.appendChild(l); top.appendChild(h('span', 'badge b-' + st, (st === 'paid' && o.stage && STAGE[o.stage]) || LABEL[st] || st)); c.appendChild(top);
     var ul = h('ul', 'items'); (o.items || []).forEach(function (i) { var li = h('li'); li.appendChild(h('span', null, i.qty + ' × ' + i.name)); li.appendChild(h('span', null, money(i.total))); ul.appendChild(li); }); c.appendChild(ul);
     var t = h('div', 'tot'); t.appendChild(h('span', null, 'Total')); t.appendChild(h('span', null, money(o.subtotal))); c.appendChild(t);
     function meta(k, v) { if (!v) return; var m = h('div', 'meta'); m.appendChild(h('b', null, k + ': ')); m.appendChild(D.createTextNode(v)); c.appendChild(m); }
@@ -181,11 +194,17 @@
       a.appendChild(ap); a.appendChild(de);
     } else {
       if (st === 'paid') {
-        if (o.stage) meta('Progress', STAGE[o.stage]);
-        [['packed', 'Mark packed'], ['out_for_delivery', 'Out for delivery'], ['delivered', 'Delivered']].forEach(function (x) {
-          if (o.stage === x[0]) return;
+        var cur = STAGES.indexOf(o.stage) + 1, log = o.stage_log || {}, tr = h('div', 'track'), tg = h('div', 'tlog');
+        [['paid', 'Confirmed'], ['packed', 'Packed'], ['out_for_delivery', 'On the way'], ['delivered', 'Delivered']].forEach(function (x, i) {
+          tr.appendChild(h('div', 'stp' + (i <= cur ? ' on' : ''), (i <= cur ? '\u2713 ' : '') + x[1]));
+          var e = log[x[0]]; if (e) tg.appendChild(h('div', 'meta', x[1] + ': ' + (e.by || '') + (e.at ? ' \u00b7 ' + fmt(e.at) : '')));
+        });
+        c.appendChild(tr); c.appendChild(tg);
+        [['packed', 'Mark packed'], ['out_for_delivery', 'Out for delivery'], ['delivered', 'Delivered']].forEach(function (x, i) {
+          if (i < cur) return;
           var sb = h('button', 'btn alt sm', x[1]); sb.type = 'button'; sb.onclick = function () { confirmAct(o, x[0]); }; a.appendChild(sb);
         });
+        if (cur >= 1) { var un = h('button', 'btn alt sm', 'Undo last step'); un.type = 'button'; un.onclick = function () { confirmAct(o, 'undo'); }; a.appendChild(un); }
       }
       var rv = h('button', 'btn alt sm', 'Move back to pending'); rv.type = 'button'; rv.onclick = function () { confirmAct(o, 'pending'); }; a.appendChild(rv);
     }
@@ -194,7 +213,7 @@
 
   var NEW = { approve: { status: 'paid', stage: null }, decline: { status: 'declined', stage: null }, pending: { status: 'pending', stage: null },
     packed: { stage: 'packed' }, out_for_delivery: { stage: 'out_for_delivery' }, delivered: { stage: 'delivered' } };
-  var TITLE = { approve: 'Confirm this order?', decline: 'Decline this order?', pending: 'Move back to pending?', packed: 'Mark as packed?', out_for_delivery: 'Mark as out for delivery?', delivered: 'Mark as delivered?' };
+  var TITLE = { approve: 'Confirm this order?', decline: 'Decline this order?', pending: 'Move back to pending?', packed: 'Mark as packed?', out_for_delivery: 'Mark as out for delivery?', delivered: 'Mark as delivered?', undo: 'Undo the last shipping step?' };
   function confirmAct(o, action) {
     $('cf-t').textContent = TITLE[action];
     var b = $('cf-b'); b.textContent = '';
@@ -206,7 +225,12 @@
     $('cf').hidden = false;
     y.onclick = function () {
       y.disabled = true; y.textContent = 'Saving...';
-      var patch = Object.assign({}, NEW[action]);
+      var hasLog = orders.some(function (x) { return 'stage_log' in x; }), log = Object.assign({}, o.stage_log || {}), patch;
+      if (action === 'undo') {
+        var ci = STAGES.indexOf(o.stage); delete log[o.stage]; patch = { stage: ci > 0 ? STAGES[ci - 1] : null }; if (hasLog) patch.stage_log = log;
+      } else if (STAGES.indexOf(action) > -1) {
+        patch = { stage: action }; log[action] = { by: sess.email || null, at: new Date().toISOString() }; if (hasLog) patch.stage_log = log;
+      } else { patch = Object.assign({}, NEW[action]); if (hasLog) patch.stage_log = null; }
       if (patch.status) { patch.handled_by = action === 'pending' ? null : (sess.email || null); patch.handled_at = action === 'pending' ? null : new Date().toISOString(); }
       ready().then(function () { return api('/rest/v1/orders?ref=eq.' + encodeURIComponent(o.ref) + '&select=ref,status', { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: patch }); })
         .then(function (r) { if (!r.ok) throw 0; return r.json(); })
