@@ -149,6 +149,23 @@
     .mgrid .pcard h3{font-size:.9rem}
     section h3.sub{font-size:1.05rem;margin:1rem 0 .6rem;border-left:4px solid var(--green);padding-left:.6rem}
     @media(min-width:760px){.mgrid{grid-template-columns:repeat(4,1fr)}}
+    .js .range>div:not(.open) ul{display:none}
+    .js .mcat:not(.open) .mgrid{display:none}
+    .range h3,.mcat>h3{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:.5rem;user-select:none}
+    .range h3::after,.mcat>h3::after{content:"+";font-weight:800;font-size:1.3rem;color:var(--orange)}
+    .range>div.open h3::after,.mcat.open>h3::after{content:"\2212"}
+    .range h3{margin-bottom:0}.range>div.open h3{margin-bottom:.5rem}
+    .cnt{margin-left:auto;margin-right:.4rem;font-size:.8rem;font-weight:700;background:var(--gold);color:#2a0e5c;border-radius:999px;padding:.05rem .55rem}
+    .range li{cursor:pointer}.range li:hover{color:var(--orange)}
+    .mgrid .pcard .img img{cursor:pointer}
+    .om{position:fixed;inset:0;z-index:50;display:none;background:rgba(0,0,0,.55);align-items:flex-end;justify-content:center}
+    .om.on{display:flex}
+    .om-card{background:var(--paper);color:var(--ink);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:1rem 1rem calc(1rem + env(safe-area-inset-bottom,0px));max-height:94%;overflow:auto}
+    .om-card img{display:block;width:100%;max-width:340px;aspect-ratio:1;object-fit:contain;background:#fff;border-radius:14px;margin:0 auto .75rem}
+    .om-card h3{font-size:1.15rem;line-height:1.3}
+    .om-card .price{margin:.3rem 0}.om-card .note{margin-bottom:.6rem}
+    .om-x{float:right;border:0;background:var(--panel);color:var(--ink);width:36px;height:36px;border-radius:50%;font-size:1.3rem;cursor:pointer}
+    .om-card .btn{display:block;text-align:center;width:100%;margin-top:.5rem;border:0;font:inherit;font-weight:700;cursor:pointer}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn,.dots i{transition:none}}
   </style>
 </head>
@@ -592,11 +609,15 @@
           <div>
             <h3>Music &amp; Entertainment</h3>
             <ul>
-              <li>Guitars, guitar amplifiers and keyboards</li>
-              <li>DJ and PA equipment</li>
-              <li>Snake cables</li>
-              <li>Karaoke machines</li>
+              <li>Guitars</li>
+              <li>Guitar amplifiers</li>
+              <li>Keyboards and MIDI</li>
+              <li>Drums and electric drums</li>
               <li>Studio microphones</li>
+              <li>Mixers and audio interfaces</li>
+              <li>Speakers and monitors</li>
+              <li>Snake cables</li>
+              <li>Stands</li>
             </ul>
           </div>
           <div>
@@ -746,6 +767,7 @@
           featured.classList.remove('hidden');
           music.classList.remove('hidden');
           music.querySelectorAll('.hidden').forEach(function (e) { e.classList.remove('hidden'); });
+          document.querySelectorAll('.mcat.open,.range>div.open').forEach(function (e) { e.classList.remove('open'); });
           cats.forEach(function (c) {
             c.classList.remove('hidden');
             c.querySelectorAll('li').forEach(function (li) { li.classList.remove('hidden'); });
@@ -753,7 +775,7 @@
           msg.textContent = '';
           return;
         }
-        var words = q.split(/\s+/);
+        var words = q.split(/\s+/).filter(function (w) { return w !== 'and' && w !== '&'; }).map(function (w) { return w.replace(/s$/, ''); });
         function matches(text) {
           text = text.toLowerCase();
           return words.every(function (w) { return text.indexOf(w) !== -1; });
@@ -764,7 +786,7 @@
         music.querySelectorAll('.mcat').forEach(function (g) {
           var gm = matches(g.querySelector('h3').textContent), n = 0;
           g.querySelectorAll('.pcard').forEach(function (c) { var ok = gm || matches(c.textContent); c.classList.toggle('hidden', !ok); if (ok) n++; });
-          g.classList.toggle('hidden', n === 0); mAny += n;
+          g.classList.toggle('hidden', n === 0); if (n) g.classList.add('open'); mAny += n;
         });
         music.classList.toggle('hidden', mAny === 0); found += mAny;
         cats.forEach(function (c) {
@@ -775,7 +797,7 @@
             li.classList.toggle('hidden', !ok);
             if (ok) any++;
           });
-          c.classList.toggle('hidden', any === 0);
+          c.classList.toggle('hidden', any === 0); if (any) c.classList.add('open');
           found += any;
         });
         if (found) {
@@ -830,6 +852,75 @@
         }, { rootMargin: '-45% 0px -50% 0px' });
         ['top', 'range', 'order', 'delivery', 'contact'].forEach(function (id) { io.observe(document.getElementById(id)); });
       }
+    })();
+  </script>
+  <div class="om" id="om" role="dialog" aria-modal="true" aria-labelledby="om-t">
+    <div class="om-card">
+      <button class="om-x" id="om-x" aria-label="Close" type="button">&times;</button>
+      <img id="om-i" alt="">
+      <h3 id="om-t"></h3>
+      <p class="price" id="om-p"></p>
+      <p class="note" id="om-d"></p>
+      <a class="btn btn-main" id="om-wa" href="#" target="_blank" rel="noopener">Send order on WhatsApp</a>
+      <button class="btn btn-alt" id="om-sh" type="button" hidden>Share photo &amp; details on WhatsApp</button>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var D = document, root = D.documentElement; root.classList.add('js');
+      var NUM = '254748888230';
+      function slug(t) { return t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+      function tog(el) { el.classList.toggle('open'); }
+      function key(h, el) { h.setAttribute('role', 'button'); h.tabIndex = 0; h.addEventListener('click', function () { tog(el); });
+        h.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog(el); } }); }
+      D.querySelectorAll('.range > div').forEach(function (c) { key(c.querySelector('h3'), c); });
+      D.querySelectorAll('#music-gear .mcat').forEach(function (g) {
+        var h = g.querySelector('h3'); g.setAttribute('data-cat', h.textContent);
+        var n = g.querySelectorAll('.pcard').length, sp = D.createElement('span'); sp.className = 'cnt'; sp.textContent = n; h.appendChild(sp);
+        key(h, g);
+      });
+      var q = D.getElementById('q');
+      D.querySelectorAll('.range li').forEach(function (li) {
+        li.addEventListener('click', function () {
+          q.value = li.textContent; q.dispatchEvent(new Event('input'));
+          var m = D.getElementById('music-gear');
+          (m.classList.contains('hidden') ? D.getElementById('range') : m).scrollIntoView({ behavior: 'smooth' });
+        });
+      });
+      var om = D.getElementById('om'), oi = D.getElementById('om-i'), ot = D.getElementById('om-t'), op = D.getElementById('om-p'),
+          od = D.getElementById('om-d'), ow = D.getElementById('om-wa'), os = D.getElementById('om-sh'), cur = null;
+      function close() { om.classList.remove('on'); D.body.style.overflow = ''; }
+      function openM(c) {
+        cur = c;
+        var name = c.querySelector('h3').textContent, price = c.querySelector('.price').textContent, img = c.querySelector('img'),
+            cat = c.closest('.mcat').getAttribute('data-cat'), id = c.id.replace(/^p-/, ''),
+            link = location.origin + location.pathname + '?item=' + id,
+            msg = 'Hello Stermont Mall, I would like to order:\n' + name + '\nPrice: ' + price + '\n' + link;
+        oi.src = img.src; oi.alt = name; ot.textContent = name; op.textContent = price;
+        od.textContent = cat + '. Photo is for reference, ask us for stock and specs. Delivery to all 47 counties, pay by M-Pesa.';
+        ow.href = 'https://wa.me/' + NUM + '?text=' + encodeURIComponent(msg);
+        c._msg = msg; c._id = id;
+        os.hidden = !(navigator.share && navigator.canShare && img.src.indexOf('data:image/jpeg') === 0);
+        om.classList.add('on'); D.body.style.overflow = 'hidden';
+      }
+      os.addEventListener('click', function () {
+        if (!cur) return;
+        fetch(oi.src).then(function (r) { return r.blob(); }).then(function (b) {
+          var f = new File([b], cur._id + '.jpg', { type: 'image/jpeg' });
+          if (navigator.canShare({ files: [f] })) return navigator.share({ files: [f], text: cur._msg });
+          return navigator.share({ text: cur._msg });
+        }).catch(function () {});
+      });
+      D.querySelectorAll('#music-gear .pcard').forEach(function (c) {
+        c.id = 'p-' + slug(c.querySelector('h3').textContent);
+        c.querySelector('.btn').addEventListener('click', function (e) { e.preventDefault(); openM(c); });
+        c.querySelector('img').addEventListener('click', function () { openM(c); });
+      });
+      D.getElementById('om-x').addEventListener('click', close);
+      om.addEventListener('click', function (e) { if (e.target === om) close(); });
+      D.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+      var it = new URLSearchParams(location.search).get('item');
+      if (it) { var c = D.getElementById('p-' + it); if (c) { c.closest('.mcat').classList.add('open'); c.scrollIntoView(); openM(c); } }
     })();
   </script>
 </body>
