@@ -80,7 +80,7 @@
   var D = document, SB = 'https://oewvtbnmyombbtggamor.supabase.co', KEY = 'sb_publishable_CQiZr-INuot9C4fbdJDz1Q_4OiWEQL7', SK = 'stm_admin_session';
   var sess = null, orders = [], tab = 'pending', q = '';
   var qs = new URLSearchParams(location.search), want = { ref: qs.get('ref'), action: qs.get('action') };
-  var LABEL = { pending: 'Pending', paid: 'Paid', declined: 'Declined' };
+  var LABEL = { pending: 'Pending', paid: 'Order confirmed ✅', declined: 'Declined' };
 
   function $(id) { return D.getElementById(id); }
   function h(t, c, x) { var e = D.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
@@ -139,7 +139,7 @@
   function count(s) { return orders.filter(function (o) { return (o.status || 'pending') === s; }).length; }
   function renderTabs() {
     var t = $('tabs'); t.textContent = '';
-    [['pending', 'Pending'], ['paid', 'Paid orders'], ['declined', 'Declined'], ['all', 'All']].forEach(function (x) {
+    [['pending', 'Pending'], ['paid', 'Confirmed ✅'], ['declined', 'Declined'], ['all', 'All']].forEach(function (x) {
       var b = h('button', tab === x[0] ? 'on' : '', x[1] + ' (' + (x[0] === 'all' ? orders.length : count(x[0])) + ')'); b.type = 'button';
       b.onclick = function () { tab = x[0]; render(); }; t.appendChild(b);
     });
@@ -173,7 +173,7 @@
     var a = h('div', 'acts'), ph = String(o.phone || '').replace(/\D/g, '');
     if (ph) { var w = h('a', 'btn alt sm', 'WhatsApp customer'); w.href = 'https://wa.me/' + ph; w.target = '_blank'; w.rel = 'noopener'; a.appendChild(w); }
     if (st === 'pending') {
-      var ap = h('button', 'btn ok', 'Approve (paid)'); ap.type = 'button'; ap.onclick = function () { confirmAct(o, 'approve'); };
+      var ap = h('button', 'btn ok', 'Approve ✅ (paid)'); ap.type = 'button'; ap.onclick = function () { confirmAct(o, 'approve'); };
       var de = h('button', 'btn no', 'Decline (not paid)'); de.type = 'button'; de.onclick = function () { confirmAct(o, 'decline'); };
       a.appendChild(ap); a.appendChild(de);
     } else {
@@ -183,7 +183,7 @@
   }
 
   var NEW = { approve: 'paid', decline: 'declined', pending: 'pending' };
-  var TITLE = { approve: 'Approve this order?', decline: 'Decline this order?', pending: 'Move back to pending?' };
+  var TITLE = { approve: 'Confirm this order?', decline: 'Decline this order?', pending: 'Move back to pending?' };
   function confirmAct(o, action) {
     $('cf-t').textContent = TITLE[action];
     var b = $('cf-b'); b.textContent = '';
