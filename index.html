@@ -209,6 +209,10 @@
     .ci img{width:64px;height:64px;border-radius:12px;object-fit:contain;background:#fff;flex:none}
     .cm{flex:1;min-width:0}.cn{font-weight:700;font-size:.95rem;line-height:1.3}.cu{color:var(--muted);font-size:.85rem;margin:.1rem 0 .4rem}
     .cr{text-align:right;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end}
+    .rall{display:flex;justify-content:flex-end;padding:.2rem 0 .5rem}
+    .ci .rm{border:1.5px solid var(--line);border-radius:999px;padding:.35rem .85rem;min-height:36px;text-decoration:none;color:var(--ink);font-weight:600;font-size:.85rem}
+    .rall .rm.armed{background:#d92d20;color:#fff}
+    .rall .rm{border:1.5px solid #d92d20;border-radius:999px;padding:.45rem 1rem;min-height:40px;text-decoration:none;color:#d92d20;font-weight:700;font-size:.9rem}
     .ct{font-weight:800}.rm{border:0;background:none;color:var(--muted);font:inherit;font-size:.8rem;text-decoration:underline;cursor:pointer}
     .qty{display:inline-flex;align-items:center;border:1.5px solid var(--line);border-radius:999px}
     .qty button{border:0;background:none;color:var(--ink);width:34px;height:34px;font-size:1.2rem;cursor:pointer;border-radius:50%}
@@ -1143,12 +1147,20 @@
           var e = h('div', 'empty'); e.appendChild(h('div', 'em', '\uD83D\uDED2')); e.appendChild(h('h3', null, 'Your cart is empty')); e.appendChild(h('p', 'note', 'Add products and check out in under a minute.'));
           btn(e, 'Browse products', function () { closeDr(); D.getElementById('music-gear').scrollIntoView({ behavior: 'smooth' }); }); b.appendChild(e); return;
         }
+        var ra = h('div', 'rall'); var rb = h('button', 'rm', '\u2715 Remove all (' + T.n + (T.n === 1 ? ' item)' : ' items)')); rb.type = 'button';
+        var armed = false, rt0;
+        rb.onclick = function () {
+          if (armed) { clearTimeout(rt0); cart = {}; store(); sync(); toast('Cart cleared'); return; }
+          armed = true; rb.textContent = 'Tap again to confirm'; rb.classList.add('armed');
+          rt0 = setTimeout(function () { armed = false; rb.classList.remove('armed'); rb.textContent = '\u2715 Remove all (' + T.n + (T.n === 1 ? ' item)' : ' items)'); }, 4000);
+        };
+        ra.appendChild(rb); b.appendChild(ra);
         T.L.forEach(function (i) {
           var r = h('div', 'ci'), im = h('img'); im.src = i.img; im.alt = ''; im.width = 64; im.height = 64; r.appendChild(im);
           var m = h('div', 'cm'); m.appendChild(h('div', 'cn', i.name)); m.appendChild(h('div', 'cu', money(i.price) + ' each'));
           var q = h('div', 'qty'); q.appendChild(qb('\u2212', function () { setQ(i.id, i.qty - 1); }, 'Decrease quantity')); q.appendChild(h('span', null, i.qty)); q.appendChild(qb('+', function () { setQ(i.id, i.qty + 1); }, 'Increase quantity')); m.appendChild(q); r.appendChild(m);
           var rt = h('div', 'cr'); rt.appendChild(h('div', 'ct', money(i.total)));
-          var x = h('button', 'rm', 'Remove'); x.type = 'button'; x.onclick = function () { setQ(i.id, 0); }; rt.appendChild(x); r.appendChild(rt); b.appendChild(r);
+          var x = h('button', 'rm', '\u2715 Remove'); x.type = 'button'; x.setAttribute('aria-label', 'Remove ' + i.name); x.onclick = function () { setQ(i.id, 0); }; rt.appendChild(x); r.appendChild(rt); b.appendChild(r);
         });
         row(f, 'Subtotal (' + T.n + (T.n === 1 ? ' item)' : ' items)'), money(T.s), 'big');
         f.appendChild(h('p', 'note', 'Delivery fee, if any, is confirmed on WhatsApp before you pay.'));
