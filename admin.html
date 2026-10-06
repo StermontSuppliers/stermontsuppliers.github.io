@@ -100,7 +100,7 @@
   </div>
 </div>
 
-<script src="receipt.js?v=5"></script>
+<script src="receipt.js?v=6"></script>
 <script>
 (function () {
   var D = document, SB = 'https://oewvtbnmyombbtggamor.supabase.co', KEY = 'sb_publishable_CQiZr-INuot9C4fbdJDz1Q_4OiWEQL7', SK = 'stm_admin_session';
@@ -194,6 +194,12 @@
   function sendReceipt(o) {
     return STM_RECEIPT.email(o).then(function () { note('Receipt emailed to ' + o.email + '.', true); })
       .catch(function (e) { note('Receipt not emailed: ' + e.message, false); });
+  }
+  function paid0(o) { return Object.assign({}, o, { status: 'paid' }); }
+  function sendStatus(o, stage) {
+    if (!o.email) { note('No email on this order, so the customer was not notified.', false); return Promise.resolve(); }
+    return STM_RECEIPT.notify(o, stage).then(function () { note('Customer notified by email (' + o.email + ').', true); })
+      .catch(function (e) { note('Customer not emailed: ' + e.message, false); });
   }
   function card(o) {
     var st = o.status || 'pending', c = h('div', 'card');
@@ -295,6 +301,8 @@
             var paid = Object.assign({}, o, { status: 'paid', handled_at: new Date().toISOString(), pay_code: code, pay_amount: amt });
             if (paid.email) sendReceipt(paid); else note('Order confirmed. No email on this order, so use "Receipt on WhatsApp" instead.', true);
           }
+          if (action === 'approve' && o.email) sendStatus(paid0(o), 'confirmed');
+          if (action === 'packed' || action === 'out_for_delivery' || action === 'delivered') sendStatus(o, action);
           if (action === 'setcode') note('Payment code saved. You can now send the receipt.', true);
           return done;
         })

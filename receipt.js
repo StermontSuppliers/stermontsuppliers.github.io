@@ -6,7 +6,12 @@
   'use strict';
 
   /* ---- 1. Fill these in once (EmailJS: https://www.emailjs.com) ---- */
-  var EMAILJS = { serviceId: '', templateId: '', publicKey: '' };
+  var EMAILJS = {
+    serviceId: 'service_fdp81n2', // e.g. 'service_abc123'   (EmailJS > Email Services)
+    templateId: '',         // receipt template        (EmailJS > Email Templates)
+    statusTemplateId: '',   // order-status template   (Confirmed / Packed / On the way / Delivered)
+    publicKey: ''           // EmailJS > Account > Public Key
+  };
 
   /* ---- 2. Business details printed on the receipt ---- */
   var BIZ = {
@@ -470,5 +475,38 @@
     }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error('EmailJS: ' + (t || r.status)); }); });
   }
 
-  window.STM_RECEIPT = { pdf: pdf, email: email, text: text };
+  /* ---- Order status notification emails (Confirmed, Packed, On the way, Delivered) ---- */
+  var STATUS_MSG = {
+    confirmed: { label: 'Order confirmed', head: 'Order confirmed! \uD83C\uDF89 We got your payment',
+      msg: 'Great news: your M-Pesa payment has landed and your order is officially confirmed. Our team is already on it. Sit back, relax and start imagining how good your new items will look. We will keep you posted at every step.' },
+    packed: { label: 'Packed', head: 'Packed with care \uD83D\uDCE6',
+      msg: 'Your order has been checked, double-checked and snugly packed. Every item passed our inspection with flying colours. ' },
+    out_for_delivery: { label: 'On the way', head: 'Your order is on the move! \uD83D\uDE9A\uD83D\uDCA8',
+      msg: 'Your package has left our store and is heading your way right now. Please keep your phone close and switched on so our rider can reach you. Get ready to unwrap something good!' },
+    delivered: { label: 'Delivered', head: 'Delivered! Enjoy \uD83C\uDF81\u2728',
+      msg: 'Your order has arrived. Thank you for choosing Stermont Mall, it means the world to us. We hope you love every bit of it. Something not right? Just reply to this email or call us and we will make it right. See you again soon!' }
+  };
+  function notify(o, stage) {
+    var m = STATUS_MSG[stage];
+    if (!m) return Promise.reject(new Error('Unknown order step'));
+    if (!EMAILJS.serviceId || !EMAILJS.statusTemplateId || !EMAILJS.publicKey) return Promise.reject(new Error('Email is not set up yet'));
+    if (!o.email) return Promise.reject(new Error('This order has no customer email.'));
+    var pickup = o.method !== 'delivery', msg = m.msg;
+    if (stage === 'packed') msg += pickup ? 'It is waiting for you at our store, ready to collect whenever you are.' : 'Next stop: our rider, who will bring it straight to your door.';
+    if (pickup && stage === 'out_for_delivery') { msg = 'Your order is ready and waiting for you at our store. Come pick up your goodies whenever you like!'; }
+    if (pickup && stage === 'delivered') msg = 'Your order has been collected. Thank you for choosing Stermont Mall, we hope you love it! Need anything? Just reply to this email. See you again soon!';
+    var params = {
+      to_email: o.email, to_name: o.customer_name || 'Customer', business: BIZ.name, phone: BIZ.phone, web: BIZ.web,
+      order_ref: o.ref, status: m.label, subject: BIZ.name + ': ' + m.label + ' (' + o.ref + ')',
+      headline: m.head, message: msg, items: lines(o).join('\n'), total: money(o.subtotal),
+      delivery: o.method === 'delivery' ? [o.address, o.county].filter(Boolean).join(', ') : 'Store pickup',
+      date: when(new Date())
+    };
+    return fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ service_id: EMAILJS.serviceId, template_id: EMAILJS.statusTemplateId, user_id: EMAILJS.publicKey, template_params: params })
+    }).then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error('EmailJS: ' + (t || r.status)); }); });
+  }
+
+  window.STM_RECEIPT = { pdf: pdf, email: email, text: text, notify: notify };
 })();
