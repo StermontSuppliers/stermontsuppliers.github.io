@@ -69,6 +69,7 @@
   </section>
 
   <section id="app" hidden>
+    <p style="margin:0 0 .8rem"><button class="btn alt sm" id="sg-open" type="button">✍️ My signature</button> <span class="meta" id="sg-st"></span></p>
     <div class="tabs" id="tabs"></div>
     <input id="q" type="search" placeholder="Search reference, name or phone" style="margin-bottom:.8rem">
     <div id="aerr" class="err" hidden></div>
@@ -84,7 +85,22 @@
   </div>
 </div>
 
-<script src="receipt.js?v=3"></script>
+<div class="modal" id="sg" hidden>
+  <div class="card">
+    <h2 style="margin-top:0">Sign here</h2>
+    <p class="meta" style="margin-top:-.4rem">Draw your signature with your finger or mouse. It is printed on every receipt you issue.</p>
+    <canvas id="sg-c" style="width:100%;height:190px;border:2px dashed var(--ln);border-radius:12px;background:#fff;touch-action:none;display:block"></canvas>
+    <div id="sg-e" class="err" hidden>Please sign in the box first.</div>
+    <div class="acts">
+      <button class="btn alt" id="sg-clr" type="button">Clear</button>
+      <button class="btn alt" id="sg-x" type="button">Cancel</button>
+      <button class="btn" id="sg-ok" type="button">Save signature</button>
+    </div>
+    <div id="sg-dl" hidden style="margin-top:.8rem"><p class="meta">Saved ✅ on this phone. For customers to see it on their own downloaded receipts, download the file and upload it to your site as <b>signature.png</b>.</p><a class="btn alt sm" id="sg-a" download="signature.png">Download signature.png</a></div>
+  </div>
+</div>
+
+<script src="receipt.js?v=5"></script>
 <script>
 (function () {
   var D = document, SB = 'https://oewvtbnmyombbtggamor.supabase.co', KEY = 'sb_publishable_CQiZr-INuot9C4fbdJDz1Q_4OiWEQL7', SK = 'stm_admin_session';
@@ -334,6 +350,42 @@
   sess = load();
   if (sess) start(); else show('login');
   setInterval(function () { if (sess && !$('app').hidden && $('cf').hidden) fetchOrders(); }, 60000);
+
+  /* ---- signature pad ---- */
+  (function () {
+    var cv = $('sg-c'), ctx, drawing = false, inked = false, KEYS = 'stm_signature';
+    function stored() { try { return localStorage.getItem(KEYS) || ''; } catch (e) { return ''; } }
+    function status() { $('sg-st').textContent = stored() ? 'Signature saved ✓' : 'Not signed yet'; }
+    function setup() {
+      var r = cv.getBoundingClientRect(), k = window.devicePixelRatio || 1;
+      cv.width = Math.round(r.width * k); cv.height = Math.round(r.height * k);
+      ctx = cv.getContext('2d'); ctx.scale(k, k); ctx.lineWidth = 2.6; ctx.lineCap = ctx.lineJoin = 'round'; ctx.strokeStyle = '#14246b';
+      inked = false;
+    }
+    function pt(e) { var r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+    cv.addEventListener('pointerdown', function (e) { e.preventDefault(); drawing = true; inked = true; $('sg-e').hidden = true; var p = pt(e); try { cv.setPointerCapture(e.pointerId); } catch (x) {} ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + 0.1, p.y + 0.1); ctx.stroke(); });
+    cv.addEventListener('pointermove', function (e) { if (!drawing) return; e.preventDefault(); var p = pt(e); ctx.lineTo(p.x, p.y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(p.x, p.y); });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (n) { cv.addEventListener(n, function () { drawing = false; }); });
+    function open() { $('sg').hidden = false; $('sg-dl').hidden = true; $('sg-e').hidden = true; setup(); }
+    function trimmed() {   // crop the transparent margins around the ink
+      var w = cv.width, h = cv.height, d = ctx.getImageData(0, 0, w, h).data, x0 = w, y0 = h, x1 = 0, y1 = 0;
+      for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) if (d[(y * w + x) * 4 + 3] > 20) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+      if (x1 <= x0 || y1 <= y0) return null;
+      var pad = 6, c = D.createElement('canvas'); x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(w, x1 + pad); y1 = Math.min(h, y1 + pad);
+      c.width = x1 - x0; c.height = y1 - y0; c.getContext('2d').drawImage(cv, x0, y0, c.width, c.height, 0, 0, c.width, c.height);
+      return c.toDataURL('image/png');
+    }
+    $('sg-open').onclick = open;
+    $('sg-clr').onclick = setup;
+    $('sg-x').onclick = function () { $('sg').hidden = true; };
+    $('sg-ok').onclick = function () {
+      var url = inked ? trimmed() : null;
+      if (!url) { $('sg-e').hidden = false; return; }
+      try { localStorage.setItem(KEYS, url); } catch (e) { $('sg-e').textContent = 'Could not save on this browser.'; $('sg-e').hidden = false; return; }
+      $('sg-a').href = url; $('sg-dl').hidden = false; status();
+    };
+    status();
+  })();
 })();
 </script>
 </body>
