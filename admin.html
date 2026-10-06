@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#7c3aed">
+<title>Stermont Mall | Orders (Customer care)</title>
+<style>
+  :root { --p:#7c3aed; --pd:#5b21b6; --bg:#f6f4fb; --card:#fff; --tx:#1c1830; --mu:#6b6785; --ln:#e6e2f2; --ok:#15803d; --okb:#dcfce7; --no:#b91c1c; --nob:#fee2e2; --wa:#f59e0b; --wab:#fef3c7; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--tx); }
+  header { background:var(--p); color:#fff; padding:.8rem 1rem; display:flex; align-items:center; justify-content:space-between; gap:.5rem; position:sticky; top:0; z-index:5; }
+  header h1 { font-size:1.05rem; margin:0; }
+  header button { background:rgba(255,255,255,.18); color:#fff; border:0; border-radius:8px; padding:.45rem .8rem; font:inherit; font-size:.9rem; }
+  main { max-width:760px; margin:0 auto; padding:1rem; }
+  .card { background:var(--card); border:1px solid var(--ln); border-radius:14px; padding:1rem; margin-bottom:.9rem; }
+  label { display:block; font-weight:600; margin:.7rem 0 .25rem; }
+  input[type=email], input[type=password], input[type=search] { width:100%; padding:.7rem .8rem; border:1px solid var(--ln); border-radius:10px; font:inherit; background:#fff; }
+  .btn { display:inline-block; border:0; border-radius:10px; padding:.7rem 1rem; font:inherit; font-weight:600; background:var(--p); color:#fff; cursor:pointer; text-decoration:none; text-align:center; }
+  .btn:disabled { opacity:.55; }
+  .btn.ok { background:var(--ok); } .btn.no { background:var(--no); } .btn.alt { background:#eceaf5; color:var(--tx); }
+  .btn.sm { padding:.45rem .7rem; font-size:.88rem; }
+  .err { background:var(--nob); color:var(--no); padding:.6rem .8rem; border-radius:10px; margin:.7rem 0; }
+  .tabs { display:flex; gap:.4rem; overflow-x:auto; margin-bottom:.8rem; padding-bottom:.2rem; }
+  .tabs button { border:1px solid var(--ln); background:#fff; border-radius:999px; padding:.45rem .9rem; font:inherit; font-size:.92rem; white-space:nowrap; cursor:pointer; }
+  .tabs button.on { background:var(--p); border-color:var(--p); color:#fff; }
+  .top { display:flex; justify-content:space-between; gap:.5rem; align-items:flex-start; }
+  .ref { font-weight:700; font-size:1.05rem; }
+  .when { color:var(--mu); font-size:.85rem; }
+  .badge { font-size:.78rem; font-weight:700; padding:.2rem .6rem; border-radius:999px; text-transform:uppercase; letter-spacing:.03em; }
+  .b-pending { background:var(--wab); color:#92400e; } .b-paid { background:var(--okb); color:var(--ok); } .b-declined { background:var(--nob); color:var(--no); }
+  .items { margin:.6rem 0; padding:0; list-style:none; border-top:1px solid var(--ln); }
+  .items li { display:flex; justify-content:space-between; gap:.8rem; padding:.35rem 0; border-bottom:1px solid var(--ln); }
+  .tot { display:flex; justify-content:space-between; font-weight:700; font-size:1.05rem; margin:.4rem 0; }
+  .meta { color:var(--mu); font-size:.92rem; margin:.15rem 0; } .meta b { color:var(--tx); }
+  .acts { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.8rem; }
+  .acts .btn { flex:1 1 130px; }
+  .empty { text-align:center; color:var(--mu); padding:2rem 1rem; }
+  .modal { position:fixed; inset:0; background:rgba(20,15,40,.6); display:flex; align-items:center; justify-content:center; padding:1rem; z-index:10; }
+  .modal .card { max-width:420px; width:100%; margin:0; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Stermont Mall · Orders</h1>
+  <span><button id="refresh" hidden>Refresh</button> <button id="out" hidden>Sign out</button></span>
+</header>
+<main>
+  <section id="login" class="card" hidden>
+    <h2 style="margin-top:0">Customer care sign-in</h2>
+    <p class="meta">Only approved staff can view or change orders.</p>
+    <form id="lf">
+      <label for="em">Email</label><input id="em" type="email" autocomplete="username" required>
+      <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required>
+      <div id="lerr" class="err" hidden></div>
+      <p><button class="btn" id="lb" type="submit" style="width:100%">Sign in</button></p>
+    </form>
+  </section>
+
+  <section id="app" hidden>
+    <div class="tabs" id="tabs"></div>
+    <input id="q" type="search" placeholder="Search reference, name or phone" style="margin-bottom:.8rem">
+    <div id="aerr" class="err" hidden></div>
+    <div id="list"></div>
+  </section>
+</main>
+
+<div class="modal" id="cf" hidden>
+  <div class="card">
+    <h2 id="cf-t" style="margin-top:0"></h2>
+    <div id="cf-b"></div>
+    <div class="acts"><button class="btn alt" id="cf-n" type="button">Cancel</button><button class="btn" id="cf-y" type="button">Confirm</button></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var D = document, SB = 'https://oewvtbnmyombbtggamor.supabase.co', KEY = 'sb_publishable_CQiZr-INuot9C4fbdJDz1Q_4OiWEQL7', SK = 'stm_admin_session';
+  var sess = null, orders = [], tab = 'pending', q = '';
+  var qs = new URLSearchParams(location.search), want = { ref: qs.get('ref'), action: qs.get('action') };
+  var LABEL = { pending: 'Pending', paid: 'Paid', declined: 'Declined' };
+
+  function $(id) { return D.getElementById(id); }
+  function h(t, c, x) { var e = D.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
+  function money(n) { return 'KSh ' + Number(n || 0).toLocaleString('en-KE'); }
+  function load() { try { return JSON.parse(localStorage.getItem(SK)); } catch (e) { return null; } }
+  function save(s) { try { if (s) localStorage.setItem(SK, JSON.stringify(s)); else localStorage.removeItem(SK); } catch (e) {} }
+
+  function api(path, opt) {
+    opt = opt || {};
+    var hd = { apikey: KEY, 'Content-Type': 'application/json' };
+    if (sess) hd.Authorization = 'Bearer ' + sess.access_token;
+    return fetch(SB + path, { method: opt.method || 'GET', headers: Object.assign(hd, opt.headers || {}), body: opt.body ? JSON.stringify(opt.body) : undefined });
+  }
+  function setSession(j) { sess = { access_token: j.access_token, refresh_token: j.refresh_token, email: (j.user && j.user.email) || (sess && sess.email) || '', exp: Date.now() + (j.expires_in || 3600) * 1000 - 60000 }; save(sess); }
+  function refresh() {
+    if (!sess || !sess.refresh_token) return Promise.reject();
+    return fetch(SB + '/auth/v1/token?grant_type=refresh_token', { method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: sess.refresh_token }) })
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(setSession);
+  }
+  function ready() { return sess && Date.now() > sess.exp ? refresh() : Promise.resolve(); }
+
+  function show(which) { $('login').hidden = which !== 'login'; $('app').hidden = which !== 'app'; $('out').hidden = $('refresh').hidden = which !== 'app'; }
+
+  $('lf').addEventListener('submit', function (e) {
+    e.preventDefault(); var b = $('lb'), er = $('lerr'); er.hidden = true; b.disabled = true; b.textContent = 'Signing in...';
+    fetch(SB + '/auth/v1/token?grant_type=password', { method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: $('em').value.trim(), password: $('pw').value }) })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error('bad'); return j; }); })
+      .then(function (j) { setSession(j); $('pw').value = ''; start(); })
+      .catch(function () { er.textContent = 'Could not sign in. Check your email and password.'; er.hidden = false; })
+      .then(function () { b.disabled = false; b.textContent = 'Sign in'; });
+  });
+  $('out').addEventListener('click', function () { sess = null; save(null); show('login'); });
+  $('refresh').addEventListener('click', fetchOrders);
+
+  function fetchOrders() {
+    var er = $('aerr'); er.hidden = true;
+    return ready().then(function () { return api('/rest/v1/orders?select=*&order=created_at.desc&limit=500'); })
+      .then(function (r) {
+        if (r.status === 401) throw new Error('expired');
+        if (!r.ok) throw new Error('load');
+        return r.json();
+      })
+      .then(function (rows) {
+        orders = rows;
+        if (rows.length && !rows.some(function (o) { return o.status === 'pending' || o.status === 'paid' || o.status === 'declined'; })) {
+          /* status column missing or no staff access */
+        }
+        render(); handleDeepLink();
+      })
+      .catch(function (e) {
+        if (e && e.message === 'expired') { sess = null; save(null); show('login'); return; }
+        er.textContent = 'Could not load orders. Make sure setup.sql was run in Supabase and your email is in the staff table.'; er.hidden = false;
+      });
+  }
+
+  function count(s) { return orders.filter(function (o) { return (o.status || 'pending') === s; }).length; }
+  function renderTabs() {
+    var t = $('tabs'); t.textContent = '';
+    [['pending', 'Pending'], ['paid', 'Paid orders'], ['declined', 'Declined'], ['all', 'All']].forEach(function (x) {
+      var b = h('button', tab === x[0] ? 'on' : '', x[1] + ' (' + (x[0] === 'all' ? orders.length : count(x[0])) + ')'); b.type = 'button';
+      b.onclick = function () { tab = x[0]; render(); }; t.appendChild(b);
+    });
+  }
+  function render() {
+    renderTabs();
+    var L = $('list'); L.textContent = '';
+    var needle = q.trim().toLowerCase();
+    var rows = orders.filter(function (o) {
+      if (tab !== 'all' && (o.status || 'pending') !== tab) return false;
+      if (!needle) return true;
+      return [o.ref, o.customer_name, o.phone].join(' ').toLowerCase().indexOf(needle) > -1;
+    });
+    if (!rows.length) { L.appendChild(h('div', 'empty', 'No orders here.')); return; }
+    rows.forEach(function (o) { L.appendChild(card(o)); });
+  }
+  $('q').addEventListener('input', function () { q = this.value; render(); });
+
+  function card(o) {
+    var st = o.status || 'pending', c = h('div', 'card');
+    var top = h('div', 'top'), l = h('div'); l.appendChild(h('div', 'ref', o.ref));
+    l.appendChild(h('div', 'when', o.created_at ? new Date(o.created_at).toLocaleString('en-KE') : ''));
+    top.appendChild(l); top.appendChild(h('span', 'badge b-' + st, LABEL[st] || st)); c.appendChild(top);
+    var ul = h('ul', 'items'); (o.items || []).forEach(function (i) { var li = h('li'); li.appendChild(h('span', null, i.qty + ' × ' + i.name)); li.appendChild(h('span', null, money(i.total))); ul.appendChild(li); }); c.appendChild(ul);
+    var t = h('div', 'tot'); t.appendChild(h('span', null, 'Total')); t.appendChild(h('span', null, money(o.subtotal))); c.appendChild(t);
+    function meta(k, v) { if (!v) return; var m = h('div', 'meta'); m.appendChild(h('b', null, k + ': ')); m.appendChild(D.createTextNode(v)); c.appendChild(m); }
+    meta('Customer', o.customer_name); meta('Phone', o.phone);
+    meta(o.method === 'delivery' ? 'Deliver to' : 'Collection', o.method === 'delivery' ? (o.address || '') + ', ' + (o.county || '') : 'Pickup at the store');
+    meta('Notes', o.notes);
+    if (o.handled_by && st !== 'pending') meta(LABEL[st] + ' by', o.handled_by + (o.handled_at ? ' on ' + new Date(o.handled_at).toLocaleString('en-KE') : ''));
+    var a = h('div', 'acts'), ph = String(o.phone || '').replace(/\D/g, '');
+    if (ph) { var w = h('a', 'btn alt sm', 'WhatsApp customer'); w.href = 'https://wa.me/' + ph; w.target = '_blank'; w.rel = 'noopener'; a.appendChild(w); }
+    if (st === 'pending') {
+      var ap = h('button', 'btn ok', 'Approve (paid)'); ap.type = 'button'; ap.onclick = function () { confirmAct(o, 'approve'); };
+      var de = h('button', 'btn no', 'Decline (not paid)'); de.type = 'button'; de.onclick = function () { confirmAct(o, 'decline'); };
+      a.appendChild(ap); a.appendChild(de);
+    } else {
+      var rv = h('button', 'btn alt sm', 'Move back to pending'); rv.type = 'button'; rv.onclick = function () { confirmAct(o, 'pending'); }; a.appendChild(rv);
+    }
+    c.appendChild(a); return c;
+  }
+
+  var NEW = { approve: 'paid', decline: 'declined', pending: 'pending' };
+  var TITLE = { approve: 'Approve this order?', decline: 'Decline this order?', pending: 'Move back to pending?' };
+  function confirmAct(o, action) {
+    $('cf-t').textContent = TITLE[action];
+    var b = $('cf-b'); b.textContent = '';
+    [['Order', o.ref], ['Customer', o.customer_name + ' (' + o.phone + ')'], ['Total', money(o.subtotal)], ['Current status', LABEL[o.status || 'pending']]].forEach(function (x) {
+      var m = h('div', 'meta'); m.appendChild(h('b', null, x[0] + ': ')); m.appendChild(D.createTextNode(x[1])); b.appendChild(m);
+    });
+    b.appendChild(h('p', 'meta', action === 'approve' ? 'Only approve after you have seen the M-Pesa payment.' : action === 'decline' ? 'Use this when payment has not been received.' : ''));
+    var y = $('cf-y'); y.className = 'btn ' + (action === 'approve' ? 'ok' : action === 'decline' ? 'no' : ''); y.textContent = 'Confirm'; y.disabled = false;
+    $('cf').hidden = false;
+    y.onclick = function () {
+      y.disabled = true; y.textContent = 'Saving...';
+      var patch = { status: NEW[action], handled_by: sess.email || null, handled_at: action === 'pending' ? null : new Date().toISOString() };
+      if (action === 'pending') patch.handled_by = null;
+      ready().then(function () { return api('/rest/v1/orders?ref=eq.' + encodeURIComponent(o.ref) + '&select=ref,status', { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: patch }); })
+        .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+        .then(function (rows) { if (!rows.length) throw 0; $('cf').hidden = true; return fetchOrders(); })
+        .catch(function () { $('cf').hidden = true; var er = $('aerr'); er.textContent = 'Could not update the order. You may not have staff access.'; er.hidden = false; });
+    };
+  }
+  $('cf-n').addEventListener('click', function () { $('cf').hidden = true; });
+
+  var handled = false;
+  function handleDeepLink() {
+    if (handled || !want.ref || !want.action) return; handled = true;
+    var o = orders.filter(function (x) { return x.ref === want.ref; })[0];
+    if (!o) { var er = $('aerr'); er.textContent = 'Order ' + want.ref + ' was not found.'; er.hidden = false; return; }
+    tab = 'all'; q = want.ref; $('q').value = q; render();
+    if ((want.action === 'approve' || want.action === 'decline') && (o.status || 'pending') === 'pending') confirmAct(o, want.action);
+    else if (want.action === 'approve' || want.action === 'decline') { var e2 = $('aerr'); e2.textContent = 'Order ' + o.ref + ' is already ' + LABEL[o.status] + '.'; e2.hidden = false; }
+  }
+
+  function start() { show('app'); fetchOrders(); }
+  sess = load();
+  if (sess) start(); else show('login');
+  setInterval(function () { if (sess && !$('app').hidden && $('cf').hidden) fetchOrders(); }, 60000);
+})();
+</script>
+</body>
+</html>

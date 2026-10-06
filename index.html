@@ -25,6 +25,7 @@
     "url": "https://stermontmall.github.io/",
     "logo": "https://stermontmall.github.io/logo.png",
     "telephone": "+254748888230",
+    "email": "stermontmall@gmail.com",
     "description": "Agrovet supplies, phones, computers, TVs, appliances, fashion and home goods with countrywide delivery in Kenya.",
     "address": {
       "@type": "PostalAddress",
@@ -805,11 +806,13 @@
           Sarit Centre, Karuna Road<br>
           Westlands, Nairobi, Kenya<br>
           Open 24 hours, every day<br>
-          Phone and WhatsApp: <a href="tel:+254748888230">+254 748 888 230</a>
+          Phone and WhatsApp: <a href="tel:+254748888230">+254 748 888 230</a><br>
+          Email for inquiries: <a href="mailto:stermontmall@gmail.com?subject=Inquiry%20from%20Stermont%20Mall%20website">stermontmall@gmail.com</a>
         </address>
         <div class="actions">
           <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Mall" target="_blank" rel="noopener">Chat on WhatsApp</a>
           <a class="btn btn-alt" href="https://www.google.com/maps/search/?api=1&query=Sarit+Centre+Westlands+Nairobi" target="_blank" rel="noopener">Open in Maps</a>
+          <a class="btn btn-alt" href="mailto:stermontmall@gmail.com?subject=Inquiry%20from%20Stermont%20Mall%20website">Email us</a>
         </div>
       </div>
     </section>
@@ -1024,7 +1027,9 @@
       var CFG = { paybill: '717777', payAcct: '0748888230', wa: '254748888230', pickup: 'Sarit Centre, Karuna Road, Westlands, Nairobi',
         sbUrl: 'https://oewvtbnmyombbtggamor.supabase.co', sbKey: 'sb_publishable_CQiZr-INuot9C4fbdJDz1Q_4OiWEQL7', sbRef: 'oewvtbnmyombbtggamor',
         /* Free key from https://web3forms.com (enter the email that should receive order alerts) */
-        mailKey: '' };
+        mailKey: '2c55cbd0-5ec1-4603-a6a0-293b8a68faab',
+        /* Optional second inbox: paste a key made with the other email here */
+        mailKey2: '' };
       function slug(t) { return t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
       function ls(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k)); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} return null; }
       function h(t, c, x) { var e = D.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
@@ -1179,14 +1184,21 @@
       }
       function notify(T, s) {
         if (!CFG.mailKey) return;
+        var adm = new URL('admin.html', location.href).href;
         var lines = T.L.map(function (i, k) { return (k + 1) + '. ' + i.name + ' x' + i.qty + ' = ' + money(i.total); });
         var msg = ['Order ' + ref, '', lines.join('\n'), '', 'Subtotal: ' + money(T.s), form.method === 'pickup' ? 'Collection: ' + where() : 'Deliver to: ' + where(),
           '', 'Customer: ' + form.name.trim(), 'Phone: +' + normPhone(form.phone), s && s.user && s.user.email ? 'Account email: ' + s.user.email : '',
           form.notes && form.notes.trim() ? 'Notes: ' + form.notes.trim() : '', '', 'Payment: M-Pesa Paybill ' + CFG.paybill + ', account ' + CFG.payAcct,
-          'WhatsApp the customer: https://wa.me/' + normPhone(form.phone)].filter(function (l, i, a) { return l !== '' || a[i - 1] !== ''; }).join('\n');
+          'WhatsApp the customer: https://wa.me/' + normPhone(form.phone),
+          '', 'STATUS: PENDING. Confirm payment, then (customer care sign-in required):',
+          'APPROVE (paid): ' + adm + '?ref=' + encodeURIComponent(ref) + '&action=approve',
+          'DECLINE (not paid): ' + adm + '?ref=' + encodeURIComponent(ref) + '&action=decline'].filter(function (l, i, a) { return l !== '' || a[i - 1] !== ''; }).join('\n');
         try {
-          fetch('https://api.web3forms.com/submit', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-            body: JSON.stringify({ access_key: CFG.mailKey, subject: 'New order ' + ref + ' - ' + money(T.s), from_name: 'Stermont Mall website', message: msg }) }).catch(function () {});
+          [CFG.mailKey, CFG.mailKey2].forEach(function (k) {
+            if (!k) return;
+            fetch('https://api.web3forms.com/submit', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+              body: JSON.stringify({ access_key: k, subject: 'New order ' + ref + ' - ' + money(T.s), from_name: 'Stermont Mall website', message: msg }) }).catch(function () {});
+          });
         } catch (e) {}
       }
       function place(T) {
