@@ -141,6 +141,14 @@
       .ring{font-size:1.8rem}
       .pcard{flex-basis:260px}
     }
+    .mgrid{display:grid;gap:.75rem;grid-template-columns:repeat(2,1fr);margin-bottom:1.25rem}
+    .mgrid .pcard{max-width:none;background:var(--panel)}
+    .mgrid .pcard .img{display:block;background:#fff}
+    .mgrid .pcard img{object-fit:contain}
+    .mgrid .price{font-size:1.1rem}
+    .mgrid .pcard h3{font-size:.9rem}
+    section h3.sub{font-size:1.05rem;margin:1rem 0 .6rem;border-left:4px solid var(--green);padding-left:.6rem}
+    @media(min-width:760px){.mgrid{grid-template-columns:repeat(4,1fr)}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn,.dots i{transition:none}}
   </style>
 </head>
@@ -226,6 +234,107 @@
         </div>
       </div>
     </div>
+
+    <section id="music-gear">
+      <div class="wrap">
+        <h2 class="t">Music &amp; sound gear</h2>
+        <p class="lead">Guitar amplifiers and snake cables. Delivery to all 47 counties, pay by M-Pesa.</p>
+        <h3 class="sub">Guitar amplifiers</h3>
+        <div class="mgrid">
+          <div class="pcard">
+            <span class="img"><img src="music/bal-10.jpg" alt="BAL-10 Micro Guitar Amplifier" width="720" height="720" loading="lazy"></span>
+            <div class="b">
+              <h3>BAL-10 Micro Guitar Amplifier</h3>
+              <p class="price">KSh 10,500</p>
+              <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Mall%2C%20I%20would%20like%20to%20order%20the%20BAL-10%20Micro%20Guitar%20Amplifier." target="_blank" rel="noopener">Order on WhatsApp</a>
+            </div>
+          </div>
+          <div class="pcard">
+            <span class="img"><img src="music/ga-10.jpg" alt="GA-10 Mini Guitar Combo" width="720" height="720" loading="lazy"></span>
+            <div class="b">
+              <h3>GA-10 Mini Guitar Combo</h3>
+              <p class="price">KSh 13,000</p>
+              <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Mall%2C%20I%20would%20like%20to%20order%20the%20GA-10%20Mini%20Guitar%20Combo." target="_blank" rel="noopener">Order on WhatsApp</a>
+            </div>
+          </div>
+          <div class="pcard">
+            <span class="img"><img src="music/ga-15.jpg" alt="GA-15 Small Practice Combo" width="720" height="720" loading="lazy"></span>
+            <div class="b">
+              <h3>GA-15 Small Practice Combo</h3>
+              <p class="price">KSh 14,500</p>
+              <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Mall%2C%20I%20would%20like%20to%20order%20the%20GA-15%20Small%20Practice%20Combo." target="_blank" rel="noopener">Order on WhatsApp</a>
+            </div>
+          </div>
+          <div class="pcard">
+            <span class="img"><img src="music/ga-30.jpg" alt="GA-30 Portable Guitar Amplifier" width="720" height="720" loading="lazy"></span>
+            <div class="b">
+              <h3>GA-30 Portable Guitar Amplifier</h3>
+              <p class="price">KSh 18,000</p>
+              <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Mall%2C%20I%20would%20like%20to%20order%20the%20GA-30%20Portable%20Guitar%20Amplifier." target="_blank" rel="noopener">Order on WhatsApp</a>
+            </div>
+          </div>
+          <div class="pcard">
+            <span class="img"><img src="music/ga-30r.jpg" alt="GA-30R Guitar Combo With Reverb" width="720" height="720" loading="lazy"></span>
+            <div class="b">
+              <h3>GA-30R Guitar Combo With Reverb</h3>
+              <p class="price">KSh 19,000</p>
+              <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Mall%2C%20I%20would%20like%20to%20order%20the%20GA-30R%20Guitar%20Combo%20With%20Reverb." target="_blank" rel="noopener">Order on WhatsApp</a>
+            </div>
+          </div>
+          <div class="pcard">
+            <span class="img"><img src="music/ga-60.jpg" alt="GA-60 Guitar Amplifier for Electric Guitars" width="720" height="720" loading="lazy"></span>
+            <div class="b">
+              <h3>GA-60 Guitar Amplifier for Electric Guitars</h3>
+              <p class="price">KSh 34,000</p>
+              <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Mall%2C%20I%20would%20like%20to%20order%20the%20GA-60%20Guitar%20Amplifier%20for%20Electric%20Guitars." target="_blank" rel="noopener">Order on WhatsApp</a>
+            </div>
+          </div>
+          <div class="pcard">
+            <span class="img"><img src="music/rockstar-tb-40.jpg" alt="Rockstar TB-40 Small Bass Guitar Combo" width="720" height="720" loading="lazy"></span>
+            <div class="b">
+              <h3>Rockstar TB-40 Small Bass Guitar Combo</h3>
+              <p class="price">KSh 16,000</p>
+              <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Mall%2C%20I%20would%20like%20to%20order%20the%20Rockstar%20TB-40%20Small%20Bass%20Guitar%20Combo." target="_blank" rel="noopener">Order on WhatsApp</a>
+            </div>
+          </div>
+          <div class="pcard">
+            <span class="img"><img src="music/placeholder.svg" alt="TG-25 Mini Electric Guitar Combo (photo coming soon)" width="720" height="720" loading="lazy"></span>
+            <div class="b">
+              <h3>TG-25 Mini Electric Guitar Combo</h3>
+              <p class="price">KSh 15,500</p>
+              <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Mall%2C%20I%20would%20like%20to%20order%20the%20TG-25%20Mini%20Electric%20Guitar%20Combo." target="_blank" rel="noopener">Order on WhatsApp</a>
+            </div>
+          </div>
+        </div>
+        <h3 class="sub">Snake cables</h3>
+        <div class="mgrid">
+          <div class="pcard">
+            <span class="img"><img src="music/snake-drum-12ch.jpg" alt="12 Channels 4 Returns 30 Meters Drum Snake Cable" width="720" height="720" loading="lazy"></span>
+            <div class="b">
+              <h3>12 Channels 4 Returns 30 Meters Drum Snake Cable</h3>
+              <p class="price">KSh 38,000</p>
+              <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Mall%2C%20I%20would%20like%20to%20order%20the%2012%20Channels%204%20Returns%2030%20Meters%20Drum%20Snake%20Cable." target="_blank" rel="noopener">Order on WhatsApp</a>
+            </div>
+          </div>
+          <div class="pcard">
+            <span class="img"><img src="music/snake-stage-12ch.jpg" alt="12 Channels 4 Returns 30 Meters Stage Snake Cable" width="720" height="720" loading="lazy"></span>
+            <div class="b">
+              <h3>12 Channels 4 Returns 30 Meters Stage Snake Cable</h3>
+              <p class="price">KSh 44,000</p>
+              <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Mall%2C%20I%20would%20like%20to%20order%20the%2012%20Channels%204%20Returns%2030%20Meters%20Stage%20Snake%20Cable." target="_blank" rel="noopener">Order on WhatsApp</a>
+            </div>
+          </div>
+          <div class="pcard">
+            <span class="img"><img src="music/snake-drum-16ch.jpg" alt="16 Channel 4 Return 30-Meter Snake Cable" width="720" height="720" loading="lazy"></span>
+            <div class="b">
+              <h3>16 Channel 4 Return 30-Meter Snake Cable</h3>
+              <p class="price">KSh 50,000</p>
+              <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Mall%2C%20I%20would%20like%20to%20order%20the%2016%20Channel%204%20Return%2030-Meter%20Snake%20Cable." target="_blank" rel="noopener">Order on WhatsApp</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <section id="range">
       <div class="wrap">
@@ -426,8 +535,9 @@
           <div>
             <h3>Music &amp; Entertainment</h3>
             <ul>
-              <li>Guitars and keyboards</li>
+              <li>Guitars, guitar amplifiers and keyboards</li>
               <li>DJ and PA equipment</li>
+              <li>Snake cables</li>
               <li>Karaoke machines</li>
               <li>Studio microphones</li>
             </ul>
@@ -568,6 +678,7 @@
       var input = document.getElementById('q');
       var msg = document.getElementById('search-msg');
       var featured = document.getElementById('featured');
+      var music = document.getElementById('music-gear');
       var cats = document.querySelectorAll('#range .range > div');
       var base = 'https://wa.me/254748888230?text=';
 
@@ -576,6 +687,7 @@
         var found = 0;
         if (!q) {
           featured.classList.remove('hidden');
+          music.classList.remove('hidden');
           cats.forEach(function (c) {
             c.classList.remove('hidden');
             c.querySelectorAll('li').forEach(function (li) { li.classList.remove('hidden'); });
@@ -590,6 +702,8 @@
         }
         if (matches(featured.textContent)) { featured.classList.remove('hidden'); found++; }
         else { featured.classList.add('hidden'); }
+        if (matches(music.textContent)) { music.classList.remove('hidden'); found++; }
+        else { music.classList.add('hidden'); }
         cats.forEach(function (c) {
           var catMatch = matches(c.querySelector('h3').textContent);
           var any = 0;
@@ -604,7 +718,7 @@
         if (found) {
           msg.textContent = 'Showing results for "' + input.value.trim() + '". Clear the box to see everything.';
           if (scroll) {
-            var target = featured.classList.contains('hidden') ? document.getElementById('range') : featured;
+            var target = !featured.classList.contains('hidden') ? featured : (!music.classList.contains('hidden') ? music : document.getElementById('range'));
             target.scrollIntoView({ behavior: 'smooth' });
           }
         } else {
