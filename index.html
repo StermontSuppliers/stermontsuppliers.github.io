@@ -48,12 +48,18 @@
     nav.desk{display:none}
     nav.desk a{margin-left:1.1rem;text-decoration:none;color:var(--ink);font-weight:600}
     nav.desk a:hover{color:var(--orange)}
-    .search{display:flex;align-items:center;gap:.75rem;background:var(--panel);border-radius:999px;padding:0 .5rem 0 1.1rem}
+    .search{position:relative;display:flex;align-items:center;gap:.75rem;background:var(--panel);border-radius:999px;padding:0 .5rem 0 1.1rem}
     .search svg{flex:none;width:22px;height:22px;stroke:var(--ink);fill:none;stroke-width:2.2;stroke-linecap:round}
     .search input{flex:1;min-width:0;border:0;background:transparent;font:inherit;color:var(--ink);padding:.8rem 0}
     .search input:focus-visible{outline:0}
     .search:focus-within{outline:3px solid var(--orange)}
     .search button{border:0;background:linear-gradient(135deg,#9d5cff,#7c3aed);color:#fff;font:inherit;font-weight:700;border-radius:999px;padding:.5rem 1.1rem;cursor:pointer}
+    .sugg{position:absolute;left:0;right:0;top:calc(100% + .4rem);z-index:60;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:1rem;box-shadow:0 12px 30px rgba(0,0,0,.18);max-height:320px;overflow-y:auto;padding:.3rem;display:none}
+    .sugg.on{display:block}
+    .sugg button{display:flex;width:100%;justify-content:space-between;gap:.75rem;align-items:center;text-align:left;border:0;background:transparent;color:inherit;font:inherit;padding:.65rem .8rem;border-radius:.7rem;cursor:pointer}
+    .sugg button:hover,.sugg button.act{background:var(--tint)}
+    .sugg small{color:var(--muted);flex:none;font-size:.8rem}
+    .sugg mark{background:transparent;color:var(--orange);font-weight:700}
     .search-msg{margin:.6rem 0 0;color:var(--muted);font-size:.95rem}
     .search-msg:empty{display:none}
     .search-msg a{font-weight:700}
@@ -884,6 +890,54 @@
       }
       form.addEventListener('submit', function (e) { e.preventDefault(); run(true); });
       input.addEventListener('input', function () { run(false); });
+
+      /* ---- Live suggestions while typing ---- */
+      var box = document.createElement('div'); box.className = 'sugg'; box.id = 'sugg'; box.setAttribute('role', 'listbox');
+      form.appendChild(box);
+      input.setAttribute('aria-controls', 'sugg'); input.setAttribute('aria-autocomplete', 'list');
+      var pool = [], seen = {}, act = -1;
+      function add(t, c) { t = (t || '').replace(/\s+/g, ' ').trim(); var k = t.toLowerCase(); if (t && !seen[k]) { seen[k] = 1; pool.push({ t: t, c: c }); } }
+      document.querySelectorAll('#range .range > div').forEach(function (d) {
+        var cn = d.querySelector('h3').textContent.replace(/\d+\s*$/, '').trim();
+        add(cn, 'Category');
+        d.querySelectorAll('li').forEach(function (li) { add(li.textContent, cn); });
+      });
+      document.querySelectorAll('#music-gear .pcard h3').forEach(function (h) { add(h.textContent, 'Product'); });
+      function hide() { box.classList.remove('on'); box.innerHTML = ''; act = -1; }
+      function pick(t) { input.value = t; hide(); run(true); input.blur(); }
+      function esc(x) { return x.replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; }); }
+      function suggest() {
+        var q = input.value.trim().toLowerCase();
+        if (q.length < 1 || document.activeElement !== input) { hide(); return; }
+        var ws = q.split(/\s+/).filter(function (w) { return w !== 'and' && w !== '&'; }).map(function (w) { return w.replace(/s$/, ''); });
+        var hits = pool.filter(function (o) { var t = o.t.toLowerCase(); return ws.every(function (w) { return t.indexOf(w) !== -1; }); });
+        hits.sort(function (a, b) { return (a.t.toLowerCase().indexOf(q) === 0 ? 0 : 1) - (b.t.toLowerCase().indexOf(q) === 0 ? 0 : 1) || a.t.length - b.t.length; });
+        hits = hits.slice(0, 8);
+        box.innerHTML = '';
+        if (!hits.length) { box.classList.remove('on'); return; }
+        hits.forEach(function (o) {
+          var b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'option');
+          var i = o.t.toLowerCase().indexOf(q), label = esc(o.t);
+          if (i > -1) label = esc(o.t.slice(0, i)) + '<mark>' + esc(o.t.slice(i, i + q.length)) + '</mark>' + esc(o.t.slice(i + q.length));
+          b.innerHTML = '<span>' + label + '</span><small>' + esc(o.c) + '</small>';
+          b.addEventListener('mousedown', function (e) { e.preventDefault(); });
+          b.addEventListener('click', function () { pick(o.t); });
+          box.appendChild(b);
+        });
+        act = -1; box.classList.add('on');
+      }
+      input.addEventListener('input', suggest);
+      input.addEventListener('focus', suggest);
+      input.addEventListener('keydown', function (e) {
+        var bs = box.querySelectorAll('button'); if (!bs.length || !box.classList.contains('on')) return;
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault(); act = (act + (e.key === 'ArrowDown' ? 1 : -1) + bs.length) % bs.length;
+          bs.forEach(function (b, j) { b.classList.toggle('act', j === act); });
+        } else if (e.key === 'Enter' && act > -1) { e.preventDefault(); bs[act].click(); }
+        else if (e.key === 'Escape') { hide(); }
+      });
+      form.addEventListener('submit', hide);
+      document.addEventListener('click', function (e) { if (!form.contains(e.target)) hide(); });
     })();
   </script>
   <script>
