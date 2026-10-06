@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#7c3aed">
+  <title>Account | Stermont Mall</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    :root{--paper:#fff;--ink:#282828;--muted:#6b6b6b;--line:#e3e3e3;--panel:#f1f1f2;--card:#fff;--orange:#7c3aed;--red:#5b21b6;--navy:#2a0e5c;--gold:#c8f31d;--green:#8fd400;--tint:#f1e8ff;--bad:#d92d20}
+    @media (prefers-color-scheme:dark){:root{--paper:#121212;--ink:#f1f1f1;--muted:#a8a8a8;--line:#2c2c2c;--panel:#1d1d1d;--card:#1d1d1d;--tint:#2b1d4d;--bad:#ff6b5e}}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--ink);line-height:1.5;min-height:100vh}
+    a{color:var(--orange)}
+    :focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+    .hidden,[hidden]{display:none!important}
+    header{padding:.8rem 1rem;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:1rem;max-width:980px;margin:0 auto}
+    .wm{display:inline-flex;align-items:baseline;font-size:1.6rem;font-weight:800;letter-spacing:-.04em;line-height:1.1;text-decoration:none;color:var(--ink)}
+    .wm b{color:var(--navy);font-weight:800}
+    .wm i{font-style:normal;background:var(--gold);color:#121212;padding:0 .12em;margin-left:.04em;border-radius:3px}
+    @media (prefers-color-scheme:dark){.wm b{color:#e9ddff}}
+    .back{font-weight:600;text-decoration:none;color:var(--ink);font-size:.95rem}
+    .back:hover{color:var(--orange)}
+    main{max-width:460px;margin:0 auto;padding:1.5rem 1rem 3rem}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:1.25rem;box-shadow:0 6px 24px rgba(91,33,182,.08)}
+    h1{font-size:1.5rem;font-weight:800;line-height:1.2}
+    .sub{color:var(--muted);margin:.3rem 0 1rem}
+    .tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--panel);border-radius:999px;padding:4px;margin-bottom:1.1rem}
+    .tabs button{border:0;background:none;color:var(--ink);font:inherit;font-weight:700;padding:.6rem;border-radius:999px;cursor:pointer}
+    .tabs button[aria-selected=true]{background:linear-gradient(135deg,#9d5cff,#7c3aed);color:#fff;box-shadow:0 3px 10px rgba(124,58,237,.35)}
+    .fld{margin:.75rem 0}
+    .fld label{display:block;font-weight:700;font-size:.9rem;margin-bottom:.3rem}
+    .fld label small{font-weight:500;color:var(--muted)}
+    .fld input{width:100%;font:inherit;color:var(--ink);background:var(--panel);border:2px solid transparent;border-radius:12px;padding:.75rem .9rem}
+    .fld input:focus{outline:0;border-color:var(--orange);background:var(--paper)}
+    .fld input[aria-invalid=true]{border-color:var(--bad)}
+    .pw{position:relative}
+    .pw input{padding-right:4.2rem}
+    .pw button{position:absolute;right:.4rem;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--orange);font:inherit;font-weight:700;font-size:.85rem;cursor:pointer;padding:.4rem .5rem}
+    .code{letter-spacing:.35em;font-size:1.4rem;text-align:center;font-weight:700}
+    .hint{color:var(--muted);font-size:.82rem;margin-top:.25rem}
+    .btn{display:block;width:100%;text-align:center;padding:.85rem 1.2rem;border-radius:10px;font:inherit;font-weight:700;border:0;cursor:pointer;margin-top:1rem;transition:transform .15s}
+    .btn:hover{transform:translateY(-2px)}
+    .btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+    .btn-main{background:linear-gradient(135deg,#9d5cff,#7c3aed);color:#fff;box-shadow:0 3px 10px rgba(124,58,237,.35)}
+    .btn-alt{background:none;border:2px solid var(--line);color:var(--ink)}
+    .link{border:0;background:none;color:var(--orange);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline;padding:0}
+    .link:disabled{color:var(--muted);text-decoration:none;cursor:default}
+    .row{display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin-top:.8rem;font-size:.92rem;flex-wrap:wrap}
+    .msg{margin-top:.9rem;padding:.7rem .9rem;border-radius:12px;font-size:.92rem}
+    .msg:empty{display:none}
+    .msg.err{background:rgba(217,45,32,.1);color:var(--bad);border:1px solid var(--bad)}
+    .msg.ok{background:var(--tint);color:var(--ink);border:1px solid var(--orange)}
+    .badge{width:72px;height:72px;border-radius:50%;background:var(--green);color:#1b1230;display:grid;place-items:center;font-size:2.2rem;font-weight:800;margin:.5rem auto 1rem}
+    .center{text-align:center}
+    .email-chip{display:inline-block;background:var(--tint);border-radius:999px;padding:.1rem .7rem;font-weight:700;word-break:break-all}
+    @media(prefers-reduced-motion:reduce){.btn{transition:none}}
+  </style>
+</head>
+<body>
+  <header>
+    <a class="wm" href="index.html" aria-label="Stermont Mall home"><b>Stermont</b><i>Mall</i></a>
+    <a class="back" href="index.html">&larr; Back to store</a>
+  </header>
+
+  <main>
+    <div class="card" id="card">
+
+      <!-- LOG IN / CREATE ACCOUNT -->
+      <section id="v-auth">
+        <h1 id="auth-title">Welcome back</h1>
+        <p class="sub" id="auth-sub">Log in to your Stermont Mall account.</p>
+        <div class="tabs" role="tablist">
+          <button type="button" role="tab" id="tab-login" aria-selected="true">Log in</button>
+          <button type="button" role="tab" id="tab-signup" aria-selected="false">Create account</button>
+        </div>
+
+        <form id="f-login" novalidate>
+          <div class="fld"><label for="l-email">Email</label><input id="l-email" type="email" autocomplete="email" inputmode="email" required></div>
+          <div class="fld"><label for="l-pass">Password</label>
+            <div class="pw"><input id="l-pass" type="password" autocomplete="current-password" required><button type="button" data-toggle="l-pass">Show</button></div>
+          </div>
+          <div class="msg" id="m-login" role="alert"></div>
+          <button class="btn btn-main" type="submit" id="b-login">Log in</button>
+          <div class="row"><button type="button" class="link" id="to-forgot">Forgot password?</button></div>
+        </form>
+
+        <form id="f-signup" novalidate hidden>
+          <div class="fld"><label for="s-name">Full name</label><input id="s-name" type="text" autocomplete="name" required></div>
+          <div class="fld"><label for="s-email">Email</label><input id="s-email" type="email" autocomplete="email" inputmode="email" required></div>
+          <div class="fld"><label for="s-phone">Phone <small>(optional, for delivery)</small></label><input id="s-phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="07XX XXX XXX"></div>
+          <div class="fld"><label for="s-pass">Password</label>
+            <div class="pw"><input id="s-pass" type="password" autocomplete="new-password" minlength="8" required><button type="button" data-toggle="s-pass">Show</button></div>
+            <p class="hint">At least 8 characters.</p>
+          </div>
+          <div class="fld"><label for="s-pass2">Confirm password</label><input id="s-pass2" type="password" autocomplete="new-password" required></div>
+          <div class="msg" id="m-signup" role="alert"></div>
+          <button class="btn btn-main" type="submit" id="b-signup">Create account</button>
+        </form>
+      </section>
+
+      <!-- CONFIRM EMAIL WITH CODE (after sign up) -->
+      <section id="v-verify" hidden>
+        <h1>Check your email</h1>
+        <p class="sub">We sent a verification code to <span class="email-chip" id="verify-email"></span>. Enter it below to activate your account.</p>
+        <form id="f-verify" novalidate>
+          <div class="fld"><label for="v-code">Verification code</label><input id="v-code" class="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required></div>
+          <div class="msg" id="m-verify" role="alert"></div>
+          <button class="btn btn-main" type="submit" id="b-verify">Verify and continue</button>
+          <div class="row"><span>Didn't get it? <button type="button" class="link" id="resend-verify">Resend code</button></span><button type="button" class="link" data-goto="auth">Back</button></div>
+        </form>
+      </section>
+
+      <!-- FORGOT PASSWORD: ASK FOR EMAIL -->
+      <section id="v-forgot" hidden>
+        <h1>Forgot your password?</h1>
+        <p class="sub">Enter your account email and we'll send you a code to set a new password.</p>
+        <form id="f-forgot" novalidate>
+          <div class="fld"><label for="f-email">Email</label><input id="f-email" type="email" autocomplete="email" inputmode="email" required></div>
+          <div class="msg" id="m-forgot" role="alert"></div>
+          <button class="btn btn-main" type="submit" id="b-forgot">Send code</button>
+          <div class="row"><button type="button" class="link" data-goto="auth">&larr; Back to log in</button></div>
+        </form>
+      </section>
+
+      <!-- RESET: CODE + NEW PASSWORD -->
+      <section id="v-reset" hidden>
+        <h1>Set a new password</h1>
+        <p class="sub" id="reset-sub">Enter the code we emailed you and choose a new password.</p>
+        <form id="f-reset" novalidate>
+          <div class="fld" id="code-fld"><label for="r-code">Code from email</label><input id="r-code" class="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10"></div>
+          <div class="fld"><label for="r-pass">New password</label>
+            <div class="pw"><input id="r-pass" type="password" autocomplete="new-password" minlength="8" required><button type="button" data-toggle="r-pass">Show</button></div>
+            <p class="hint">At least 8 characters.</p>
+          </div>
+          <div class="fld"><label for="r-pass2">Confirm new password</label><input id="r-pass2" type="password" autocomplete="new-password" required></div>
+          <div class="msg" id="m-reset" role="alert"></div>
+          <button class="btn btn-main" type="submit" id="b-reset">Update password</button>
+          <div class="row" id="reset-links"><span>Didn't get it? <button type="button" class="link" id="resend-reset">Resend code</button></span><button type="button" class="link" data-goto="auth">Cancel</button></div>
+        </form>
+      </section>
+
+      <!-- SIGNED IN -->
+      <section id="v-done" hidden class="center">
+        <div class="badge" aria-hidden="true">&#10003;</div>
+        <h1 id="done-title">You're signed in</h1>
+        <p class="sub" id="done-sub"></p>
+        <a class="btn btn-main" href="index.html">Continue shopping</a>
+        <button class="btn btn-alt" type="button" id="b-logout">Log out</button>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    // Your Supabase project. The publishable key is designed to be public.
+    var SUPABASE_URL = 'https://oewvtbnmyombbtggamor.supabase.co';
+    var SUPABASE_KEY = 'sb_publishable_CQiZr-INuot9C4fbdJDz1Q_4OiWEQL7';
+    var HOME = 'index.html';
+    var COOLDOWN = 60; // seconds between code emails
+
+    var $ = function (id) { return document.getElementById(id); };
+    var sb = null;
+    try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch (e) {}
+
+    var pending = { email: '' };   // email being verified / reset
+    var recoveryFromLink = false;  // arrived through an emailed reset link
+
+    /* ---------- helpers ---------- */
+    function show(view) {
+      ['auth', 'verify', 'forgot', 'reset', 'done'].forEach(function (v) { $('v-' + v).hidden = (v !== view); });
+      document.querySelectorAll('.msg').forEach(function (m) { m.textContent = ''; m.className = 'msg'; });
+      var first = $('v-' + view).querySelector('input:not([type=hidden])');
+      if (first && view !== 'done') setTimeout(function () { try { first.focus({ preventScroll: true }); } catch (e) {} }, 50);
+    }
+    function msg(id, text, ok) { var m = $(id); m.textContent = text; m.className = 'msg ' + (ok ? 'ok' : 'err'); }
+    function busy(btn, on, label) { btn.disabled = on; if (label) btn.textContent = on ? 'Please wait...' : label; }
+    function validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v); }
+    function friendly(err) {
+      var t = (err && err.message) || 'Something went wrong. Please try again.';
+      var l = t.toLowerCase();
+      if (l.indexOf('invalid login') > -1) return 'Wrong email or password.';
+      if (l.indexOf('already registered') > -1) return 'An account with this email already exists. Try logging in.';
+      if (l.indexOf('rate limit') > -1 || l.indexOf('too many') > -1 || err.status === 429) return 'Too many attempts. Please wait a few minutes and try again.';
+      if (l.indexOf('expired') > -1 || l.indexOf('invalid') > -1 && l.indexOf('token') > -1) return 'That code is wrong or has expired. Request a new one.';
+      if (l.indexOf('same password') > -1) return 'Choose a password different from your old one.';
+      if (l.indexOf('network') > -1 || l.indexOf('fetch') > -1) return 'Network problem. Check your connection and try again.';
+      return t;
+    }
+    function cooldown(btn, label) {
+      var left = COOLDOWN; btn.disabled = true;
+      var iv = setInterval(function () {
+        left--; if (left <= 0) { clearInterval(iv); btn.disabled = false; btn.textContent = label; }
+        else btn.textContent = label + ' (' + left + 's)';
+      }, 1000);
+      btn.textContent = label + ' (' + left + 's)';
+    }
+    function digits(v) { return v.replace(/\D/g, ''); }
+
+    /* ---------- tabs ---------- */
+    function tab(which) {
+      var login = which === 'login';
+      $('tab-login').setAttribute('aria-selected', login);
+      $('tab-signup').setAttribute('aria-selected', !login);
+      $('f-login').hidden = !login; $('f-signup').hidden = login;
+      $('auth-title').textContent = login ? 'Welcome back' : 'Create your account';
+      $('auth-sub').textContent = login ? 'Log in to your Stermont Mall account.' : 'Sign up to save your details and order faster.';
+      document.querySelectorAll('.msg').forEach(function (m) { m.textContent = ''; m.className = 'msg'; });
+    }
+    $('tab-login').onclick = function () { tab('login'); };
+    $('tab-signup').onclick = function () { tab('signup'); };
+    $('to-forgot').onclick = function () { $('f-email').value = $('l-email').value; show('forgot'); };
+    document.querySelectorAll('[data-goto]').forEach(function (b) { b.onclick = function () { recoveryFromLink = false; show(b.getAttribute('data-goto')); }; });
+    document.querySelectorAll('[data-toggle]').forEach(function (b) {
+      b.onclick = function () {
+        var i = $(b.getAttribute('data-toggle')), t = i.type === 'password';
+        i.type = t ? 'text' : 'password'; b.textContent = t ? 'Hide' : 'Show';
+      };
+    });
+
+    /* ---------- signed-in view ---------- */
+    function showSignedIn(user) {
+      var name = user && user.user_metadata && user.user_metadata.full_name;
+      $('done-title').textContent = name ? 'Hi, ' + name.split(' ')[0] : "You're signed in";
+      $('done-sub').textContent = user && user.email ? user.email : '';
+      show('done');
+    }
+
+    /* ---------- log in ---------- */
+    $('f-login').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var email = $('l-email').value.trim(), pass = $('l-pass').value;
+      if (!validEmail(email)) return msg('m-login', 'Enter a valid email address.');
+      if (!pass) return msg('m-login', 'Enter your password.');
+      busy($('b-login'), true, 'Log in');
+      var r = await sb.auth.signInWithPassword({ email: email, password: pass });
+      busy($('b-login'), false, 'Log in');
+      if (r.error) {
+        if ((r.error.message || '').toLowerCase().indexOf('not confirmed') > -1) {
+          pending.email = email;
+          await sb.auth.resend({ type: 'signup', email: email });
+          $('verify-email').textContent = email; show('verify');
+          return msg('m-verify', 'Your email is not verified yet. We sent you a new code.', true);
+        }
+        return msg('m-login', friendly(r.error));
+      }
+      location.href = HOME;
+    });
+
+    /* ---------- create account ---------- */
+    $('f-signup').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var name = $('s-name').value.trim(), email = $('s-email').value.trim(),
+          phone = $('s-phone').value.trim(), p1 = $('s-pass').value, p2 = $('s-pass2').value;
+      if (name.length < 2) return msg('m-signup', 'Enter your full name.');
+      if (!validEmail(email)) return msg('m-signup', 'Enter a valid email address.');
+      if (phone && digits(phone).length < 9) return msg('m-signup', 'Enter a valid phone number or leave it blank.');
+      if (p1.length < 8) return msg('m-signup', 'Password must be at least 8 characters.');
+      if (p1 !== p2) return msg('m-signup', 'Passwords do not match.');
+      busy($('b-signup'), true, 'Create account');
+      var r = await sb.auth.signUp({
+        email: email, password: p1,
+        options: { data: { full_name: name, phone: phone }, emailRedirectTo: location.origin + location.pathname }
+      });
+      busy($('b-signup'), false, 'Create account');
+      if (r.error) return msg('m-signup', friendly(r.error));
+      // Supabase hides duplicates: an existing confirmed user comes back with no identities.
+      if (r.data.user && r.data.user.identities && r.data.user.identities.length === 0)
+        return msg('m-signup', 'An account with this email already exists. Try logging in.');
+      if (r.data.session) { location.href = HOME; return; } // email confirmation switched off
+      pending.email = email; $('verify-email').textContent = email; $('v-code').value = '';
+      show('verify'); cooldown($('resend-verify'), 'Resend code');
+    });
+
+    $('f-verify').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var code = digits($('v-code').value);
+      if (code.length < 6) return msg('m-verify', 'Enter the code from your email.');
+      busy($('b-verify'), true, 'Verify and continue');
+      var r = await sb.auth.verifyOtp({ email: pending.email, token: code, type: 'signup' });
+      busy($('b-verify'), false, 'Verify and continue');
+      if (r.error) return msg('m-verify', friendly(r.error));
+      location.href = HOME;
+    });
+    $('resend-verify').onclick = async function () {
+      var r = await sb.auth.resend({ type: 'signup', email: pending.email });
+      if (r.error) return msg('m-verify', friendly(r.error));
+      msg('m-verify', 'A new code is on its way.', true); cooldown($('resend-verify'), 'Resend code');
+    };
+
+    /* ---------- forgot password ---------- */
+    async function sendReset(email) {
+      return sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+    }
+    $('f-forgot').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var email = $('f-email').value.trim();
+      if (!validEmail(email)) return msg('m-forgot', 'Enter a valid email address.');
+      busy($('b-forgot'), true, 'Send code');
+      var r = await sendReset(email);
+      busy($('b-forgot'), false, 'Send code');
+      if (r.error) return msg('m-forgot', friendly(r.error));
+      pending.email = email; recoveryFromLink = false;
+      $('code-fld').hidden = false; $('reset-links').hidden = false;
+      $('reset-sub').textContent = 'We sent a code to ' + email + '. Enter it and choose a new password.';
+      ['r-code', 'r-pass', 'r-pass2'].forEach(function (id) { $(id).value = ''; });
+      show('reset'); cooldown($('resend-reset'), 'Resend code');
+      msg('m-reset', 'If that email has an account, a code is on its way.', true);
+    });
+    $('resend-reset').onclick = async function () {
+      var r = await sendReset(pending.email);
+      if (r.error) return msg('m-reset', friendly(r.error));
+      msg('m-reset', 'A new code is on its way.', true); cooldown($('resend-reset'), 'Resend code');
+    };
+
+    $('f-reset').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var code = digits($('r-code').value), p1 = $('r-pass').value, p2 = $('r-pass2').value;
+      if (!recoveryFromLink && code.length < 6) return msg('m-reset', 'Enter the code from your email.');
+      if (p1.length < 8) return msg('m-reset', 'Password must be at least 8 characters.');
+      if (p1 !== p2) return msg('m-reset', 'Passwords do not match.');
+      busy($('b-reset'), true, 'Update password');
+      if (!recoveryFromLink) {
+        var v = await sb.auth.verifyOtp({ email: pending.email, token: code, type: 'recovery' });
+        if (v.error) { busy($('b-reset'), false, 'Update password'); return msg('m-reset', friendly(v.error)); }
+      }
+      var u = await sb.auth.updateUser({ password: p1 });
+      busy($('b-reset'), false, 'Update password');
+      if (u.error) return msg('m-reset', friendly(u.error));
+      recoveryFromLink = false;
+      $('done-title').textContent = 'Password updated';
+      $('done-sub').textContent = 'You are now signed in with your new password.';
+      show('done');
+    });
+
+    $('b-logout').onclick = async function () { await sb.auth.signOut(); tab('login'); show('auth'); };
+
+    /* ---------- start up ---------- */
+    if (!sb) {
+      msg('m-login', 'Could not load the sign-in service. Check your connection and refresh.');
+      document.querySelectorAll('button[type=submit]').forEach(function (b) { b.disabled = true; });
+      return;
+    }
+
+    // Emailed link flow (if the email template still uses links instead of codes)
+    sb.auth.onAuthStateChange(function (event) {
+      if (event === 'PASSWORD_RECOVERY') {
+        recoveryFromLink = true;
+        $('code-fld').hidden = true; $('reset-links').hidden = true;
+        $('reset-sub').textContent = 'Choose a new password for your account.';
+        show('reset');
+      }
+    });
+
+    sb.auth.getSession().then(function (r) {
+      if (recoveryFromLink || !$('v-reset').hidden) return;
+      var s = r.data && r.data.session;
+      if (s) showSignedIn(s.user);
+      if (location.hash === '#signup') tab('signup');
+    });
+  })();
+  </script>
+</body>
+</html>

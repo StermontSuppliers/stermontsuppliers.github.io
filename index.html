@@ -181,6 +181,9 @@
     .cb{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--gold);color:#2a0e5c;font-size:.75rem;font-weight:800;display:grid;place-items:center;border:2px solid var(--paper)}
     .cb[hidden]{display:none}.cb.bump{animation:bump .35s}
     @keyframes bump{50%{transform:scale(1.35)}}
+    .hd-r{display:flex;align-items:center;gap:.5rem}
+    .acctbtn{text-decoration:none;color:var(--ink)}
+    .acctbtn.in::after{content:"";position:absolute;top:2px;right:2px;width:11px;height:11px;border-radius:50%;background:var(--green);border:2px solid var(--paper)}
     #bar a{position:relative}#bar .cb{top:-2px;right:12px}
     .cartbar{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:40;width:min(92%,460px);display:none;align-items:center;justify-content:space-between;gap:1rem;border:0;font:inherit;color:#fff;background:linear-gradient(135deg,#9d5cff,#5b21b6);border-radius:999px;padding:.85rem 1.25rem;box-shadow:0 8px 24px rgba(91,33,182,.45);cursor:pointer;font-weight:700;opacity:0;transition:opacity .2s,transform .2s}
     .cartbar.on{display:flex;opacity:1;transform:translateX(-50%)}
@@ -239,8 +242,8 @@
     <div class="wrap">
       <div class="top">
         <a class="logo" href="#top" aria-label="Stermont Mall home"><span class="wm" aria-hidden="true"><b>Stermont</b><i>Mall</i></span></a>
-        <nav class="desk" aria-label="Main"><a href="#range">Products</a><a href="#order">How to order</a><a href="#delivery">Delivery</a><a href="#contact">Contact</a></nav>
-        <button class="cartbtn" id="cartbtn" type="button" aria-label="Open cart"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h11L21 7H6"/></svg><span class="cb" hidden>0</span></button>
+        <nav class="desk" aria-label="Main"><a href="#range">Products</a><a href="#order">How to order</a><a href="#delivery">Delivery</a><a href="#contact">Contact</a><a href="account.html">Account</a></nav>
+        <div class="hd-r"><a class="cartbtn acctbtn" id="acctbtn" href="account.html" aria-label="Log in or create account"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></a><button class="cartbtn" id="cartbtn" type="button" aria-label="Open cart"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h11L21 7H6"/></svg><span class="cb" hidden>0</span></button></div>
       </div>
       <form class="search" role="search" id="search-form">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6"/></svg>
@@ -1002,6 +1005,9 @@
     </div>
   </div>
   <button class="cartbar" id="cartbar" type="button"><span id="cartbar-l">View cart</span><span id="cartbar-t"></span></button>
+  <script>
+    try { if (localStorage.getItem('sb-oewvtbnmyombbtggamor-auth-token')) document.getElementById('acctbtn').classList.add('in'); } catch (e) {}
+  </script>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script>
     (function () {
