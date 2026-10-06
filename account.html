@@ -171,6 +171,7 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="receipt.js"></script>
   <script>
   (function () {
     'use strict';
@@ -246,7 +247,7 @@
     async function loadOrders() {
       var box = $('orders'), list = $('orders-list');
       try {
-        var r = await sb.from('orders').select('ref,created_at,status,stage,subtotal,items').order('created_at', { ascending: false }).limit(30);
+        var r = await sb.from('orders').select('ref,created_at,status,stage,subtotal,items,customer_name,phone,email,method,county,address,handled_at').order('created_at', { ascending: false }).limit(30);
         if (r.error || !r.data || !r.data.length) { box.hidden = true; return; }
         list.textContent = '';
         r.data.forEach(function (o) {
@@ -266,6 +267,9 @@
             var tr = document.createElement('div'); tr.className = 'track';
             steps.forEach(function (x, i) { var d = document.createElement('div'); d.className = 'stp' + (i <= at ? ' on' : ''); d.textContent = (i <= at ? '\u2713 ' : '') + x[1]; tr.appendChild(d); });
             c.appendChild(tr);
+            var rb = document.createElement('button'); rb.type = 'button'; rb.className = 'btn btn-alt'; rb.textContent = 'Download receipt (PDF)'; rb.style.marginTop = '.6rem';
+            rb.onclick = function () { rb.disabled = true; window.STM_RECEIPT.pdf(o).catch(function (e) { alert(e.message); }).then(function () { rb.disabled = false; }); };
+            c.appendChild(rb);
           }
           var n = document.createElement('div'); n.className = 'note'; n.textContent = st[1]; c.appendChild(n);
           list.appendChild(c);

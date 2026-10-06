@@ -314,15 +314,6 @@
               <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Mall%2C%20I%20would%20like%20to%20order%20the%20MIKA%2010KG%20washing%20machine." target="_blank" rel="noopener">Order on WhatsApp</a>
             </div>
           </div>
-          <div class="pcard">
-            <a class="img" href="products/lucerne-delight.html"><img src="lucerne-delight.jpg" alt="Advanta Delight Lucerne high protein legume seed pack" loading="lazy"></a>
-            <div class="b">
-              <h3>Advanta Delight Lucerne (High Protein Legume)</h3>
-              <p class="price">KSh 3,800</p>
-              <p class="note">High-protein forage legume for more milk and healthier calves. Delivery to all 47 counties, pay by M-Pesa.</p>
-              <a class="btn btn-main" href="https://wa.me/254748888230?text=Hello%20Stermont%20Mall%2C%20I%20would%20like%20to%20order%20the%20Delight%20Lucerne." target="_blank" rel="noopener">Order on WhatsApp</a>
-            </div>
-          </div>
           <div class="pcard cta">
             <h3>Can't see what you need?</h3>
             <p class="note">Ask us. If it is not in stock, we will source it for you.</p>
@@ -1097,7 +1088,7 @@
       function h(t, c, x) { var e = D.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
       function money(n) { return 'KSh ' + n.toLocaleString('en-KE'); }
       var cart = ls('stm_cart') || {}, cust = ls('stm_cust') || {}, step = 'cart', isOpen = false, opener = null, ref = '', lastMsg = '', lastUrl = '', sending = false, sendErr = '', doneRef = '', doneTotal = 0;
-      var form = { method: 'delivery', name: cust.name || '', phone: cust.phone || '', county: cust.county || '', addr: cust.addr || '', notes: '' }, errs = {};
+      var form = { method: 'delivery', name: cust.name || '', phone: cust.phone || '', email: cust.email || '', county: cust.county || '', addr: cust.addr || '', notes: '' }, errs = {};
       function session() {
         try {
           var x = JSON.parse(localStorage.getItem('sb-' + CFG.sbRef + '-auth-token'));
@@ -1105,7 +1096,7 @@
         } catch (e) {}
         return null;
       }
-      (function () { var u = (session() || {}).user; if (u) { var md = u.user_metadata || {}; if (!form.name) form.name = md.full_name || ''; if (!form.phone) form.phone = md.phone || ''; } })();
+      (function () { var u = (session() || {}).user; if (u) { var md = u.user_metadata || {}; if (!form.name) form.name = md.full_name || ''; if (!form.phone) form.phone = md.phone || ''; if (!form.email) form.email = u.email || ''; } })();
       var counties = [].map.call(D.querySelectorAll('.counties li'), function (l) { return l.textContent; });
 
       D.querySelectorAll('#featured .pcard:not(.cta)').forEach(function (c) {
@@ -1199,6 +1190,7 @@
         }); fs.appendChild(os); b.appendChild(fs);
         fld(b, 'name', 'Full name', inp('text', 'e.g. Jane Wanjiru', 'name'));
         fld(b, 'phone', 'Phone / WhatsApp number', inp('tel', '07XX XXX XXX', 'tel', 'tel'));
+        fld(b, 'email', 'Email (we send your receipt here)', inp('email', 'you@example.com', 'email', 'email'));
         if (form.method === 'delivery') {
           var s = h('select'); s.appendChild(new Option('Select county', '')); counties.forEach(function (c) { s.appendChild(new Option(c, c)); });
           fld(b, 'county', 'County', s); s.value = form.county;
@@ -1212,6 +1204,7 @@
           errs = {};
           if (!form.name || form.name.trim().length < 2) errs.name = 'Enter your full name.';
           if (!normPhone(form.phone)) errs.phone = 'Enter a valid Kenyan number, e.g. 0712 345 678.';
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((form.email || '').trim())) errs.email = 'Enter a valid email so we can send your receipt.';
           if (form.method === 'delivery') { if (!form.county) errs.county = 'Choose your county.'; if (!form.addr || form.addr.trim().length < 3) errs.addr = 'Enter your town / area and street.'; }
           var k = Object.keys(errs);
           if (k.length) { render(); var e = D.getElementById(k[0]); if (e) e.focus(); return; }
@@ -1247,7 +1240,7 @@
       function rReview(b, f, T) {
         box(b, 'Items', T.L.map(function (i) { return [i.qty + ' × ' + i.name, money(i.total)]; }), 'cart');
         box(b, form.method === 'pickup' ? 'Collection' : 'Delivery', [[where()]], 'details');
-        box(b, 'Contact', [[form.name.trim()], ['+' + normPhone(form.phone)]], 'details');
+        box(b, 'Contact', [[form.name.trim()], ['+' + normPhone(form.phone)], [(form.email || '').trim()]], 'details');
         payBox(b, T.s);
         row(f, 'Subtotal', money(T.s), 'big'); f.appendChild(h('p', 'note', 'Delivery fee, if any, is confirmed with you on WhatsApp.'));
         if (sendErr) f.appendChild(h('div', 'oerr', sendErr));
@@ -1279,7 +1272,7 @@
         var s = session(), method = form.method;
         var row = {
           ref: ref, user_id: s ? s.user.id : null, customer_name: form.name.trim().slice(0, 120), phone: '+' + normPhone(form.phone),
-          email: s && s.user.email ? s.user.email : null, method: method, county: method === 'delivery' ? form.county : null,
+          email: (form.email || '').trim().toLowerCase().slice(0, 150) || (s && s.user.email) || null, method: method, county: method === 'delivery' ? form.county : null,
           address: method === 'delivery' ? form.addr.trim().slice(0, 200) : null, notes: form.notes && form.notes.trim() ? form.notes.trim().slice(0, 500) : null,
           items: T.L.map(function (i) { return { name: i.name, qty: i.qty, price: i.price, total: i.total }; }), subtotal: T.s
         };
@@ -1287,16 +1280,17 @@
         if (s) hd.Authorization = 'Bearer ' + s.access_token;
         var ctl = window.AbortController ? new AbortController() : null, to = setTimeout(function () { if (ctl) ctl.abort(); }, 20000);
         fetch(CFG.sbUrl + '/rest/v1/orders', { method: 'POST', headers: hd, body: JSON.stringify(row), signal: ctl ? ctl.signal : undefined })
-          .then(function (r) { clearTimeout(to); if (!r.ok) throw new Error('status ' + r.status); })
+          .then(function (r) { clearTimeout(to); if (r.ok) return; return r.text().then(function (t) { var e = new Error('status ' + r.status + ' ' + t); e.status = r.status; throw e; }); })
           .then(function () {
             lastMsg = message(T); lastUrl = 'https://wa.me/' + CFG.wa + '?text=' + encodeURIComponent(lastMsg);
             notify(T, s);
-            ls('stm_cust', { name: form.name.trim(), phone: form.phone, county: form.county, addr: form.addr, method: form.method });
+            ls('stm_cust', { name: form.name.trim(), phone: form.phone, email: (form.email || '').trim(), county: form.county, addr: form.addr, method: form.method });
             doneRef = ref; doneTotal = T.s; ref = ''; cart = {}; store(); sending = false; form.notes = ''; step = 'done'; sync(); if (!isOpen) render();
           })
-          .catch(function () {
+          .catch(function (err) {
             clearTimeout(to); sending = false;
-            sendErr = 'We could not place your order. Check your connection and try again, or send it on WhatsApp instead.'; render();
+            try { console.error('Order failed:', err && err.message); } catch (e) {}
+            sendErr = 'We could not place your order. Check your connection and try again, or send it on WhatsApp instead.' + (err && err.status ? ' (Error ' + err.status + ')' : ' (Network)'); render();
           });
       }
       function rDone(b, f) {

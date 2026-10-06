@@ -84,6 +84,7 @@
   </div>
 </div>
 
+<script src="receipt.js"></script>
 <script>
 (function () {
   var D = document, SB = 'https://oewvtbnmyombbtggamor.supabase.co', KEY = 'sb_publishable_CQiZr-INuot9C4fbdJDz1Q_4OiWEQL7', SK = 'stm_admin_session';
@@ -173,6 +174,11 @@
   }
   $('q').addEventListener('input', function () { q = this.value; render(); });
 
+  function note(msg, ok) { var er = $('aerr'); er.textContent = msg; er.style.color = ok ? '#15803d' : ''; er.hidden = false; }
+  function sendReceipt(o) {
+    return STM_RECEIPT.email(o).then(function () { note('Receipt emailed to ' + o.email + '.', true); })
+      .catch(function (e) { note('Receipt not emailed: ' + e.message, false); });
+  }
   function card(o) {
     var st = o.status || 'pending', c = h('div', 'card');
     var top = h('div', 'top'), l = h('div'); l.appendChild(h('div', 'ref', o.ref));
@@ -200,6 +206,11 @@
           var e = log[x[0]]; if (e) tg.appendChild(h('div', 'meta', x[1] + ': ' + (e.by || '') + (e.at ? ' \u00b7 ' + fmt(e.at) : '')));
         });
         c.appendChild(tr); c.appendChild(tg);
+        var pb = h('button', 'btn alt sm', 'Receipt PDF'); pb.type = 'button';
+        pb.onclick = function () { STM_RECEIPT.pdf(o).catch(function (e) { note(e.message, false); }); }; a.appendChild(pb);
+        if (o.email) { var eb = h('button', 'btn alt sm', 'Email receipt'); eb.type = 'button';
+          eb.onclick = function () { eb.disabled = true; sendReceipt(o).then(function () { eb.disabled = false; }); }; a.appendChild(eb); }
+        if (ph) { var wr = h('a', 'btn alt sm', 'Receipt on WhatsApp'); wr.href = 'https://wa.me/' + ph + '?text=' + encodeURIComponent(STM_RECEIPT.text(o)); wr.target = '_blank'; wr.rel = 'noopener'; a.appendChild(wr); }
         [['packed', 'Mark packed'], ['out_for_delivery', 'Out for delivery'], ['delivered', 'Delivered']].forEach(function (x, i) {
           if (i < cur) return;
           var sb = h('button', 'btn alt sm', x[1]); sb.type = 'button'; sb.onclick = function () { confirmAct(o, x[0]); }; a.appendChild(sb);
@@ -234,7 +245,15 @@
       if (patch.status) { patch.handled_by = action === 'pending' ? null : (sess.email || null); patch.handled_at = action === 'pending' ? null : new Date().toISOString(); }
       ready().then(function () { return api('/rest/v1/orders?ref=eq.' + encodeURIComponent(o.ref) + '&select=ref,status', { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: patch }); })
         .then(function (r) { if (!r.ok) throw 0; return r.json(); })
-        .then(function (rows) { if (!rows.length) throw 0; $('cf').hidden = true; return fetchOrders(); })
+        .then(function (rows) {
+          if (!rows.length) throw 0; $('cf').hidden = true;
+          var done = fetchOrders();
+          if (action === 'approve') {
+            var paid = Object.assign({}, o, { status: 'paid', handled_at: new Date().toISOString() });
+            if (paid.email) sendReceipt(paid); else note('Order confirmed. No email on this order, so use "Receipt on WhatsApp" instead.', true);
+          }
+          return done;
+        })
         .catch(function () { $('cf').hidden = true; var er = $('aerr'); er.textContent = 'Could not update the order. You may not have staff access.'; er.hidden = false; });
     };
   }
