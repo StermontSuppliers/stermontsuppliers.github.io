@@ -105,7 +105,10 @@
 <script>
 (function () {
   var D = document, SB = 'https://oewvtbnmyombbtggamor.supabase.co', KEY = 'sb_publishable_CQiZr-INuot9C4fbdJDz1Q_4OiWEQL7', SK = 'stm_admin_session';
-  var sess = null, orders = [], tab = 'pending', q = '';
+  var TABS_OK = ['pending', 'paid', 'declined', 'all', 'stock', 'catalog'], TK = 'stm_admin_tab';
+  function savedTab() { try { var t = (location.hash || '').replace('#', '') || localStorage.getItem(TK); return TABS_OK.indexOf(t) > -1 ? t : 'pending'; } catch (e) { return 'pending'; } }
+  function rememberTab(t) { try { localStorage.setItem(TK, t); history.replaceState(null, '', location.pathname + location.search + '#' + t); } catch (e) {} }
+  var sess = null, orders = [], tab = savedTab(), q = '';
   var qs = new URLSearchParams(location.search), want = { ref: qs.get('ref'), action: qs.get('action') };
   var STAGE = { packed: 'Packed 📦', out_for_delivery: 'Out for delivery 🚚', delivered: 'Delivered 🎉' };
   var STAGES = ['packed', 'out_for_delivery', 'delivered'];
@@ -172,7 +175,7 @@
     var t = $('tabs'); t.textContent = '';
     [['pending', 'Pending'], ['paid', 'Confirmed ✅'], ['declined', 'Declined'], ['all', 'All'], ['stock', 'Stock 📦'], ['catalog', 'Catalog 🛍️']].forEach(function (x) {
       var b = h('button', tab === x[0] ? 'on' : '', x[1] + (x[0] === 'stock' || x[0] === 'catalog' ? '' : ' (' + (x[0] === 'all' ? orders.length : count(x[0])) + ')')); b.type = 'button';
-      b.onclick = function () { tab = x[0]; render(); }; t.appendChild(b);
+      b.onclick = function () { tab = x[0]; rememberTab(tab); render(); }; t.appendChild(b);
     });
   }
   function render() {

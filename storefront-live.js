@@ -5,11 +5,32 @@
   function money(n) { return 'KSh ' + Math.round(n).toLocaleString('en-KE'); }
   function mk(t, c, x) { var e = D.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
 
+  /* ---------- wishlist (saved on this device; shown in My account > Wishlist) ---------- */
+  function wl() { try { return JSON.parse(localStorage.getItem('stm_wish')) || []; } catch (e) { return []; } }
+  function inWish(id) { return wl().indexOf(id) > -1; }
+  function toggleWish(id) {
+    var w = wl(), i = w.indexOf(id); if (i > -1) w.splice(i, 1); else w.unshift(id);
+    try { localStorage.setItem('stm_wish', JSON.stringify(w)); } catch (e) {}
+    paintHearts(); return i === -1;
+  }
+  function paintHearts() {
+    [].forEach.call(D.querySelectorAll('.wl-h'), function (b) { var on = inWish(b.getAttribute('data-id')); b.classList.toggle('on', on); b.textContent = on ? '♥' : '♡'; b.setAttribute('aria-label', on ? 'Remove from wishlist' : 'Save to wishlist'); });
+  }
+  function heart(id, cls) {
+    var b = mk('button', 'wl-h' + (cls ? ' ' + cls : '')); b.type = 'button'; b.setAttribute('data-id', id);
+    b.onclick = function (e) { e.stopPropagation(); e.preventDefault(); var on = toggleWish(id); var t = D.getElementById('toast'); if (t) { t.textContent = on ? 'Saved to wishlist' : 'Removed from wishlist'; t.classList.add('on'); clearTimeout(heart.t); heart.t = setTimeout(function () { t.classList.remove('on'); }, 1400); } };
+    return b;
+  }
+  var HCSS = '.wl-h{border:0;background:rgba(255,255,255,.92);color:#5b21b6;width:36px;height:36px;border-radius:50%;font-size:1.3rem;line-height:1;cursor:pointer;display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.18);padding:0}.wl-h.on{color:#d92d20}' +
+    '.pcard .img .wl-h{position:absolute;top:.4rem;right:.4rem;z-index:2}#stm-pd .bar .wl-h{margin-left:auto;flex:none;box-shadow:none;background:#f1ecfc}';
+  (function () { var s = mk('style'); s.textContent = HCSS; D.head.appendChild(s); })();
+
   /* ---------- product card (compact; tap to open the full view) ---------- */
   function card(p) {
     var c = mk('div', 'pcard'), sold = p.stock <= 0; c.id = 'p-' + p.id; c._p = p; c.style.cursor = 'pointer';
     var img = mk('span', 'img'); img.style.position = 'relative';
     if (p.images && p.images[0]) { var i = new Image(); i.src = p.images[0]; i.alt = p.name; i.width = i.height = 288; i.loading = 'lazy'; img.appendChild(i); }
+    img.appendChild(heart(c.id)); setTimeout(paintHearts, 0);
     var b = mk('div', 'b'), h = mk('h3', '', p.name), pr = mk('p', 'price', money(p.price));
     var btn = mk('button', 'btn btn-main'); btn.type = 'button';
     if (sold) { btn.textContent = 'Sold out'; btn.disabled = true; btn.dataset.sold = '1'; btn.style.opacity = '.55'; }
@@ -55,6 +76,7 @@
       '<div class="act"><div class="q"><button type="button" class="mn" aria-label="Less">−</button><span>1</span><button type="button" class="pl" aria-label="More">+</button></div><button type="button" class="add">Add to cart</button><button type="button" class="cart">🛒 Cart</button></div></div>';
     D.body.appendChild(pd);
     var q = function (s) { return pd.querySelector(s); };
+    q('.bar').appendChild(heart('', 'pd-h'));
     q('.back').onclick = closeView;
     pd.addEventListener('click', function (e) { if (e.target === pd) closeView(); });
     q('.mn').onclick = function () { setQty(qty - 1); };
@@ -90,6 +112,7 @@
   }
   function openView(c, noPush) {
     var p = c._p; if (!p) return; build(); cur = c; var q = function (s) { return pd.querySelector(s); };
+    q('.pd-h').setAttribute('data-id', c.id); paintHearts(); if (window.STM_track) window.STM_track(c.id);
     imgs = (p.images || []).filter(Boolean); q('.bar b').textContent = p.name; q('h2').textContent = p.name; q('.pr').textContent = money(p.price);
     var s = q('.st'), sold = p.stock <= 0; s.className = 'st' + (sold ? ' out' : p.stock <= 5 ? ' low' : '');
     s.textContent = sold ? 'Sold out' : p.stock <= 5 ? 'Only ' + p.stock + ' left' : 'In stock';
@@ -106,6 +129,7 @@
   }
   function hide() { if (pd) pd.classList.remove('on'); D.documentElement.style.overflow = ''; cur = null; }
   function closeView() { if (history.state && history.state.stm) history.back(); else hide(); }
+  window.STM_openView = function (c) { if (c && c._p) openView(c); else if (c) c.click(); };
 
   /* ---------- put items into their category sections ---------- */
   function bump(m) { var c = m.querySelector('.cnt'); if (c) c.textContent = m.querySelectorAll('.pcard').length; }
