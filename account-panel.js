@@ -1,11 +1,13 @@
 /* Stermont Arcade · Jumia-style "My account" panel.
    Add at the end of index.html, AFTER storefront-live.js:  <script src="account-panel.js" defer></script>
    Replaces the old account panel (same #ac container) with: Orders (Ongoing/Delivered + Canceled/Returned),
-   Inbox, Ratings & Reviews, Vouchers, Wishlist, Recently viewed, Address book. */
+   Inbox, Ratings & Reviews, Vouchers, Wishlist, Recently viewed, Address book.
+   v2: full-detail order enquiry on WhatsApp, Edit saved details, Recently viewed now records products. */
 (function () {
   var D = document, NS = 'http://www.w3.org/2000/svg', REF = 'oewvtbnmyombbtggamor', SBU = 'https://' + REF + '.supabase.co',
       KEY = 'sb_publishable_CQiZr-INuot9C4fbdJDz1Q_4OiWEQL7', SK = 'sb-' + REF + '-auth-token', WA = '254748888230';
   var AC, AB, view = 'main', tab = 'ongoing', orders = null, loading = false, loadErr = '';
+  var COUNTIES = ['Baringo', 'Bomet', 'Bungoma', 'Busia', 'Elgeyo-Marakwet', 'Embu', 'Garissa', 'Homa Bay', 'Isiolo', 'Kajiado', 'Kakamega', 'Kericho', 'Kiambu', 'Kilifi', 'Kirinyaga', 'Kisii', 'Kisumu', 'Kitui', 'Kwale', 'Laikipia', 'Lamu', 'Machakos', 'Makueni', 'Mandera', 'Marsabit', 'Meru', 'Migori', 'Mombasa', "Murang'a", 'Nairobi', 'Nakuru', 'Nandi', 'Narok', 'Nyamira', 'Nyandarua', 'Nyeri', 'Samburu', 'Siaya', 'Taita-Taveta', 'Tana River', 'Tharaka-Nithi', 'Trans-Nzoia', 'Turkana', 'Uasin Gishu', 'Vihiga', 'Wajir', 'West Pokot'];
 
   function el(t, c, x) { var e = D.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
   function get(k) { try { return JSON.parse(localStorage.getItem(k)) || null; } catch (e) { return null; } }
@@ -29,29 +31,54 @@
     '.ac-on{font-weight:800;font-size:.95rem}' +
     '.ac-msg{padding:.9rem 1rem;border-bottom:1px solid var(--line)}.ac-msg b{display:block}.ac-msg small{color:var(--muted)}' +
     '.ac-st{display:inline-flex;gap:.15rem;margin-top:.3rem}.ac-st button{border:0;background:none;font-size:1.7rem;line-height:1;color:#c9c4d8;cursor:pointer;padding:0 .1rem}.ac-st button.on{color:#f6a800}' +
-    '.ac-hd{padding:.8rem 1rem;font-weight:800;border-bottom:1px solid var(--line)}';
+    '.ac-hd{padding:.8rem 1rem;font-weight:800;border-bottom:1px solid var(--line)}' +
+    '.ac-row.bk::after{content:none}' +
+    '.ac-it.big img{width:84px;height:84px}.ac-it .m small+small{display:block;color:var(--muted);font-weight:600;margin-top:.1rem}' +
+    '.ac-f{padding:.2rem 1rem 1rem}.ac-f label{display:block;font-weight:700;font-size:.88rem;margin:.8rem 0 .25rem}' +
+    '.ac-f input,.ac-f select{width:100%;font:inherit;color:var(--ink);background:var(--panel);border:2px solid transparent;border-radius:12px;padding:.75rem .9rem}' +
+    '.ac-f input:focus,.ac-f select:focus{outline:0;border-color:var(--orange);background:var(--paper)}.ac-f .er{color:#d92d20;font-size:.82rem;margin-top:.2rem}' +
+    '.ac-f .ac-login{margin:1rem 0 0;width:100%;border:0;font:inherit;cursor:pointer}.ac-two{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;padding:0 1rem 1rem}' +
+    '.ac-two .ac-login,.ac-two .ac-out{margin:0;width:auto;font:inherit;cursor:pointer}.ac-sh{margin:.6rem 1rem 0;width:calc(100% - 2rem);border:2px solid var(--orange);background:var(--paper);color:var(--orange);font:inherit;font-weight:800;border-radius:8px;padding:.8rem;cursor:pointer}' +
+    '.ac-sec2{padding:.8rem 1rem;border-bottom:1px solid var(--line)}.ac-sec2 small{display:block;color:var(--muted)}.ac-sec2 b{font-weight:700}';
   D.head.appendChild(st);
+
+  /* ---------- recently viewed: record every product the customer opens ---------- */
+  function recent(id) {
+    if (!id) return;
+    var l = (get('stm_recent') || []).filter(function (x) { return x !== id; }); l.unshift(id); put('stm_recent', l.slice(0, 20));
+  }
+  function hookOpenView() {
+    var f = window.STM_openView;
+    if (typeof f !== 'function' || f.__stmRecent) return;
+    var w = function (c) { try { if (c && c.id) recent(c.id); } catch (e) {} return f.apply(this, arguments); };
+    w.__stmRecent = true; window.STM_openView = w;
+  }
 
   /* ---------- data ---------- */
   function loadOrders(done) {
     var S = sess(); if (!S) { orders = []; return done(); }
     loading = true; loadErr = '';
-    fetch(SBU + '/rest/v1/orders?select=ref,items,subtotal,status,created_at,handled_at,method,pay_code&user_id=eq.' + encodeURIComponent(S.user.id) + '&order=created_at.desc&limit=100',
+    fetch(SBU + '/rest/v1/orders?select=ref,items,subtotal,status,stage,created_at,handled_at,method,pay_code,pay_amount,county,address,customer_name,phone,notes&user_id=eq.' + encodeURIComponent(S.user.id) + '&order=created_at.desc&limit=100',
       { headers: { apikey: KEY, Authorization: 'Bearer ' + S.access_token } })
       .then(function (r) { if (!r.ok) throw new Error('status ' + r.status); return r.json(); })
       .then(function (rows) { orders = rows || []; })
       .catch(function () { orders = []; loadErr = 'Could not load your orders. Check your connection and try again.'; })
       .then(function () { loading = false; done(); });
   }
+  function eff(o) {   /* the admin stores shipping progress in "stage" while status stays "paid" */
+    var s = String(o.status || 'pending').toLowerCase();
+    if (s === 'paid') return o.stage === 'delivered' ? 'delivered' : o.stage === 'out_for_delivery' ? 'out_for_delivery' : o.stage === 'packed' ? 'packed' : 'confirmed';
+    return s;
+  }
   function kind(o) {
-    var s = String(o.status || '').toLowerCase();
+    var s = eff(o);
     if (s === 'declined' || s === 'cancelled' || s === 'canceled' || s === 'returned') return 'no';
     if (s === 'delivered' || s === 'completed' || s === 'collected') return 'ok';
     if (s === 'out_for_delivery' || s === 'shipped') return 'go';
     return 'wait';
   }
   function label(o) {
-    var s = String(o.status || 'pending').toLowerCase(), m = { pending: 'Pending verification', paid: 'Payment confirmed', confirmed: 'Confirmed', packed: 'Packed', out_for_delivery: 'On the way', delivered: 'Delivered', declined: 'Declined', cancelled: 'Canceled', canceled: 'Canceled', returned: 'Returned' };
+    var s = eff(o), m = { pending: 'Pending verification', paid: 'Payment confirmed', confirmed: 'Confirmed', packed: 'Packed', out_for_delivery: 'On the way', delivered: 'Delivered', declined: 'Declined', cancelled: 'Canceled', canceled: 'Canceled', returned: 'Returned' };
     return (m[s] || s.replace(/_/g, ' ')).toUpperCase();
   }
   function imgFor(name) {
@@ -70,8 +97,8 @@
   }
   function go(v) { view = v; if (v === 'orders' || v === 'inbox' || v === 'reviews') { if (orders === null) { render(); return loadOrders(render); } } render(); }
   function sub(title, node) {
-    var bk = el('button', 'ac-row', '\u2190 Back'); bk.type = 'button'; bk.style.fontWeight = '700'; bk.style.setProperty('--x', 0);
-    bk.addEventListener('click', function () { view = 'main'; render(); });
+    var bk = el('button', 'ac-row bk', '\u2190 Back'); bk.type = 'button'; bk.style.fontWeight = '700';
+    bk.addEventListener('click', function () { view = (view.indexOf('order:') === 0 ? 'orders' : view === 'addr-edit' ? 'addr' : 'main'); render(); });
     AB.appendChild(bk); AB.appendChild(el('div', 'ac-sec', title)); AB.appendChild(node);
   }
   function needLogin() {
@@ -79,6 +106,24 @@
     var a = el('a', 'ac-login', 'Log in or create account'); a.href = 'account.html'; w.appendChild(a); return w;
   }
   function itemsOf(o) { return Array.isArray(o.items) ? o.items : []; }
+
+  /* WhatsApp enquiry: carries every detail of the order, with each item's photo link */
+  function orderMsg(o) {
+    var L = ['Hello Stermont Arcade, about my order ' + o.ref, '', 'Status: ' + label(o), 'Placed: ' + dmy(o.created_at), '', 'ITEMS'];
+    itemsOf(o).forEach(function (i, n) {
+      var src = imgFor(i.name);
+      L.push((n + 1) + '. ' + i.name + ' x' + (i.qty || 1) + ' @ ' + money(i.price) + ' = ' + money(i.total));
+      if (/^https?:/i.test(src)) L.push('   Photo: ' + src);
+    });
+    L.push('', 'Items total: ' + money(o.subtotal));
+    L.push('Delivery: ' + (o.method === 'delivery' ? [o.address, o.county].filter(Boolean).join(', ') : 'Pickup at the store'));
+    if (o.customer_name) L.push('Name: ' + o.customer_name);
+    if (o.phone) L.push('Phone: ' + o.phone);
+    if (o.pay_code) L.push('M-Pesa code: ' + String(o.pay_code).toUpperCase() + (o.pay_amount != null ? ' (' + money(o.pay_amount) + ')' : ''));
+    if (o.notes) L.push('Notes: ' + o.notes);
+    L.push('', 'Please update me on this order. Thank you!');
+    return L.join('\n');
+  }
 
   /* ---------- views ---------- */
   function vOrders() {
@@ -109,13 +154,17 @@
     if (!o) { f.appendChild(el('p', 'ac-empty', 'Order not found.')); return f; }
     var h = el('div', 'ac-kv'); h.appendChild(el('small', null, 'Order #' + o.ref)); h.appendChild(el('span', 'ac-bd ' + kind(o), label(o))); h.appendChild(el('small', null, 'Placed ' + dmy(o.created_at))); f.appendChild(h);
     itemsOf(o).forEach(function (i) {
-      var d = el('div', 'ac-it'), src = imgFor(i.name), m = el('div', 'm');
+      var d = el('div', 'ac-it big'), src = imgFor(i.name), m = el('div', 'm');
       if (src) { var im = el('img'); im.src = src; im.alt = ''; d.appendChild(im); }
       m.appendChild(el('b', null, i.name)); m.appendChild(el('small', null, (i.qty || 1) + ' \u00d7 ' + money(i.price) + ' = ' + money(i.total))); d.appendChild(m); f.appendChild(d);
     });
     var t = el('div', 'ac-kv'); t.appendChild(el('small', null, 'Items total')); t.appendChild(el('b', null, money(o.subtotal))); f.appendChild(t);
+    [['Delivery', o.method === 'delivery' ? [o.address, o.county].filter(Boolean).join(', ') : 'Pickup at the store'], ['Name', o.customer_name], ['Phone', o.phone],
+     ['M-Pesa code', o.pay_code ? String(o.pay_code).toUpperCase() : ''], ['Notes', o.notes]].forEach(function (k) {
+      if (!k[1]) return; var d = el('div', 'ac-sec2'); d.appendChild(el('small', null, k[0])); d.appendChild(el('b', null, k[1])); f.appendChild(d);
+    });
     var a = el('a', 'ac-login', 'Ask about this order on WhatsApp'); a.target = '_blank'; a.rel = 'noopener';
-    a.href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent('Hello Stermont Arcade, about my order ' + o.ref); f.appendChild(a);
+    a.href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent(orderMsg(o)); f.appendChild(a);
     return f;
   }
   var INBOX = { pending: 'We received your M-Pesa code and are verifying your payment.', paid: 'Your payment is confirmed. We are preparing your order.', confirmed: 'Your order is confirmed.', packed: 'Your order has been packed.', out_for_delivery: 'Your order is on the way. Keep your phone on.', delivered: 'Your order was delivered. Enjoy!', declined: 'We could not verify the payment, so the order was declined. Message us on WhatsApp.', cancelled: 'Your order was canceled.', canceled: 'Your order was canceled.', returned: 'Your order was returned.' };
@@ -124,7 +173,7 @@
     if (orders === null || loading) { f.appendChild(el('p', 'ac-empty', 'Loading\u2026')); return f; }
     if (!orders.length) { f.appendChild(el('p', 'ac-empty', 'No messages yet. Updates about your orders will show here.')); return f; }
     orders.forEach(function (o) {
-      var d = el('div', 'ac-msg'), s = String(o.status || 'pending').toLowerCase();
+      var d = el('div', 'ac-msg'), s = eff(o);
       d.appendChild(el('b', null, label(o) + ' \u00b7 Order #' + o.ref)); d.appendChild(el('span', null, INBOX[s] || 'Order update.')); d.appendChild(el('small', null, dmy(o.handled_at || o.created_at)));
       d.style.cursor = 'pointer'; d.addEventListener('click', function () { view = 'order:' + o.ref; render(); }); f.appendChild(d);
     });
@@ -152,7 +201,7 @@
     if (!list.length) { f.appendChild(el('p', 'ac-empty', key === 'stm_wish' ? 'Nothing saved yet. Tap the \u2661 on any product.' : 'Products you open will show here.')); return f; }
     list.forEach(function (id) {
       var c = card(id), d = el('div', 'ac-it'), im = el('img'), m = el('div', 'm'); im.src = (c.querySelector('img') || {}).src || ''; im.alt = '';
-      m.appendChild(el('b', null, c.querySelector('h3').textContent)); m.appendChild(el('small', null, c.querySelector('.price').textContent)); d.appendChild(im); d.appendChild(m);
+      m.appendChild(el('b', null, c.querySelector('h3').textContent)); m.appendChild(el('small', null, (c.querySelector('.price') || {}).textContent || '')); d.appendChild(im); d.appendChild(m);
       if (key === 'stm_wish') { var x = el('button', null, '\u00d7'); x.setAttribute('aria-label', 'Remove'); x.addEventListener('click', function (e) { e.stopPropagation(); put('stm_wish', (get('stm_wish') || []).filter(function (i) { return i !== id; })); render(); }); d.appendChild(x); }
       d.addEventListener('click', function () { shut(); if (window.STM_openView) window.STM_openView(c); else c.click(); });
       f.appendChild(d);
@@ -160,17 +209,51 @@
     return f;
   }
   function vAddr() {
-    var f = D.createDocumentFragment(), c = get('stm_cust') || {};
-    [['Name', c.name], ['Phone', c.phone], ['Email', c.email], ['County', c.county], ['Address', c.addr]].forEach(function (k) { if (k[1]) { var d = el('div', 'ac-kv'); d.appendChild(el('small', null, k[0])); d.appendChild(el('b', null, k[1])); f.appendChild(d); } });
-    if (!f.childNodes.length) f.appendChild(el('p', 'ac-empty', 'No saved address yet. It is saved when you place your first order.'));
-    else { var cl = el('button', 'ac-out', 'Clear saved details'); cl.type = 'button'; cl.addEventListener('click', function () { try { localStorage.removeItem('stm_cust'); } catch (e) {} render(); }); f.appendChild(cl); }
+    var f = D.createDocumentFragment(), c = get('stm_cust') || {}, has = false;
+    [['Name', c.name], ['Phone', c.phone], ['Email', c.email], ['County', c.county], ['Address', c.addr]].forEach(function (k) { if (k[1]) { has = true; var d = el('div', 'ac-kv'); d.appendChild(el('small', null, k[0])); d.appendChild(el('b', null, k[1])); f.appendChild(d); } });
+    if (!has) f.appendChild(el('p', 'ac-empty', 'No saved address yet. Add one now, or it is saved when you place your first order.'));
+    var bt = el('div', 'ac-two'), ed = el('button', 'ac-login', has ? 'Edit saved details' : 'Add details'); ed.type = 'button';
+    ed.addEventListener('click', function () { view = 'addr-edit'; render(); }); bt.appendChild(ed);
+    if (has) { var cl = el('button', 'ac-out', 'Clear saved details'); cl.type = 'button'; cl.addEventListener('click', function () { try { localStorage.removeItem('stm_cust'); } catch (e) {} render(); }); bt.appendChild(cl); }
+    f.appendChild(bt);
     return f;
+  }
+  function vAddrEdit() {
+    var c = get('stm_cust') || {}, form = el('form', 'ac-f'), F = {};
+    function field(key, lab, type, val, ph) {
+      form.appendChild(el('label', null, lab)); var i = el('input'); i.type = type; i.value = val || ''; if (ph) i.placeholder = ph; i.name = key;
+      if (key === 'phone') i.inputMode = 'tel'; if (key === 'email') i.autocomplete = 'email'; if (key === 'name') i.autocomplete = 'name';
+      var er = el('div', 'er'); er.hidden = true; form.appendChild(i); form.appendChild(er); F[key] = { i: i, er: er }; return i;
+    }
+    field('name', 'Full name', 'text', c.name);
+    field('phone', 'Phone (M-Pesa number)', 'tel', c.phone, '07XX XXX XXX');
+    field('email', 'Email', 'email', c.email, 'you@example.com');
+    form.appendChild(el('label', null, 'County'));
+    var sel = el('select'); sel.appendChild(el('option', null, 'Select county')); sel.firstChild.value = '';
+    var list = COUNTIES.slice(); if (c.county && list.indexOf(c.county) < 0) list.unshift(c.county);
+    list.forEach(function (n) { var o = el('option', null, n); o.value = n; if (n === c.county) o.selected = true; sel.appendChild(o); });
+    form.appendChild(sel);
+    field('addr', 'Delivery address / area', 'text', c.addr, 'Estate, street, landmark');
+    var sv = el('button', 'ac-login', 'Save details'); sv.type = 'submit'; form.appendChild(sv);
+    form.addEventListener('submit', function (e) {
+      e.preventDefault(); var bad = false;
+      Object.keys(F).forEach(function (k) { F[k].er.hidden = true; });
+      function fail(k, m) { F[k].er.textContent = m; F[k].er.hidden = false; bad = true; }
+      var name = F.name.i.value.trim(), phone = F.phone.i.value.replace(/[\s-]/g, ''), email = F.email.i.value.trim();
+      if (!name) fail('name', 'Enter your name.');
+      if (phone && !/^(\+?254|0)(7|1)\d{8}$/.test(phone)) fail('phone', 'Enter a valid Kenyan number, e.g. 0712345678.');
+      if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) fail('email', 'Enter a valid email address.');
+      if (bad) return;
+      put('stm_cust', Object.assign({}, c, { name: name, phone: phone, email: email, county: sel.value, addr: F.addr.i.value.trim() }));
+      view = 'addr'; render();
+    });
+    return form;
   }
 
   function render() {
     AB.textContent = ''; var S = sess();
     if (view.indexOf('order:') === 0) return sub('Order details', vOrder(view.slice(6)));
-    var map = { orders: ['Orders', vOrders], inbox: ['Inbox', vInbox], reviews: ['Ratings & Reviews', vReviews], vouchers: ['Vouchers', vVouchers], wish: ['My wishlist', function () { return vItems('stm_wish'); }], recent: ['Recently viewed', function () { return vItems('stm_recent'); }], addr: ['Address book', vAddr] };
+    var map = { orders: ['Orders', vOrders], inbox: ['Inbox', vInbox], reviews: ['Ratings & Reviews', vReviews], vouchers: ['Vouchers', vVouchers], wish: ['My wishlist', function () { return vItems('stm_wish'); }], recent: ['Recently viewed', function () { return vItems('stm_recent'); }], addr: ['Address book', vAddr], 'addr-edit': ['Edit saved details', vAddrEdit] };
     if (map[view]) return sub(map[view][0], map[view][1]());
 
     var md = S ? (S.user.user_metadata || {}) : {}, hi = el('div', 'ac-hi');
@@ -209,6 +292,12 @@
       var a = e.target.closest && e.target.closest('#acctbtn,#bar-acct,nav.desk a[href="account.html"]');
       if (!a) return; e.preventDefault(); e.stopImmediatePropagation(); orders = null; open();
     }, true);
+    /* recently viewed: any tap on a product card (also cards the storefront adds later) is recorded */
+    D.addEventListener('click', function (e) {
+      var t = e.target; if (!t || !t.closest || t.closest('#ac')) return;
+      var c = t.closest('.pcard[id^="p-"]'); if (c) recent(c.id);
+    }, true);
+    hookOpenView(); setTimeout(hookOpenView, 1500); window.addEventListener('load', hookOpenView);
     /* keep the order list fresh whenever the panel opens */
     var mo = new MutationObserver(function () { if (!AC.classList.contains('on')) { orders = null; } }); mo.observe(AC, { attributes: true, attributeFilter: ['class'] });
   }
