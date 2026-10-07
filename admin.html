@@ -155,7 +155,7 @@
         return r.json();
       })
       .then(function (rows) {
-        orders = rows;
+        orders = rows; window.STM_orders = rows;
         if (rows.length && !rows.some(function (o) { return o.status === 'pending' || o.status === 'paid' || o.status === 'declined'; })) {
           /* status column missing or no staff access */
         }

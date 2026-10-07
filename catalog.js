@@ -12,7 +12,7 @@
     '.cx-th button{position:absolute;top:-6px;right:-6px;border:0;background:var(--no);color:#fff;border-radius:50%;width:20px;height:20px;line-height:1}' +
     '.cx-t{width:100%;border-collapse:collapse;font-size:.84rem}.cx-t th,.cx-t td{padding:.45rem .5rem;text-align:right;border-bottom:1px solid var(--ln);white-space:nowrap}.cx-t th:first-child,.cx-t td:first-child{text-align:left;position:sticky;left:0;background:#fff;max-width:150px;overflow:hidden;text-overflow:ellipsis}' +
     '.cx-t th{background:#f3eefc;color:var(--pd);font-size:.74rem;text-transform:uppercase}.cx-t .sub td{background:#f6f4fb;font-weight:700}.cx-t .tot td{background:var(--p);color:#fff;font-weight:800}.cx-t .neg{color:var(--no)}.cx-w{overflow-x:auto;border:1px solid var(--ln);border-radius:12px}' +
-    '.modal .card{max-height:92vh;overflow:auto}.cx-pv{background:#f3eefc;border-radius:10px;padding:.5rem .7rem;margin:.6rem 0;font-size:.9rem}';
+    '.modal .card{max-height:92vh;overflow:auto}.cx-pl{background:#fff;border:1px solid var(--ln);border-radius:12px;padding:.5rem .6rem;margin-bottom:.8rem}.cx-pl summary{font-weight:700;cursor:pointer;padding:.3rem .2rem}.cx-pl .cx-t td:last-child{text-align:right;white-space:nowrap}.cx-pl .cx-t td:first-child{position:static;white-space:normal;max-width:none}.cx-pv{background:#f3eefc;border-radius:10px;padding:.5rem .7rem;margin:.6rem 0;font-size:.9rem}';
 
   /* ---------- helpers ---------- */
   function $(id) { return D.getElementById(id); }
@@ -55,11 +55,25 @@
     var b = bounds(); if (!b) return call('/rest/v1/product_stats?select=*');
     return call('/rest/v1/rpc/product_stats_range', { m: 'POST', body: { p_from: b[0].toISOString(), p_to: b[1] ? b[1].toISOString() : null } });
   }
-  function load() {
-    return Promise.all([call('/rest/v1/categories?select=*&order=name'), call('/rest/v1/products?select=*&order=created_at.desc'), statsCall()])
-      .then(function (r) { S.cats = r[0]; S.prods = r[1]; S.st = {}; r[2].forEach(function (x) { S.st[x.product_id] = x; }); });
+  function logsCall() {
+    var b = bounds(), f = b ? '&created_at=gte.' + encodeURIComponent(b[0].toISOString()) : '';
+    return call('/rest/v1/loss_logs?select=reason,loss,qty,created_at' + f + '&limit=2000').catch(function () { return []; });
   }
-  function stat(p) { var s = S.st[p.id] || {}; var sales = +s.sales || 0, cogs = +s.cogs || 0; return { sold: +s.sold || 0, sales: sales, profit: sales - cogs, loss: +s.loss || 0 }; }
+  function load() {
+    return Promise.all([call('/rest/v1/categories?select=*&order=name'), call('/rest/v1/products?select=*&order=created_at.desc'), statsCall(), logsCall()])
+      .then(function (r) { S.cats = r[0]; S.prods = r[1]; S.st = {}; r[2].forEach(function (x) { S.st[x.product_id] = x; }); S.logs = r[3] || []; });
+  }
+  /* orders the admin declined / cancelled in the chosen period (never counted as sales) */
+  function cancelled() {
+    var os = window.STM_orders || [], b = bounds(), n = 0, v = 0;
+    os.forEach(function (o) {
+      if (o.status !== 'declined' && o.status !== 'cancelled') return;
+      if (b && new Date(o.handled_at || o.created_at) < b[0]) return;
+      n++; v += Number(o.subtotal || 0);
+    });
+    return { n: n, value: v };
+  }
+  function stat(p) { var s = S.st[p.id] || {}; var sales = +s.sales || 0, cogs = +s.cogs || 0; return { sold: +s.sold || 0, sales: sales, cogs: cogs, profit: sales - cogs, loss: +s.loss || 0 }; }
   var ICONS = { agrovet: '🌾', 'phones-tablets': '📱', 'tvs-audio': '📺', appliances: '🧺', fashion: '👕', 'home-office': '🛋️', computing: '💻', supermarket: '🛒', 'health-beauty': '💄', gaming: '🎮', 'baby-products': '🍼', shoes: '👟', bags: '🎒', 'watches-jewellery': '⌚', automotive: '🚗', 'music-audio': '🎸' };
   function catIcon(id) { var c = S.cats.filter(function (x) { return x.id === id; })[0]; return (c && ICONS[c.slug]) || '📦'; }
   function catName(id) { var c = S.cats.filter(function (x) { return x.id === id; })[0]; return c ? c.name : 'Uncategorised'; }
@@ -105,9 +119,9 @@
     var body = '<label>Category</label><select class="cx-f" id="cx-cat">' + opts + '<option value="__new">＋ Create new category…</option></select>' +
       '<input class="cx-f" id="cx-newcat" placeholder="New category name" hidden style="margin-top:.4rem">' +
       '<label>Item name</label><input class="cx-f" id="cx-name" maxlength="120" value="' + esc(edit ? p.name : '') + '">' +
-      '<label>Description</label><textarea class="cx-f" id="cx-desc" rows="4" maxlength="1500" placeholder="Key features, size, warranty, what is in the box...">' + esc(edit ? p.description || '' : '') + '</textarea>' +
+      '<label>Description (shown on the product page)</label><textarea class="cx-f" id="cx-desc" rows="9" maxlength="4000" placeholder="One point per line.\nPut a section title on its own line, e.g.\nKey Features\nSpecifications\nBrand: Hisense\nWhat is in the box?">' + esc(edit ? p.description || '' : '') + '</textarea>' +
       '<div class="cx-r"><div><label>Price (KSh)</label><input class="cx-f" id="cx-price" type="number" min="0" inputmode="decimal" value="' + (edit ? p.price : '') + '"></div>' +
-      '<div><label>Cost / COGS (KSh)</label><input class="cx-f" id="cx-cost" type="number" min="0" inputmode="decimal" value="' + (edit ? p.cost : '') + '"></div>' +
+      '<div><label>Cost price per unit · COGS (KSh)</label><input class="cx-f" id="cx-cost" type="number" min="0" inputmode="decimal" value="' + (edit ? p.cost : '') + '"></div>' +
       '<div><label>' + (edit ? 'Pieces in stock' : 'Initial pieces') + '</label><input class="cx-f" id="cx-stock" type="number" min="0" inputmode="numeric" value="' + (edit ? p.stock : '') + '"' + (edit ? ' disabled' : '') + '></div>' +
       '<div><label>Low-stock alert below</label><input class="cx-f" id="cx-low" type="number" min="0" value="' + (edit ? p.low_at : 5) + '"></div></div>' +
       '<label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" id="cx-feat"' + (edit && p.featured ? ' checked' : '') + '> Feature as advert / top banner</label>' +
@@ -188,17 +202,38 @@
 
   /* ---------- render ---------- */
   function totals(list) {
-    return list.reduce(function (a, p) { var s = stat(p); a.stock += p.stock; a.sold += s.sold; a.sales += s.sales; a.profit += s.profit; a.loss += s.loss; a.value += p.stock * p.cost; return a; }, { stock: 0, sold: 0, sales: 0, profit: 0, loss: 0, value: 0 });
+    return list.reduce(function (a, p) { var s = stat(p); a.stock += p.stock; a.sold += s.sold; a.sales += s.sales; a.cogs += s.cogs; a.profit += s.profit; a.loss += s.loss; a.value += p.stock * p.cost; return a; }, { stock: 0, sold: 0, sales: 0, cogs: 0, profit: 0, loss: 0, value: 0 });
+  }
+  function plBox(T, X) {
+    var by = {}, rets = 0;
+    (S.logs || []).forEach(function (l) { var k = l.reason || 'Other'; by[k] = by[k] || { q: 0, v: 0 }; by[k].q += +l.qty || 0; by[k].v += +l.loss || 0; });
+    var rows = Object.keys(by).sort().map(function (k) { return '<tr><td>&nbsp;&nbsp;' + esc(k) + (k === 'Returned' ? ' (returns)' : '') + ' · ' + by[k].q + ' pcs</td><td class="neg">−' + money(by[k].v) + '</td></tr>'; }).join('');
+    var net = T.profit - T.loss;
+    return '<details class="cx-pl" open><summary>Profit &amp; loss breakdown</summary><table class="cx-t">' +
+      '<tr><td>Total sales</td><td>' + money(T.sales) + '</td></tr>' +
+      '<tr><td>− Cost of goods sold (COGS)</td><td class="neg">−' + money(T.cogs) + '</td></tr>' +
+      '<tr class="sub"><td>= Total profit</td><td>' + money(T.profit) + '</td></tr>' +
+      '<tr><td>Losses logged:</td><td></td></tr>' + (rows || '<tr><td>&nbsp;&nbsp;None</td><td>' + money(0) + '</td></tr>') +
+      '<tr class="sub"><td>= Total loss (write-offs &amp; returns)</td><td class="neg">−' + money(T.loss) + '</td></tr>' +
+      '<tr class="tot"><td>NET PROFIT</td><td>' + money(net) + '</td></tr>' +
+      '<tr><td>Cancelled / declined orders · ' + X.n + '</td><td class="neg">' + money(X.value) + '</td></tr>' +
+      '<tr class="sub"><td>Total loss incl. cancelled orders</td><td class="neg">−' + money(T.loss + X.value) + '</td></tr></table>' +
+      '<p class="meta" style="margin:.4rem .2rem">Cancelled or declined orders were never counted as sales, so they are shown as lost sales and are not deducted from profit. Log returned goods with <b>Log loss → Returned</b> so they count as a loss.</p></details>';
   }
   function neg(n) { return n < 0 ? ' class="neg"' : ''; }
   function render() {
-    var all = S.prods, T = totals(all), low = all.filter(function (p) { return p.active && p.stock < p.low_at; });
+    var all = S.prods, T = totals(all), X = cancelled(), rl = S.range === 'all' ? '' : ' · ' + RANGES.filter(function (r) { return r[0] === S.range; })[0][1].toUpperCase(), low = all.filter(function (p) { return p.active && p.stock < p.low_at; });
     var q = S.q.trim().toLowerCase();
     var shown = all.filter(function (p) { return (S.cat === 'all' || String(p.category_id) === S.cat) && (!q || p.name.toLowerCase().indexOf(q) > -1); });
     root.innerHTML = '<div class="err" id="cx-err" hidden></div><div class="tabs" id="cx-rg"></div>' +
-      '<div class="cx-k"><div class="hi"><small>TOTAL SALES' + (S.range === 'all' ? '' : ' · ' + RANGES.filter(function (r) { return r[0] === S.range; })[0][1].toUpperCase()) + '</small><b>' + money(T.sales) + '</b></div><div class="lime"><small>PROFIT</small><b>' + money(T.profit) + '</b></div>' +
-      '<div><small>LOSS / WRITE-OFFS</small><b style="color:var(--no)">' + money(T.loss) + '</b></div><div><small>NET PROFIT</small><b>' + money(T.profit - T.loss) + '</b></div>' +
+      '<div class="cx-k"><div class="hi"><small>TOTAL SALES' + rl + '</small><b>' + money(T.sales) + '</b></div>' +
+      '<div><small>COST OF GOODS SOLD (COGS)</small><b>' + money(T.cogs) + '</b></div>' +
+      '<div class="lime"><small>TOTAL PROFIT (sales − COGS)</small><b>' + money(T.profit) + '</b></div>' +
+      '<div><small>TOTAL LOSS (write-offs &amp; returns)</small><b style="color:var(--no)">' + money(T.loss) + '</b></div>' +
+      '<div><small>NET PROFIT (profit − loss)</small><b' + neg(T.profit - T.loss) + '>' + money(T.profit - T.loss) + '</b></div>' +
+      '<div><small>CANCELLED / DECLINED ORDERS</small><b>' + X.n + ' · ' + money(X.value) + '</b></div>' +
       '<div><small>PIECES LEFT · SOLD</small><b>' + T.stock + ' · ' + T.sold + '</b></div><div><small>STOCK VALUE (AT COST)</small><b>' + money(T.value) + '</b></div></div>' +
+      plBox(T, X) +
       (low.length ? '<div class="err" style="background:#fef3c7;color:#92400e">⚠ ' + low.length + ' item' + (low.length > 1 ? 's' : '') + ' low on stock: ' + low.slice(0, 4).map(function (p) { return esc(p.name) + ' (' + p.stock + ')'; }).join(', ') + (low.length > 4 ? '…' : '') + '</div>' : '') +
       '<p style="margin:0 0 .7rem"><button class="btn" id="cx-add" type="button" style="width:100%">＋ Add new item</button></p>' +
       '<div class="tabs" id="cx-chips"></div><input id="cx-q" type="search" placeholder="Search items" value="' + esc(S.q) + '" style="width:100%;padding:.7rem .8rem;border:1px solid var(--ln);border-radius:10px;font:inherit;margin-bottom:.8rem">' +
@@ -216,9 +251,10 @@
         (p.stock === 0 ? '<span class="badge b-declined">Out of stock</span> ' : lowS ? '<span class="badge b-low">Low · ' + p.stock + ' left</span> ' : '<span class="badge b-paid">In stock</span> ') +
         (p.featured ? '<span class="badge b-ad">Advert</span> ' : '') + (p.active ? '' : '<span class="badge b-pending">Hidden</span>') + '</div></div></div>' +
         (p.description ? '<div class="meta" style="margin:.5rem 0 0;white-space:pre-line">' + esc(p.description.length > 140 ? p.description.slice(0, 140) + '…' : p.description) + '</div>' : '<div class="meta" style="margin:.5rem 0 0;color:#b45309">No description yet. Tap Edit to add one.</div>') +
-        '<div class="cx-g"><div><span>Price</span><b>' + money(p.price) + '</b></div><div><span>Cost</span><b>' + money(p.cost) + '</b></div>' +
+        '<div class="cx-g"><div><span>Price</span><b>' + money(p.price) + '</b></div><div><span>COGS / unit</span><b>' + money(p.cost) + '</b></div>' +
         '<div><span>Left / Sold</span><b>' + p.stock + ' / ' + s.sold + '</b></div><div><span>Margin</span><b>' + margin + '%</b></div>' +
-        '<div><span>Sales</span><b>' + money(s.sales) + '</b></div><div><span>Profit</span><b>' + money(s.profit) + '</b></div></div>' +
+        '<div><span>Sales</span><b>' + money(s.sales) + '</b></div><div><span>COGS (sold)</span><b>' + money(s.cogs) + '</b></div>' +
+        '<div><span>Profit</span><b>' + money(s.profit) + '</b></div><div><span>Loss / returns</span><b' + (s.loss ? ' style="color:var(--no)"' : '') + '>' + money(s.loss) + '</b></div></div>' +
         '<div class="acts"><button class="btn ok sm" data-a="r" type="button">＋ Restock</button><button class="btn alt sm" data-a="l" type="button">Log loss</button><button class="btn alt sm" data-a="y" type="button">History</button><button class="btn alt sm" data-a="e" type="button">Edit</button><button class="btn alt sm" data-a="h" type="button">' + (p.active ? 'Hide' : 'Show') + '</button></div>';
       c.onclick = function (e) { var a = e.target.getAttribute && e.target.getAttribute('data-a'); if (!a) return;
         if (a === 'r') restockForm(p); else if (a === 'l') lossForm(p); else if (a === 'e') itemForm(p); else if (a === 'y') history(p);
@@ -228,8 +264,8 @@
     ledger(all);
   }
   function ledger(all) {
-    var rows = '<table class="cx-t"><tr><th>Item</th><th>Left</th><th>Sold</th><th>Sales</th><th>Profit</th><th>Loss</th></tr>';
-    function line(cls, name, t) { return '<tr class="' + cls + '"><td>' + name + '</td><td>' + t.stock + '</td><td>' + t.sold + '</td><td>' + money(t.sales) + '</td><td' + neg(t.profit) + '>' + money(t.profit) + '</td><td>' + money(t.loss) + '</td></tr>'; }
+    var rows = '<table class="cx-t"><tr><th>Item</th><th>Left</th><th>Sold</th><th>Sales</th><th>COGS</th><th>Profit</th><th>Loss</th></tr>';
+    function line(cls, name, t) { return '<tr class="' + cls + '"><td>' + name + '</td><td>' + t.stock + '</td><td>' + t.sold + '</td><td>' + money(t.sales) + '</td><td>' + money(t.cogs) + '</td><td' + neg(t.profit) + '>' + money(t.profit) + '</td><td>' + money(t.loss) + '</td></tr>'; }
     S.cats.concat([{ id: null, name: 'Uncategorised' }]).forEach(function (c) {
       var ps = all.filter(function (p) { return p.category_id === c.id; }); if (!ps.length) return;
       rows += line('sub', esc(c.name), totals(ps)); ps.forEach(function (p) { rows += line('', esc(p.name), totals([p])); });
