@@ -60,7 +60,7 @@
   }
   </script>
   <script type="application/ld+json">
-  {"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "name": "Stermont Arcade", "url": "https://stermontarcade.co.ke/", "inLanguage": "en-KE"}, {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I order from Stermont Arcade?", "acceptedAnswer": {"@type": "Answer", "text": "Add items to your cart on the website, enter your name and delivery details, and place your order. We confirm stock and the delivery fee, then you pay by M-Pesa."}}, {"@type": "Question", "name": "Do you deliver countrywide in Kenya?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. We deliver to all 47 counties in Kenya, usually in 1-3 days. The delivery fee, if any, is confirmed before you pay."}}, {"@type": "Question", "name": "How do I pay?", "acceptedAnswer": {"@type": "Answer", "text": "Pay by M-Pesa using our Paybill details shown after you place your order. Your order is processed once payment is received."}}, {"@type": "Question", "name": "What can I buy at Stermont Arcade?", "acceptedAnswer": {"@type": "Answer", "text": "Phones and tablets, TVs and audio, appliances, health and beauty, home and office, fashion, shoes, bags, computing, gaming, supermarket, baby products, automotive, music gear and agrovet supplies."}}, {"@type": "Question", "name": "What if an item is faulty or not what I ordered?", "acceptedAnswer": {"@type": "Answer", "text": "Message us on WhatsApp within 48 hours of delivery with photos and we will arrange a replacement or refund."}}]}]}
+  {"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "name": "Stermont Arcade", "url": "https://stermontarcade.co.ke/", "inLanguage": "en-KE"}, {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I order from Stermont Arcade?", "acceptedAnswer": {"@type": "Answer", "text": "Add items to your cart on the website, enter your name and delivery details, pay by M-Pesa Paybill, then enter the M-Pesa code from your SMS to place your order. We confirm stock and the delivery fee on WhatsApp."}}, {"@type": "Question", "name": "Do you deliver countrywide in Kenya?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. We deliver to all 47 counties in Kenya, usually in 1-3 days. The delivery fee, if any, is confirmed before you pay."}}, {"@type": "Question", "name": "How do I pay?", "acceptedAnswer": {"@type": "Answer", "text": "Pay by M-Pesa using our Paybill details shown at checkout, then enter the M-Pesa code from your confirmation SMS to place your order. Your order is processed once we verify the payment."}}, {"@type": "Question", "name": "What can I buy at Stermont Arcade?", "acceptedAnswer": {"@type": "Answer", "text": "Phones and tablets, TVs and audio, appliances, health and beauty, home and office, fashion, shoes, bags, computing, gaming, supermarket, baby products, automotive, music gear and agrovet supplies."}}, {"@type": "Question", "name": "What if an item is faulty or not what I ordered?", "acceptedAnswer": {"@type": "Answer", "text": "Message us on WhatsApp within 48 hours of delivery with photos and we will arrange a replacement or refund."}}]}]}
   </script>
   <style>
     :root{--paper:#fff;--ink:#282828;--muted:#6b6b6b;--line:#e3e3e3;--panel:#f1f1f2;--card:#fff;--orange:#7c3aed;--red:#5b21b6;--navy:#2a0e5c;--gold:#c8f31d;--green:#8fd400;--tint:#f1e8ff}
@@ -762,9 +762,9 @@
     <section id="faq">
       <div class="wrap">
         <h2 class="t">Frequently asked questions</h2>
-        <details><summary>How do I order from Stermont Arcade?</summary><p>Add items to your cart on the website, enter your name and delivery details, and place your order. We confirm stock and the delivery fee, then you pay by M-Pesa.</p></details>
+        <details><summary>How do I order from Stermont Arcade?</summary><p>Add items to your cart on the website, enter your name and delivery details, pay by M-Pesa Paybill, then enter the M-Pesa code from your SMS to place your order. We confirm stock and the delivery fee on WhatsApp.</p></details>
         <details><summary>Do you deliver countrywide in Kenya?</summary><p>Yes. We deliver to all 47 counties in Kenya, usually in 1-3 days. The delivery fee, if any, is confirmed before you pay.</p></details>
-        <details><summary>How do I pay?</summary><p>Pay by M-Pesa using our Paybill details shown after you place your order. Your order is processed once payment is received.</p></details>
+        <details><summary>How do I pay?</summary><p>Pay by M-Pesa using our Paybill details shown at checkout, then enter the M-Pesa code from your confirmation SMS to place your order. Your order is processed once we verify the payment.</p></details>
         <details><summary>What can I buy at Stermont Arcade?</summary><p>Phones and tablets, TVs and audio, appliances, health and beauty, home and office, fashion, shoes, bags, computing, gaming, supermarket, baby products, automotive, music gear and agrovet supplies.</p></details>
         <details><summary>What if an item is faulty or not what I ordered?</summary><p>Message us on WhatsApp within 48 hours of delivery with photos and we will arrange a replacement or refund.</p></details>
         </div>
@@ -1158,7 +1158,7 @@
     (function () {
       var D = document;
       /* ---- Settings: put your M-Pesa Till or Paybill here ---- */
-      var CFG = { paybill: '717777', payAcct: '0748888230', wa: '254748888230',
+      var CFG = { paybill: '714777', payAcct: '0748888230', wa: '254748888230',
         sbUrl: 'https://oewvtbnmyombbtggamor.supabase.co', sbKey: 'sb_publishable_CQiZr-INuot9C4fbdJDz1Q_4OiWEQL7', sbRef: 'oewvtbnmyombbtggamor',
         /* Free key from https://web3forms.com (enter the email that should receive order alerts) */
         mailKey: '2c55cbd0-5ec1-4603-a6a0-293b8a68faab',
@@ -1170,8 +1170,8 @@
       function ls(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k)); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} return null; }
       function h(t, c, x) { var e = D.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
       function money(n) { return 'KSh ' + n.toLocaleString('en-KE'); }
-      var cart = ls('stm_cart') || {}, cust = ls('stm_cust') || {}, step = 'cart', isOpen = false, opener = null, ref = '', lastMsg = '', lastUrl = '', sending = false, sendErr = '', doneRef = '', doneTotal = 0;
-      var form = { method: 'delivery', name: cust.name || '', phone: cust.phone || '', email: cust.email || '', county: cust.county || '', addr: cust.addr || '', notes: '' }, errs = {};
+      var cart = ls('stm_cart') || {}, cust = ls('stm_cust') || {}, step = 'cart', isOpen = false, opener = null, ref = '', lastMsg = '', lastUrl = '', sending = false, sendErr = '', doneRef = '', doneTotal = 0, doneCode = '', doneAmt = 0;
+      var form = { method: 'delivery', name: cust.name || '', phone: cust.phone || '', email: cust.email || '', county: cust.county || '', addr: cust.addr || '', notes: '', payCode: '', payAmt: '', payTouched: false }, errs = {};
       function session() {
         try {
           var x = JSON.parse(localStorage.getItem('sb-' + CFG.sbRef + '-auth-token'));
@@ -1294,6 +1294,10 @@
           ref = newRef(); go('review');
         });
       }
+      function due(T) { var f = form.method === 'delivery' ? (CFG.fees[form.county] || 0) : 0; return T.s + f; }
+      function cleanCode() { return String(form.payCode || '').replace(/\s+/g, '').toUpperCase(); }
+      function codeOk() { return /^[A-Z0-9]{8,12}$/.test(cleanCode()); }
+      function amtOk(T) { return Number(form.payAmt) >= due(T); }
       function where() { return form.method === 'pickup' ? 'Collect at ' + CFG.pickup : form.addr.trim() + ', ' + form.county; }
       function box(b, title, lines, edit) {
         var x = h('div', 'box'); x.appendChild(h('h4', null, title));
@@ -1306,7 +1310,7 @@
         T.L.forEach(function (i, k) { L.push((k + 1) + '. ' + i.name + ' x' + i.qty + ' = ' + money(i.total)); });
         L.push('', '*Subtotal:* ' + money(T.s), '*Delivery:* ' + (form.method === 'pickup' ? where() : 'Deliver to ' + where() + ' (fee to be confirmed)'), '', '*Name:* ' + form.name.trim(), '*Phone:* +' + normPhone(form.phone));
         if (form.notes && form.notes.trim()) L.push('*Notes:* ' + form.notes.trim());
-        L.push('*Payment:* M-Pesa Paybill ' + CFG.paybill + ', account ' + CFG.payAcct, '', 'Please confirm availability and the total including delivery. Thank you!');
+        L.push('*Payment:* M-Pesa Paybill ' + CFG.paybill + ', account ' + CFG.payAcct, '*M-Pesa code:* ' + (doneCode || cleanCode()) + ' (paid KSh ' + (doneAmt || Number(form.payAmt)) + ')', '', 'Please confirm availability and the delivery fee. Thank you!');
         return L.join('\n');
       }
       function copyBtn(v) { var c = h('button', 'cp', 'Copy'); c.type = 'button'; c.onclick = function () { try { navigator.clipboard.writeText(v).then(function () { toast('Copied'); }); } catch (e) {} }; return c; }
@@ -1324,10 +1328,27 @@
         box(b, 'Items', T.L.map(function (i) { return [i.qty + ' × ' + i.name, money(i.total)]; }), 'cart');
         box(b, form.method === 'pickup' ? 'Collection' : 'Delivery', [[where()]], 'details');
         box(b, 'Contact', [[form.name.trim()], ['+' + normPhone(form.phone)], [(form.email || '').trim()]], 'details');
-        payBox(b, T.s);
-        row(f, 'Subtotal', money(T.s), 'big'); f.appendChild(h('p', 'note', 'Delivery fee, if any, is confirmed with you on WhatsApp.'));
+        var amt = due(T); if (!form.payTouched) form.payAmt = String(amt);
+        b.appendChild(h('p', 'note', 'Step 1: pay with M-Pesa using the details below. Step 2: enter the code from your M-Pesa SMS. Your order is only placed after you enter it.'));
+        payBox(b, amt);
+        var pc = h('div', 'fld'), pl = h('label', null, 'M-Pesa transaction code'); pl.htmlFor = 'paycode'; pc.appendChild(pl);
+        var pi = h('input'); pi.id = 'paycode'; pi.type = 'text'; pi.maxLength = 14; pi.autocomplete = 'off'; pi.spellcheck = false; pi.placeholder = 'e.g. SGH7A1B2C3'; pi.value = form.payCode || '';
+        pi.setAttribute('autocapitalize', 'characters'); pi.style.cssText = 'text-transform:uppercase;letter-spacing:.08em;font-weight:700'; pc.appendChild(pi);
+        var pe = h('div', 'err', ''); pc.appendChild(pe); b.appendChild(pc);
+        var ac = h('div', 'fld'), al = h('label', null, 'Amount you paid (KSh)'); al.htmlFor = 'payamt'; ac.appendChild(al);
+        var ai = h('input'); ai.id = 'payamt'; ai.type = 'number'; ai.inputMode = 'numeric'; ai.min = '1'; ai.value = form.payAmt || ''; ac.appendChild(ai);
+        var ae = h('div', 'err', ''); ac.appendChild(ae); b.appendChild(ac);
+        row(f, 'Items total', money(T.s), 'big'); f.appendChild(h('p', 'note', form.method === 'delivery' && !CFG.fees[form.county] ? 'The delivery fee is confirmed on WhatsApp and paid separately.' : 'Delivery fee, if any, is confirmed with you on WhatsApp.'));
         if (sendErr) f.appendChild(h('div', 'oerr', sendErr));
-        var pb = btn(f, sending ? 'Placing your order...' : 'Place order', function () { place(T); }); pb.disabled = sending;
+        var pb = btn(f, sending ? 'Placing your order...' : 'I have paid, place order', function () { place(T); });
+        function check(show) {
+          pe.textContent = show && form.payCode && !codeOk() ? 'Enter the code exactly as in the SMS (8 to 12 letters and numbers).' : '';
+          ae.textContent = show && form.payAmt && !amtOk(T) ? 'The amount must be at least ' + money(amt) + '.' : '';
+          pb.disabled = sending || !(codeOk() && amtOk(T));
+        }
+        pi.addEventListener('input', function () { form.payCode = pi.value; check(true); });
+        ai.addEventListener('input', function () { form.payAmt = ai.value; form.payTouched = true; check(true); });
+        check(false);
         if (sendErr) btn(f, 'Send on WhatsApp instead', function () { window.open('https://wa.me/' + CFG.wa + '?text=' + encodeURIComponent(message(T)), '_blank', 'noopener'); }, 'btn-alt');
       }
       function notify(T, s) {
@@ -1336,9 +1357,9 @@
         var lines = T.L.map(function (i, k) { return (k + 1) + '. ' + i.name + ' x' + i.qty + ' = ' + money(i.total); });
         var msg = ['Order ' + ref, '', lines.join('\n'), '', 'Subtotal: ' + money(T.s), form.method === 'pickup' ? 'Collection: ' + where() : 'Deliver to: ' + where(),
           '', 'Customer: ' + form.name.trim(), 'Phone: +' + normPhone(form.phone), s && s.user && s.user.email ? 'Account email: ' + s.user.email : '',
-          form.notes && form.notes.trim() ? 'Notes: ' + form.notes.trim() : '', '', 'Payment: M-Pesa Paybill ' + CFG.paybill + ', account ' + CFG.payAcct,
+          form.notes && form.notes.trim() ? 'Notes: ' + form.notes.trim() : '', '', 'Payment: M-Pesa Paybill ' + CFG.paybill + ', account ' + CFG.payAcct, 'M-Pesa CODE entered by customer: ' + (doneCode || cleanCode()) + ' (says paid KSh ' + (doneAmt || Number(form.payAmt)) + ')',
           'WhatsApp the customer: https://wa.me/' + normPhone(form.phone),
-          '', 'STATUS: PENDING. Confirm payment, then (customer care sign-in required):',
+          '', 'STATUS: PENDING VERIFICATION. Check the M-Pesa SMS for the code above, then (customer care sign-in required):',
           'APPROVE (paid): ' + adm + '?ref=' + encodeURIComponent(ref) + '&action=approve',
           'DECLINE (not paid): ' + adm + '?ref=' + encodeURIComponent(ref) + '&action=decline'].filter(function (l, i, a) { return l !== '' || a[i - 1] !== ''; }).join('\n');
         try {
@@ -1358,34 +1379,47 @@
       function place(T) {
         if (sending) return;
         sending = true; sendErr = ''; render();
-        var s = session(), method = form.method;
+        doneCode = ''; doneAmt = 0;
+        var s = session(), method = form.method, code = cleanCode(), paid = Number(form.payAmt);
+        if (!codeOk() || !amtOk(T)) { sending = false; sendErr = 'Enter your M-Pesa code and the amount you paid before placing the order.'; render(); return; }
         var row = {
           ref: ref, user_id: s ? s.user.id : null, customer_name: form.name.trim().slice(0, 120), phone: '+' + normPhone(form.phone),
           email: (form.email || '').trim().toLowerCase().slice(0, 150) || (s && s.user.email) || null, method: method, county: method === 'delivery' ? form.county : null,
           address: method === 'delivery' ? form.addr.trim().slice(0, 200) : null, notes: form.notes && form.notes.trim() ? form.notes.trim().slice(0, 500) : null,
-          items: T.L.map(function (i) { return { name: i.name, qty: i.qty, price: i.price, total: i.total }; }), subtotal: T.s
+          items: T.L.map(function (i) { return { name: i.name, qty: i.qty, price: i.price, total: i.total }; }), subtotal: T.s, pay_code: code, pay_amount: paid
         };
         var hd = { 'Content-Type': 'application/json', apikey: CFG.sbKey, Prefer: 'return=minimal' };
         if (s) hd.Authorization = 'Bearer ' + s.access_token;
         var ctl = window.AbortController ? new AbortController() : null, to = setTimeout(function () { if (ctl) ctl.abort(); }, 20000);
-        fetch(CFG.sbUrl + '/rest/v1/orders', { method: 'POST', headers: hd, body: JSON.stringify(row), signal: ctl ? ctl.signal : undefined })
-          .then(function (r) { clearTimeout(to); if (r.ok) return; return r.text().then(function (t) { var e = new Error('status ' + r.status + ' ' + t); e.status = r.status; throw e; }); })
+        function post(rw) {
+          return fetch(CFG.sbUrl + '/rest/v1/orders', { method: 'POST', headers: hd, body: JSON.stringify(rw), signal: ctl ? ctl.signal : undefined })
+            .then(function (r) { if (r.ok) return; return r.text().then(function (t) { var e = new Error('status ' + r.status + ' ' + t); e.status = r.status; e.body = t; throw e; }); });
+        }
+        post(row)
+          .catch(function (err) {   /* payment columns not set up yet: keep the code in the order notes instead */
+            if (err && err.status === 400 && /pay_code|pay_amount/.test(err.body || '')) {
+              var r2 = Object.assign({}, row); delete r2.pay_code; delete r2.pay_amount;
+              r2.notes = ('M-Pesa code ' + code + ', paid KSh ' + paid + (row.notes ? ' | ' + row.notes : '')).slice(0, 500); return post(r2);
+            }
+            throw err;
+          })
           .then(function () {
+            clearTimeout(to); doneCode = code; doneAmt = paid;
             lastMsg = message(T); lastUrl = 'https://wa.me/' + CFG.wa + '?text=' + encodeURIComponent(lastMsg);
             notify(T, s);
             ls('stm_cust', { name: form.name.trim(), phone: form.phone, email: (form.email || '').trim(), county: form.county, addr: form.addr, method: form.method });
-            doneRef = ref; doneTotal = T.s; ref = ''; cart = {}; store(); sending = false; form.notes = ''; step = 'done'; sync(); if (!isOpen) render();
+            doneRef = ref; doneTotal = T.s; ref = ''; cart = {}; store(); sending = false; form.notes = ''; form.payCode = ''; form.payAmt = ''; form.payTouched = false; step = 'done'; sync(); if (!isOpen) render();
           })
           .catch(function (err) {
             clearTimeout(to); sending = false;
             try { console.error('Order failed:', err && err.message); } catch (e) {}
-            sendErr = 'We could not place your order. Check your connection and try again, or send it on WhatsApp instead.' + (err && err.status ? ' (Error ' + err.status + ')' : ' (Network)'); render();
+            sendErr = err && err.status === 409 ? 'This M-Pesa code has already been used on another order. Check the code in your SMS, or message us on WhatsApp.' : 'We could not place your order. Check your connection and try again, or send it on WhatsApp instead.' + (err && err.status ? ' (Error ' + err.status + ')' : ' (Network)'); render();
           });
       }
       function rDone(b, f) {
         var c = h('div', 'center'); c.appendChild(h('div', 'done-ic', '✓')); c.appendChild(h('h3', null, 'Order received')); c.appendChild(h('p', 'note', 'Reference ' + doneRef));
-        c.appendChild(h('p', null, 'Thank you! Pay with M-Pesa using the details below. We will contact you on WhatsApp to confirm your order and delivery.')); b.appendChild(c);
-        payBox(b, doneTotal);
+        c.appendChild(h('p', null, 'Thank you! We have your M-Pesa code. We will verify the payment and contact you on WhatsApp to confirm your order and delivery.')); b.appendChild(c);
+        box(b, 'Payment submitted', [['M-Pesa code', doneCode], ['Amount', money(doneAmt)]]);
         var a = h('a', 'btn btn-main', 'Message us on WhatsApp'); a.href = lastUrl; a.target = '_blank'; a.rel = 'noopener'; f.appendChild(a);
         btn(f, 'Copy order details', function () { try { navigator.clipboard.writeText(lastMsg).then(function () { toast('Copied'); }); } catch (e) {} }, 'btn-alt');
         if (session()) { var mo = h('a', 'btn btn-alt', 'View my orders'); mo.href = 'account.html'; f.appendChild(mo); }
