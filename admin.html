@@ -144,7 +144,7 @@
   });
   $('out').addEventListener('click', function () { sess = null; save(null); show('login'); });
   $('refresh').addEventListener('click', function () { q = ''; $('q').value = ''; fetchOrders(); });
-  setInterval(function () { if (sess && !$('app').hidden && $('cf').hidden && !D.hidden && tab !== 'catalog') fetchOrders(); }, 30000);
+  setInterval(function () { if (sess && !$('app').hidden && $('cf').hidden && !D.hidden && tab !== 'catalog' && tab !== 'stock') fetchOrders(); }, 30000);
 
   function fetchOrders() {
     var er = $('aerr'); er.hidden = true;
@@ -179,7 +179,7 @@
     renderTabs();
     var L = $('list'); L.textContent = '';
     $('q').hidden = tab === 'stock' || tab === 'catalog';
-    if (tab === 'stock') { renderStock(L); return; }
+    if (tab === 'stock') { STMCatalog.mountStock(L); return; }
     if (tab === 'catalog') { STMCatalog.mount(L); return; }
     var needle = q.trim().toLowerCase();
     var rows = orders.filter(function (o) {
@@ -365,7 +365,7 @@
   function start() { show('app'); fetchOrders(); }
   sess = load();
   if (sess) start(); else show('login');
-  setInterval(function () { if (sess && !$('app').hidden && $('cf').hidden && tab !== 'catalog') fetchOrders(); }, 60000);
+  setInterval(function () { if (sess && !$('app').hidden && $('cf').hidden && tab !== 'catalog' && tab !== 'stock') fetchOrders(); }, 60000);
 
   /* ---- signature pad ---- */
   (function () {

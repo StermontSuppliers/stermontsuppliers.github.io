@@ -1,7 +1,7 @@
 /* Stermont Arcade · Catalog, Restock & Ledger module. Mount: STMCatalog.mount(containerEl) */
 (function () {
   var SB = 'https://oewvtbnmyombbtggamor.supabase.co', KEY = 'sb_publishable_CQiZr-INuot9C4fbdJDz1Q_4OiWEQL7', SK = 'stm_admin_session';
-  var S = { cats: [], prods: [], st: {}, cat: 'all', q: '', range: 'all' }, root, D = document;
+  var S = { cats: [], prods: [], st: {}, cat: 'all', q: '', range: 'all' }, root, D = document, view = function () { render(); };
   var LIME = '#84cc16';
   var css = '.cx-k{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.8rem}.cx-k div{background:#fff;border:1px solid var(--ln);border-radius:12px;padding:.6rem .8rem}.cx-k small{color:var(--mu);display:block;font-size:.74rem;font-weight:600}.cx-k b{font-size:1.05rem}' +
     '.cx-k .hi{background:var(--p);color:#fff;border-color:var(--p)}.cx-k .hi small{color:#e9ddff}.cx-k .lime{background:' + LIME + ';border-color:' + LIME + ';color:#1a2e05}.cx-k .lime small{color:#365314}' +
@@ -73,7 +73,7 @@
     c.querySelector('#cx-mn').onclick = close;
     ok.onclick = function () {
       er.hidden = true; ok.disabled = true;
-      Promise.resolve().then(onOk).then(function () { close(); return load(); }).then(render)
+      Promise.resolve().then(onOk).then(function () { close(); return load(); }).then(function () { view(); })
         .catch(function (e) { ok.disabled = false; er.textContent = e.message || 'Something went wrong'; er.hidden = false; });
     };
     if (onMount) onMount(c);
@@ -85,9 +85,9 @@
   function shrink(file) {
     return new Promise(function (res, rej) {
       var img = new Image(); img.onload = function () {
-        var k = Math.min(1, 900 / Math.max(img.width, img.height)), c = D.createElement('canvas');
+        var k = Math.min(1, 1600 / Math.max(img.width, img.height)), c = D.createElement('canvas');
         c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        c.toBlob(function (b) { b ? res(b) : rej(new Error('Image failed')); }, 'image/jpeg', 0.82);
+        c.toBlob(function (b) { b ? res(b) : rej(new Error('Image failed')); }, 'image/jpeg', 0.9);
       }; img.onerror = function () { rej(new Error('Not an image')); }; img.src = URL.createObjectURL(file);
     });
   }
@@ -105,6 +105,7 @@
     var body = '<label>Category</label><select class="cx-f" id="cx-cat">' + opts + '<option value="__new">＋ Create new category…</option></select>' +
       '<input class="cx-f" id="cx-newcat" placeholder="New category name" hidden style="margin-top:.4rem">' +
       '<label>Item name</label><input class="cx-f" id="cx-name" maxlength="120" value="' + esc(edit ? p.name : '') + '">' +
+      '<label>Description</label><textarea class="cx-f" id="cx-desc" rows="4" maxlength="1500" placeholder="Key features, size, warranty, what is in the box...">' + esc(edit ? p.description || '' : '') + '</textarea>' +
       '<div class="cx-r"><div><label>Price (KSh)</label><input class="cx-f" id="cx-price" type="number" min="0" inputmode="decimal" value="' + (edit ? p.price : '') + '"></div>' +
       '<div><label>Cost / COGS (KSh)</label><input class="cx-f" id="cx-cost" type="number" min="0" inputmode="decimal" value="' + (edit ? p.cost : '') + '"></div>' +
       '<div><label>' + (edit ? 'Pieces in stock' : 'Initial pieces') + '</label><input class="cx-f" id="cx-stock" type="number" min="0" inputmode="numeric" value="' + (edit ? p.stock : '') + '"' + (edit ? ' disabled' : '') + '></div>' +
@@ -122,6 +123,7 @@
       })() : Promise.resolve(parseInt(v('cx-cat'), 10));
       return catP.then(function (cid) {
         var row = { category_id: cid, name: name, price: price, cost: cost, low_at: parseInt(v('cx-low') || 5, 10), featured: $('cx-feat').checked, images: imgs };
+        var desc = v('cx-desc').trim(); if (desc || (edit && p.description)) row.description = desc;
         if (edit) return call('/rest/v1/products?id=eq.' + encodeURIComponent(p.id), { m: 'PATCH', h: { Prefer: 'return=minimal' }, body: row });
         var id = slug(name) || 'item', n = 2, base = id; while (S.prods.some(function (x) { return x.id === id; })) id = base + '-' + n++;
         row.id = id; row.stock = stock; return call('/rest/v1/products', { m: 'POST', h: { Prefer: 'return=minimal' }, body: row });
@@ -213,6 +215,7 @@
         '<div style="min-width:0"><div class="ref">' + esc(p.name) + '</div><div class="when">' + esc(catName(p.category_id)) + '</div><div style="margin-top:.3rem">' +
         (p.stock === 0 ? '<span class="badge b-declined">Out of stock</span> ' : lowS ? '<span class="badge b-low">Low · ' + p.stock + ' left</span> ' : '<span class="badge b-paid">In stock</span> ') +
         (p.featured ? '<span class="badge b-ad">Advert</span> ' : '') + (p.active ? '' : '<span class="badge b-pending">Hidden</span>') + '</div></div></div>' +
+        (p.description ? '<div class="meta" style="margin:.5rem 0 0;white-space:pre-line">' + esc(p.description.length > 140 ? p.description.slice(0, 140) + '…' : p.description) + '</div>' : '<div class="meta" style="margin:.5rem 0 0;color:#b45309">No description yet. Tap Edit to add one.</div>') +
         '<div class="cx-g"><div><span>Price</span><b>' + money(p.price) + '</b></div><div><span>Cost</span><b>' + money(p.cost) + '</b></div>' +
         '<div><span>Left / Sold</span><b>' + p.stock + ' / ' + s.sold + '</b></div><div><span>Margin</span><b>' + margin + '%</b></div>' +
         '<div><span>Sales</span><b>' + money(s.sales) + '</b></div><div><span>Profit</span><b>' + money(s.profit) + '</b></div></div>' +
@@ -234,9 +237,32 @@
     $('cx-led').innerHTML = rows + line('tot', 'ALL ITEMS', totals(all)) + '</table>';
   }
 
+  /* ---------- Stock tab (live products: pieces left, restock, loss) ---------- */
+  function renderStockView() {
+    var all = S.prods.slice().sort(function (a, b) { return a.stock - b.stock; }), T = totals(all);
+    root.innerHTML = '<div class="err" id="cx-err" hidden></div><p class="meta">Pieces left for every item on the website. An item shows <b>Sold out</b> to customers when it reaches 0. Use Restock when new stock arrives.</p>' +
+      '<div class="cx-k"><div><small>ITEMS</small><b>' + all.length + '</b></div><div><small>PIECES LEFT</small><b>' + T.stock + '</b></div></div><div id="cx-list"></div>';
+    var L = $('cx-list'); if (!all.length) L.appendChild(el('div', 'empty', 'No items yet. Add your first product in the Catalog tab.'));
+    all.forEach(function (p) {
+      var lowS = p.stock < p.low_at, c = el('div', 'card'), s = stat(p);
+      c.innerHTML = '<div class="cx-p">' + (p.images && p.images[0] ? '<img src="' + esc(p.images[0]) + '" alt="">' : '<div class="cx-ph">' + catIcon(p.category_id) + '</div>') +
+        '<div style="min-width:0"><div class="ref">' + esc(p.name) + '</div><div class="when">' + esc(catName(p.category_id)) + '</div><div style="margin-top:.3rem">' +
+        (p.stock <= 0 ? '<span class="badge b-declined">Sold out</span> ' : lowS ? '<span class="badge b-low">Low · ' + p.stock + ' left</span> ' : '<span class="badge b-paid">In stock · ' + p.stock + ' left</span> ') +
+        (p.active ? '' : '<span class="badge b-pending">Hidden</span>') + '</div><div class="meta" style="margin-top:.3rem">' + s.sold + ' sold · alert below ' + p.low_at + '</div></div></div>' +
+        '<div class="acts"><button class="btn ok sm" data-a="r" type="button">＋ Restock</button><button class="btn alt sm" data-a="l" type="button">Log loss</button><button class="btn alt sm" data-a="y" type="button">History</button></div>';
+      c.onclick = function (e) { var a = e.target.getAttribute && e.target.getAttribute('data-a'); if (a === 'r') restockForm(p); else if (a === 'l') lossForm(p); else if (a === 'y') history(p); };
+      L.appendChild(c);
+    });
+  }
+
   window.STMCatalog = {
+    mountStock: function (c) {
+      root = c; view = renderStockView; if (!D.getElementById('cx-css')) { var s = el('style'); s.id = 'cx-css'; s.textContent = css; D.head.appendChild(s); }
+      root.innerHTML = '<div class="empty">Loading stock…</div>';
+      load().then(renderStockView).catch(function (e) { root.innerHTML = '<div class="err">Could not load stock (' + esc(e.message) + ').</div>'; });
+    },
     mount: function (c) {
-      root = c; if (!D.getElementById('cx-css')) { var s = el('style'); s.id = 'cx-css'; s.textContent = css; D.head.appendChild(s); }
+      root = c; view = render; if (!D.getElementById('cx-css')) { var s = el('style'); s.id = 'cx-css'; s.textContent = css; D.head.appendChild(s); }
       root.innerHTML = '<div class="empty">Loading catalog…</div>';
       load().then(render).catch(function (e) { root.innerHTML = '<div class="err">Could not load the catalog (' + esc(e.message) + '). Run setup-catalog.sql in Supabase first.</div>'; });
     }
