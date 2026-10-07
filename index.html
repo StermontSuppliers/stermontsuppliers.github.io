@@ -6,9 +6,6 @@
   <meta name="theme-color" content="#7c3aed">
   <title>Stermont Arcade | Everything you need, one trusted store.</title>
   <meta name="description" content="Stermont Arcade, an online shopping mall in Kenya. Buy agrovet supplies, phones, laptops, TVs, appliances, fashion and home goods. Order on WhatsApp. Delivery to all 47 counties in Kenya, usually in 1-3 days.">
-  <link rel="icon" type="image/png" href="favicon.png">
-  <link rel="icon" href="favicon.ico" sizes="any">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <meta property="og:image" content="https://stermontarcade.co.ke/logo.png">
   <link rel="canonical" href="https://stermontarcade.co.ke/">
   <meta name="robots" content="index, follow">
@@ -270,8 +267,8 @@
       <h1 style="position:absolute;left:-9999px">Stermont Arcade: online shopping mall in Kenya</h1>
       <div class="top">
         <a class="logo" href="#top" aria-label="Stermont Arcade home"><svg class="mk" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="#7c3aed"/><path d="M134 372V252a122 122 0 0 1 244 0v120" fill="none" stroke="#fff" stroke-width="38" stroke-linecap="round"/><path d="M208 372V262a48 48 0 0 1 96 0v110z" fill="#c8f31d"/><rect x="100" y="396" width="312" height="30" rx="15" fill="#fff"/></svg><span class="wm" aria-hidden="true"><b>Stermont</b><i>Arcade</i></span></a>
-        <nav class="desk" aria-label="Main"><a href="#range">Products</a><a href="#order">How to order</a><a href="#delivery">Delivery</a><a href="#contact">Contact</a><a href="account.html">Account</a></nav>
-        <div class="hd-r"><a class="cartbtn acctbtn" id="acctbtn" href="account.html" aria-label="Log in or create account"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></a><button class="cartbtn" id="cartbtn" type="button" aria-label="Open cart"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h11L21 7H6"/></svg><span class="cb" hidden>0</span></button></div>
+        <nav class="desk" aria-label="Main"><a href="#range">Products</a><a href="#order">How to order</a><a href="#delivery">Delivery</a><a href="#contact">Contact</a></nav>
+        <div class="hd-r"><button class="cartbtn" id="cartbtn" type="button" aria-label="Open cart"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h11L21 7H6"/></svg><span class="cb" hidden>0</span></button></div>
       </div>
       <form class="search" role="search" id="search-form">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6"/></svg>
@@ -942,7 +939,7 @@
         <h3 class="sub">Returns and refunds</h3>
         <p class="lead">If an item arrives faulty, damaged or different from what you ordered, message us on WhatsApp within 48 hours of delivery with photos. We will arrange a replacement or refund.</p>
         <h3 class="sub">Privacy</h3>
-        <p class="lead">We use your name, phone number and delivery details only to process and deliver your order. We do not sell your information. Read our full <a href="shipping.html">shipping</a>, <a href="returns.html">returns</a> and <a href="privacy.html">privacy</a> pages.</p>
+        <p class="lead">We use your name, phone number and delivery details only to process and deliver your order. We do not sell your information.</p>
       </div>
     </section>
 
@@ -983,7 +980,7 @@
   </main>
 
   <footer>
-    <div class="wrap">&copy; 2026 Stermont Arcade. All rights reserved. &middot; <a href="shipping.html">Shipping</a> &middot; <a href="returns.html">Returns</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="#visit">Visit us</a> &middot; <a href="#contact">Contact</a></div>
+    <div class="wrap">&copy; 2026 Stermont Arcade. All rights reserved. &middot; <a href="#visit">Visit us</a> &middot; <a href="#contact">Contact</a></div>
   </footer>
 
   <nav class="bar" aria-label="Quick navigation" id="bar">
@@ -1229,7 +1226,6 @@
   </div>
   <button class="cartbar" id="cartbar" type="button"><span id="cartbar-l">View cart</span><span id="cartbar-t"></span></button>
   <script>
-    try { if (localStorage.getItem('sb-oewvtbnmyombbtggamor-auth-token')) document.getElementById('acctbtn').classList.add('in'); } catch (e) {}
   </script>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script>
@@ -1466,7 +1462,7 @@
         payBox(b, doneTotal);
         var a = h('a', 'btn btn-main', 'Message us on WhatsApp'); a.href = lastUrl; a.target = '_blank'; a.rel = 'noopener'; f.appendChild(a);
         btn(f, 'Copy order details', function () { try { navigator.clipboard.writeText(lastMsg).then(function () { toast('Copied'); }); } catch (e) {} }, 'btn-alt');
-        if (session()) { var mo = h('a', 'btn btn-alt', 'View my orders'); mo.href = 'account.html'; f.appendChild(mo); }
+        
         btn(f, 'Close', function () { step = 'cart'; closeDr(); }, 'btn-alt');
       }
       function render() {
