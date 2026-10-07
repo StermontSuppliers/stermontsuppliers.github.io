@@ -19,7 +19,7 @@
     tag: 'Everything you need, one trusted store.',
     phone: '+254 748 888 230',
     email: 'stermontmall@gmail.com',
-    web: 'stermontmall.github.io',
+    web: 'stermontarcade.co.ke',
     place: 'Nairobi, Kenya',
     paybill: '717777',
     account: '0748888230',
