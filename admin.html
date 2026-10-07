@@ -337,7 +337,9 @@
       doc.querySelectorAll('#featured .pcard:not(.cta)').forEach(function (c) {
         var n = c.querySelector('h3'); if (!n) return;
         var name = n.textContent.trim(), id = slug(name), sold = !!out[id], card = h('div', 'card'), top = h('div', 'top');
-        top.appendChild(h('div', 'ref', name)); top.appendChild(h('span', 'badge ' + (sold ? 'b-declined' : 'b-paid'), sold ? 'Sold out' : 'In stock')); card.appendChild(top);
+        var im = c.querySelector('img'), th = h('div', ''); th.style.cssText = 'width:56px;height:56px;border-radius:10px;background:#eceaf5;flex:none;display:flex;align-items:center;justify-content:center;font-size:1.5rem;overflow:hidden';
+        if (im && im.getAttribute('src')) { var pi = new Image(); pi.src = im.getAttribute('src'); pi.alt = ''; pi.style.cssText = 'width:100%;height:100%;object-fit:cover'; th.appendChild(pi); } else { th.textContent = '📦'; }
+        var nm = h('div', 'ref', name); nm.style.flex = '1'; top.style.alignItems = 'center'; top.appendChild(th); top.appendChild(nm); top.appendChild(h('span', 'badge ' + (sold ? 'b-declined' : 'b-paid'), sold ? 'Sold out' : 'In stock')); card.appendChild(top);
         var b = h('button', 'btn ' + (sold ? 'ok' : 'no') + ' sm', sold ? 'Mark back in stock' : 'Mark sold out'); b.type = 'button'; b.style.marginTop = '.6rem';
         b.onclick = function () {
           b.disabled = true;

@@ -60,6 +60,8 @@
       .then(function (r) { S.cats = r[0]; S.prods = r[1]; S.st = {}; r[2].forEach(function (x) { S.st[x.product_id] = x; }); });
   }
   function stat(p) { var s = S.st[p.id] || {}; var sales = +s.sales || 0, cogs = +s.cogs || 0; return { sold: +s.sold || 0, sales: sales, profit: sales - cogs, loss: +s.loss || 0 }; }
+  var ICONS = { agrovet: '🌾', 'phones-tablets': '📱', 'tvs-audio': '📺', appliances: '🧺', fashion: '👕', 'home-office': '🛋️', computing: '💻', supermarket: '🛒', 'health-beauty': '💄', gaming: '🎮', 'baby-products': '🍼', shoes: '👟', bags: '🎒', 'watches-jewellery': '⌚', automotive: '🚗', 'music-audio': '🎸' };
+  function catIcon(id) { var c = S.cats.filter(function (x) { return x.id === id; })[0]; return (c && ICONS[c.slug]) || '📦'; }
   function catName(id) { var c = S.cats.filter(function (x) { return x.id === id; })[0]; return c ? c.name : 'Uncategorised'; }
 
   /* ---------- generic modal ---------- */
@@ -99,7 +101,7 @@
   /* ---------- Add / Edit item ---------- */
   function itemForm(p) {
     var edit = !!p, imgs = edit ? (p.images || []).slice() : [];
-    var opts = S.cats.map(function (c) { return '<option value="' + c.id + '"' + (edit && p.category_id === c.id ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('');
+    var opts = S.cats.map(function (c) { return '<option value="' + c.id + '"' + (edit && p.category_id === c.id ? ' selected' : '') + '>' + (ICONS[c.slug] ? ICONS[c.slug] + ' ' : '') + esc(c.name) + '</option>'; }).join('');
     var body = '<label>Category</label><select class="cx-f" id="cx-cat">' + opts + '<option value="__new">＋ Create new category…</option></select>' +
       '<input class="cx-f" id="cx-newcat" placeholder="New category name" hidden style="margin-top:.4rem">' +
       '<label>Item name</label><input class="cx-f" id="cx-name" maxlength="120" value="' + esc(edit ? p.name : '') + '">' +
@@ -202,12 +204,12 @@
     $('cx-add').onclick = function () { itemForm(); };
     RANGES.forEach(function (r) { var b = el('button', S.range === r[0] ? 'on' : '', r[1]); b.type = 'button'; b.onclick = function () { S.range = r[0]; load().then(render).catch(function (x) { toast(x.message + ' (run setup-catalog-2.sql?)'); }); }; $('cx-rg').appendChild(b); });
     var chips = $('cx-chips'); [{ id: 'all', name: 'All (' + all.length + ')' }].concat(S.cats.map(function (c) { return { id: String(c.id), name: c.name }; })).forEach(function (c) {
-      var b = el('button', S.cat === c.id ? 'on' : '', esc(c.name)); b.type = 'button'; b.onclick = function () { S.cat = c.id; render(); }; chips.appendChild(b); });
+      var cc = S.cats.filter(function (x) { return String(x.id) === c.id; })[0], b = el('button', S.cat === c.id ? 'on' : '', (cc && ICONS[cc.slug] ? ICONS[cc.slug] + ' ' : '') + esc(c.name)); b.type = 'button'; b.onclick = function () { S.cat = c.id; render(); }; chips.appendChild(b); });
     $('cx-q').oninput = function (e) { S.q = e.target.value; var pos = e.target.selectionStart; render(); var n = $('cx-q'); n.focus(); n.setSelectionRange(pos, pos); };
     var L = $('cx-list'); if (!shown.length) L.appendChild(el('div', 'empty', all.length ? 'No items match.' : 'No items yet. Tap “Add new item” to publish your first product.'));
     shown.forEach(function (p) {
       var s = stat(p), lowS = p.stock < p.low_at, c = el('div', 'card'), margin = p.price ? Math.round((p.price - p.cost) / p.price * 100) : 0;
-      c.innerHTML = '<div class="cx-p">' + (p.images && p.images[0] ? '<img src="' + esc(p.images[0]) + '" alt="">' : '<div class="cx-ph">📦</div>') +
+      c.innerHTML = '<div class="cx-p">' + (p.images && p.images[0] ? '<img src="' + esc(p.images[0]) + '" alt="">' : '<div class="cx-ph">' + catIcon(p.category_id) + '</div>') +
         '<div style="min-width:0"><div class="ref">' + esc(p.name) + '</div><div class="when">' + esc(catName(p.category_id)) + '</div><div style="margin-top:.3rem">' +
         (p.stock === 0 ? '<span class="badge b-declined">Out of stock</span> ' : lowS ? '<span class="badge b-low">Low · ' + p.stock + ' left</span> ' : '<span class="badge b-paid">In stock</span> ') +
         (p.featured ? '<span class="badge b-ad">Advert</span> ' : '') + (p.active ? '' : '<span class="badge b-pending">Hidden</span>') + '</div></div></div>' +
