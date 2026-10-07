@@ -101,6 +101,7 @@
 </div>
 
 <script src="receipt.js?v=6"></script>
+<script src="catalog.js"></script>
 <script>
 (function () {
   var D = document, SB = 'https://oewvtbnmyombbtggamor.supabase.co', KEY = 'sb_publishable_CQiZr-INuot9C4fbdJDz1Q_4OiWEQL7', SK = 'stm_admin_session';
@@ -143,7 +144,7 @@
   });
   $('out').addEventListener('click', function () { sess = null; save(null); show('login'); });
   $('refresh').addEventListener('click', function () { q = ''; $('q').value = ''; fetchOrders(); });
-  setInterval(function () { if (sess && !$('app').hidden && $('cf').hidden && !D.hidden) fetchOrders(); }, 30000);
+  setInterval(function () { if (sess && !$('app').hidden && $('cf').hidden && !D.hidden && tab !== 'catalog') fetchOrders(); }, 30000);
 
   function fetchOrders() {
     var er = $('aerr'); er.hidden = true;
@@ -169,16 +170,17 @@
   function count(s) { return orders.filter(function (o) { return (o.status || 'pending') === s; }).length; }
   function renderTabs() {
     var t = $('tabs'); t.textContent = '';
-    [['pending', 'Pending'], ['paid', 'Confirmed ✅'], ['declined', 'Declined'], ['all', 'All'], ['stock', 'Stock 📦']].forEach(function (x) {
-      var b = h('button', tab === x[0] ? 'on' : '', x[1] + (x[0] === 'stock' ? '' : ' (' + (x[0] === 'all' ? orders.length : count(x[0])) + ')')); b.type = 'button';
+    [['pending', 'Pending'], ['paid', 'Confirmed ✅'], ['declined', 'Declined'], ['all', 'All'], ['stock', 'Stock 📦'], ['catalog', 'Catalog 🛍️']].forEach(function (x) {
+      var b = h('button', tab === x[0] ? 'on' : '', x[1] + (x[0] === 'stock' || x[0] === 'catalog' ? '' : ' (' + (x[0] === 'all' ? orders.length : count(x[0])) + ')')); b.type = 'button';
       b.onclick = function () { tab = x[0]; render(); }; t.appendChild(b);
     });
   }
   function render() {
     renderTabs();
     var L = $('list'); L.textContent = '';
-    $('q').hidden = tab === 'stock';
+    $('q').hidden = tab === 'stock' || tab === 'catalog';
     if (tab === 'stock') { renderStock(L); return; }
+    if (tab === 'catalog') { STMCatalog.mount(L); return; }
     var needle = q.trim().toLowerCase();
     var rows = orders.filter(function (o) {
       if (tab !== 'all' && (o.status || 'pending') !== tab) return false;
@@ -296,7 +298,10 @@
         .then(function (r) { if (!r.ok) throw r.status; return r.json(); })
         .then(function (rows) {
           if (!rows.length) throw 0; $('cf').hidden = true;
-          var done = fetchOrders();
+          var rpc = (action === 'approve') ? 'record_sale' : (action === 'pending' && o.status === 'paid') ? 'reverse_sale' : null;
+          var done = rpc ? ready().then(function () { return api('/rest/v1/rpc/' + rpc, { method: 'POST', body: { p_ref: o.ref } }); })
+            .then(function (r) { if (!r.ok) throw 0; }).catch(function () { note('Order updated, but the sales ledger could not be updated. Run setup-catalog.sql and setup-catalog-2.sql in Supabase.', false); })
+            .then(fetchOrders) : fetchOrders();
           if (action === 'approve') {
             var paid = Object.assign({}, o, { status: 'paid', handled_at: new Date().toISOString(), pay_code: code, pay_amount: amt });
             if (paid.email) sendReceipt(paid); else note('Order confirmed. No email on this order, so use "Receipt on WhatsApp" instead.', true);
@@ -358,7 +363,7 @@
   function start() { show('app'); fetchOrders(); }
   sess = load();
   if (sess) start(); else show('login');
-  setInterval(function () { if (sess && !$('app').hidden && $('cf').hidden) fetchOrders(); }, 60000);
+  setInterval(function () { if (sess && !$('app').hidden && $('cf').hidden && tab !== 'catalog') fetchOrders(); }, 60000);
 
   /* ---- signature pad ---- */
   (function () {
