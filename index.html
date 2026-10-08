@@ -1240,6 +1240,9 @@
         mailKey: '2c55cbd0-5ec1-4603-a6a0-293b8a68faab',
         /* Optional second inbox: paste a key made with the other email here */
         mailKey2: '',
+        /* EmailJS (backup alert to staff + confirmation email to customer). Fill these 4 from your EmailJS dashboard. */
+        ejsKey: 'PayiXKhM6gVQLHYAE', ejsService: 'service_zoho', ejsAdminTpl: '', ejsCustTpl: 'template_n60yao4',
+        adminEmail: 'stermontmall@gmail.com',
         /* Delivery fee per county in KSh, e.g. { 'Nairobi': 300, 'Kiambu': 400 }. Counties not listed say the fee is confirmed on WhatsApp. */
         fees: {} };
       function slug(t) { return t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
@@ -1438,12 +1441,31 @@
           '', 'STATUS: PENDING VERIFICATION. Check the M-Pesa SMS for the code above, then (customer care sign-in required):',
           'APPROVE (paid): ' + adm + '?ref=' + encodeURIComponent(ref) + '&action=approve',
           'DECLINE (not paid): ' + adm + '?ref=' + encodeURIComponent(ref) + '&action=decline'].filter(function (l, i, a) { return l !== '' || a[i - 1] !== ''; }).join('\n');
+        /* Staff alert 1: Web3Forms (failures are now logged instead of hidden) */
         try {
           [CFG.mailKey, CFG.mailKey2].forEach(function (k) {
             if (!k) return;
             fetch('https://api.web3forms.com/submit', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-              body: JSON.stringify({ access_key: k, subject: 'New order ' + ref + ' - ' + money(T.s), from_name: 'Stermont Arcade website', message: msg }) }).catch(function () {});
+              body: JSON.stringify({ access_key: k, subject: 'New order ' + ref + ' - ' + money(T.s), from_name: 'Stermont Arcade website', message: msg }) })
+              .then(function (r) { return r.json().catch(function () { return {}; }); })
+              .then(function (j) { if (!j || j.success !== true) console.warn('Web3Forms alert failed:', j && j.message); })
+              .catch(function (e) { console.warn('Web3Forms alert error:', e && e.message); });
           });
+        } catch (e) {}
+        /* Alert 2 + customer confirmation: EmailJS (REST, no extra script needed) */
+        function ejs(tpl, params) {
+          if (!CFG.ejsKey || !tpl) return;
+          fetch('https://api.emailjs.com/api/v1.0/email/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ service_id: CFG.ejsService, template_id: tpl, user_id: CFG.ejsKey, template_params: params }) })
+            .then(function (r) { if (!r.ok) return r.text().then(function (t) { console.warn('EmailJS failed:', r.status, t); }); })
+            .catch(function (e) { console.warn('EmailJS error:', e && e.message); });
+        }
+        try {
+          var custEmail = ((form.email || '').trim() || (s && s.user && s.user.email) || '').toLowerCase();
+          var base = { order_ref: ref, order_total: money(T.s), order_items: lines.join('\n'), customer_name: form.name.trim(), customer_phone: '+' + normPhone(form.phone),
+            delivery: form.method === 'pickup' ? 'Collection: ' + where() : 'Deliver to: ' + where(), mpesa_code: (doneCode || cleanCode()), order_message: msg };
+          ejs(CFG.ejsAdminTpl, Object.assign({ to_email: CFG.adminEmail, subject: 'New order ' + ref + ' - ' + money(T.s) }, base));
+          if (custEmail) ejs(CFG.ejsCustTpl, Object.assign({ to_email: custEmail, subject: 'We received your order ' + ref }, base));
         } catch (e) {}
       }
       function newRef() {
