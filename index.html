@@ -1242,7 +1242,7 @@
         mailKey2: '',
         /* EmailJS (backup alert to staff + confirmation email to customer). Fill these 4 from your EmailJS dashboard. */
         ejsKey: 'PayiXKhM6gVQLHYAE', ejsService: 'service_zoho', ejsAdminTpl: '', ejsCustTpl: 'template_n60yao4',
-        adminEmail: 'stermontmall@gmail.com',
+        adminEmail: 'stermontmall@gmail.com', staffEmail: 'info@stermontarcade.co.ke', ejsStaffTpl: 'template_cv2qjgm',
         /* Delivery fee per county in KSh, e.g. { 'Nairobi': 300, 'Kiambu': 400 }. Counties not listed say the fee is confirmed on WhatsApp. */
         fees: {} };
       function slug(t) { return t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
@@ -1441,32 +1441,43 @@
           '', 'STATUS: PENDING VERIFICATION. Check the M-Pesa SMS for the code above, then (customer care sign-in required):',
           'APPROVE (paid): ' + adm + '?ref=' + encodeURIComponent(ref) + '&action=approve',
           'DECLINE (not paid): ' + adm + '?ref=' + encodeURIComponent(ref) + '&action=decline'].filter(function (l, i, a) { return l !== '' || a[i - 1] !== ''; }).join('\n');
-        /* Staff alert 1: Web3Forms (failures are now logged instead of hidden) */
-        try {
-          [CFG.mailKey, CFG.mailKey2].forEach(function (k) {
-            if (!k) return;
-            fetch('https://api.web3forms.com/submit', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-              body: JSON.stringify({ access_key: k, subject: 'New order ' + ref + ' - ' + money(T.s), from_name: 'Stermont Arcade website', message: msg }) })
-              .then(function (r) { return r.json().catch(function () { return {}; }); })
-              .then(function (j) { if (!j || j.success !== true) console.warn('Web3Forms alert failed:', j && j.message); })
-              .catch(function (e) { console.warn('Web3Forms alert error:', e && e.message); });
-          });
-        } catch (e) {}
+        /* Backup staff alert: Web3Forms plain text (only used if the styled EmailJS alert fails) */
+        function web3() {
+          try {
+            [CFG.mailKey, CFG.mailKey2].forEach(function (k) {
+              if (!k) return;
+              fetch('https://api.web3forms.com/submit', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                body: JSON.stringify({ access_key: k, subject: 'New order ' + ref + ' - ' + money(T.s), from_name: 'Stermont Arcade website', message: msg }) })
+                .then(function (r) { return r.json().catch(function () { return {}; }); })
+                .then(function (j) { if (!j || j.success !== true) console.warn('Web3Forms alert failed:', j && j.message); })
+                .catch(function (e) { console.warn('Web3Forms alert error:', e && e.message); });
+            });
+          } catch (e) {}
+        }
         /* Alert 2 + customer confirmation: EmailJS (REST, no extra script needed) */
         function ejs(tpl, params) {
-          if (!CFG.ejsKey || !tpl) return;
-          fetch('https://api.emailjs.com/api/v1.0/email/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          if (!CFG.ejsKey || !tpl) return Promise.resolve(false);
+          return fetch('https://api.emailjs.com/api/v1.0/email/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ service_id: CFG.ejsService, template_id: tpl, user_id: CFG.ejsKey, template_params: params }) })
-            .then(function (r) { if (!r.ok) return r.text().then(function (t) { console.warn('EmailJS failed:', r.status, t); }); })
-            .catch(function (e) { console.warn('EmailJS error:', e && e.message); });
+            .then(function (r) { if (!r.ok) return r.text().then(function (t) { console.warn('EmailJS failed:', r.status, t); return false; }); return true; })
+            .catch(function (e) { console.warn('EmailJS error:', e && e.message); return false; });
         }
         try {
           var custEmail = ((form.email || '').trim() || (s && s.user && s.user.email) || '').toLowerCase();
           var base = { order_ref: ref, order_total: money(T.s), order_items: lines.join('\n'), customer_name: form.name.trim(), customer_phone: '+' + normPhone(form.phone),
             delivery: form.method === 'pickup' ? 'Collection: ' + where() : 'Deliver to: ' + where(), mpesa_code: (doneCode || cleanCode()), order_message: msg };
-          ejs(CFG.ejsAdminTpl, Object.assign({ to_email: CFG.adminEmail, subject: 'New order ' + ref + ' - ' + money(T.s) }, base));
           if (custEmail) ejs(CFG.ejsCustTpl, Object.assign({ to_email: custEmail, subject: 'We received your order ' + ref }, base));
-        } catch (e) {}
+          /* Styled staff alert (EmailJS). If it fails, fall back to the plain Web3Forms alert. */
+          var enc = encodeURIComponent(ref);
+          function mkBtn(href, label, bg, fg) { return '<a href="' + href + '" style="display:inline-block;background:' + bg + ';color:' + fg + ';font-weight:bold;font-size:15px;text-decoration:none;padding:13px 20px;border-radius:12px;margin:4px;">' + label + '</a>'; }
+          var buttons = mkBtn(adm + '?ref=' + enc + '&action=approve', 'Approve (paid)', '#c8f31d', '#2a0e5c') + mkBtn(adm + '?ref=' + enc + '&action=decline', 'Decline', '#d92d20', '#ffffff') + mkBtn('https://wa.me/' + normPhone(form.phone), 'WhatsApp customer', '#7c3aed', '#ffffff');
+          var staffMsg = 'Customer: ' + form.name.trim() + '\nPhone: +' + normPhone(form.phone) + (custEmail ? '\nEmail: ' + custEmail : '') + (form.notes && form.notes.trim() ? '\nNotes: ' + form.notes.trim() : '') +
+            '\n\nPayment: M-Pesa Paybill ' + CFG.paybill + ', account ' + CFG.payAcct + '\nM-Pesa code entered: ' + (doneCode || cleanCode()) + ' (says paid KSh ' + (doneAmt || Number(form.payAmt)) + ')' +
+            '\n\nSTATUS: PENDING VERIFICATION. Check the M-Pesa SMS for the code above, then approve or decline (customer care sign-in required).';
+          ejs(CFG.ejsStaffTpl, { to_email: CFG.staffEmail, subject: 'New order ' + ref + ' - ' + money(T.s), business: 'Stermont Arcade', order_ref: ref, name: 'Stermont team',
+            headline: 'New order to verify', message: staffMsg, items: lines.join('\n'), total: money(T.s), delivery: form.method === 'pickup' ? 'Collection: ' + where() : 'Deliver to: ' + where(),
+            phone: '+254 748 888 230', web: 'stermontarcade.co.ke', buttons: buttons }).then(function (ok) { if (!ok) web3(); });
+        } catch (e) { web3(); }
       }
       function newRef() {
         var A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', out = '', i, b = new Uint8Array(6);
