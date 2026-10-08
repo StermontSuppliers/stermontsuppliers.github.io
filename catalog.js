@@ -12,7 +12,12 @@
     '.cx-th button{position:absolute;top:-6px;right:-6px;border:0;background:var(--no);color:#fff;border-radius:50%;width:20px;height:20px;line-height:1}' +
     '.cx-t{width:100%;border-collapse:collapse;font-size:.84rem}.cx-t th,.cx-t td{padding:.45rem .5rem;text-align:right;border-bottom:1px solid var(--ln);white-space:nowrap}.cx-t th:first-child,.cx-t td:first-child{text-align:left;position:sticky;left:0;background:#fff;max-width:150px;overflow:hidden;text-overflow:ellipsis}' +
     '.cx-t th{background:#f3eefc;color:var(--pd);font-size:.74rem;text-transform:uppercase}.cx-t .sub td{background:#f6f4fb;font-weight:700}.cx-t .tot td{background:var(--p);color:#fff;font-weight:800}.cx-t .neg{color:var(--no)}.cx-w{overflow-x:auto;border:1px solid var(--ln);border-radius:12px}' +
-    '.modal .card{max-height:92vh;overflow:auto}.cx-pl{background:#fff;border:1px solid var(--ln);border-radius:12px;padding:.5rem .6rem;margin-bottom:.8rem}.cx-pl summary{font-weight:700;cursor:pointer;padding:.3rem .2rem}.cx-pl .cx-t td:last-child{text-align:right;white-space:nowrap}.cx-pl .cx-t td:first-child{position:static;white-space:normal;max-width:none}.cx-pv{background:#f3eefc;border-radius:10px;padding:.5rem .7rem;margin:.6rem 0;font-size:.9rem}';
+    '.modal .card{max-height:92vh;overflow:auto}.cx-pl{background:#fff;border:1px solid var(--ln);border-radius:12px;padding:.5rem .6rem;margin-bottom:.8rem}.cx-pl summary{font-weight:700;cursor:pointer;padding:.3rem .2rem}.cx-pl .cx-t td:last-child{text-align:right;white-space:nowrap}.cx-pl .cx-t td:first-child{position:static;white-space:normal;max-width:none}.cx-pv{background:#f3eefc;border-radius:10px;padding:.5rem .7rem;margin:.6rem 0;font-size:.9rem}' +
+    '.cx-pr{background:linear-gradient(135deg,#f5efff,#fff);border:1px solid #d9c9fb;border-radius:14px;padding:.7rem .8rem;margin:.8rem 0}.cx-pt{font-weight:800;color:var(--pd)}' +
+    '.cx-r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem}.cx-r3 label{font-size:.78rem;margin:.4rem 0 .2rem}' +
+    '.cx-quick{display:flex;gap:.35rem;flex-wrap:wrap;margin:.6rem 0 .2rem}.cx-chip{border:1px solid #d9c9fb;background:#fff;color:var(--pd);border-radius:999px;padding:.3rem .7rem;font:inherit;font-size:.82rem;font-weight:700;cursor:pointer}.cx-chip.alt{color:var(--mu);border-color:var(--ln)}' +
+    '.cx-pvc{background:#fff;border:1px dashed #b794f6;border-radius:12px;padding:.6rem .8rem;margin-top:.5rem}.cx-pvc s{color:var(--mu)}.cx-pvc b{font-size:1.2rem;color:var(--pd)}.cx-pvc .bad{color:var(--no);font-weight:600;font-size:.9rem}' +
+    '.cx-bd{display:inline-block;background:#dc2626;color:#fff;border-radius:6px;padding:.05rem .4rem;font-size:.75rem;font-weight:800}';
 
   /* ---------- helpers ---------- */
   function $(id) { return D.getElementById(id); }
@@ -77,6 +82,11 @@
   var ICONS = { agrovet: '🌾', 'phones-tablets': '📱', 'tvs-audio': '📺', appliances: '🧺', fashion: '👕', 'home-office': '🛋️', computing: '💻', supermarket: '🛒', 'health-beauty': '💄', gaming: '🎮', 'baby-products': '🍼', shoes: '👟', bags: '🎒', 'watches-jewellery': '⌚', automotive: '🚗', 'music-audio': '🎸' };
   function catIcon(id) { var c = S.cats.filter(function (x) { return x.id === id; })[0]; return (c && ICONS[c.slug]) || '📦'; }
   function catName(id) { var c = S.cats.filter(function (x) { return x.id === id; })[0]; return c ? c.name : 'Uncategorised'; }
+  function discPct(p) { var o = Number(p.old_price), n = Number(p.price); return o > n && n >= 0 ? Math.max(1, Math.round((o - n) / o * 100)) : 0; }
+  function priceHtml(p) {
+    var d = discPct(p);
+    return (d ? '<s style="color:var(--mu);font-weight:500;font-size:.78rem">' + money(p.old_price) + '</s> ' : '') + money(p.price) + (d ? ' <span class="cx-bd">-' + d + '%</span>' : '');
+  }
 
   /* ---------- generic modal ---------- */
   function modal(title, bodyHtml, okText, onOk, onMount) {
@@ -120,7 +130,13 @@
       '<input class="cx-f" id="cx-newcat" placeholder="New category name" hidden style="margin-top:.4rem">' +
       '<label>Item name</label><input class="cx-f" id="cx-name" maxlength="120" value="' + esc(edit ? p.name : '') + '">' +
       '<label>Description (shown on the product page)</label><textarea class="cx-f" id="cx-desc" rows="9" maxlength="4000" placeholder="One point per line.\nPut a section title on its own line, e.g.\nKey Features\nSpecifications\nBrand: Hisense\nWhat is in the box?">' + esc(edit ? p.description || '' : '') + '</textarea>' +
-      '<div class="cx-r"><div><label>Price (KSh)</label><input class="cx-f" id="cx-price" type="number" min="0" inputmode="decimal" value="' + (edit ? p.price : '') + '"></div>' +
+      '<div class="cx-pr"><div class="cx-pt">🏷️ Pricing &amp; discount</div><div class="cx-r3">' +
+      '<div><label>Previous price</label><input class="cx-f" id="cx-old" type="number" min="0" inputmode="decimal" placeholder="optional" value="' + (edit && p.old_price ? p.old_price : '') + '"></div>' +
+      '<div><label>Current price *</label><input class="cx-f" id="cx-price" type="number" min="0" inputmode="decimal" value="' + (edit ? p.price : '') + '"></div>' +
+      '<div><label>Discount %</label><input class="cx-f" id="cx-pct" type="number" min="0" max="95" step="any" inputmode="decimal" placeholder="auto"></div></div>' +
+      '<div class="meta" style="margin:.4rem 0 0">Fill any two and the third is worked out for you. Customers see the old price crossed out, the new price and the % off.</div>' +
+      '<div class="cx-quick" id="cx-quick"></div><div class="cx-pvc" id="cx-pvc"></div></div>' +
+      '<div class="cx-r">' +
       '<div><label>Cost price per unit · COGS (KSh)</label><input class="cx-f" id="cx-cost" type="number" min="0" inputmode="decimal" value="' + (edit ? p.cost : '') + '"></div>' +
       '<div><label>' + (edit ? 'Pieces in stock' : 'Initial pieces') + '</label><input class="cx-f" id="cx-stock" type="number" min="0" inputmode="numeric" value="' + (edit ? p.stock : '') + '"' + (edit ? ' disabled' : '') + '></div>' +
       '<div><label>Low-stock alert below</label><input class="cx-f" id="cx-low" type="number" min="0" value="' + (edit ? p.low_at : 5) + '"></div></div>' +
@@ -129,7 +145,8 @@
     modal(edit ? 'Edit item' : 'Add new item', body, edit ? 'Save changes' : 'Publish to website', function () {
       if ($('cx-up').textContent) throw new Error('Wait for photos to finish uploading');
       var name = v('cx-name').trim(), price = num('cx-price'), cost = num('cx-cost'), stock = edit ? p.stock : parseInt(v('cx-stock') || 0, 10);
-      if (!name) throw new Error('Enter an item name'); if (!(price >= 0) || v('cx-price') === '') throw new Error('Enter a selling price');
+      if (!name) throw new Error('Enter an item name'); if (!(price >= 0) || v('cx-price') === '') throw new Error('Enter the current price');
+      var oldP = v('cx-old') === '' ? null : num('cx-old'); if (oldP != null && !(oldP > price)) throw new Error('Previous price must be higher than the current price (or leave it empty)');
       if (!(cost >= 0) || v('cx-cost') === '') throw new Error('Enter the cost price'); if (!(stock >= 0)) throw new Error('Enter pieces in stock');
       var catP = v('cx-cat') === '__new' ? (function () {
         var cn = v('cx-newcat').trim(); if (!cn) throw new Error('Enter the new category name');
@@ -137,12 +154,44 @@
       })() : Promise.resolve(parseInt(v('cx-cat'), 10));
       return catP.then(function (cid) {
         var row = { category_id: cid, name: name, price: price, cost: cost, low_at: parseInt(v('cx-low') || 5, 10), featured: $('cx-feat').checked, images: imgs };
+        if (oldP != null || (edit && p.old_price != null)) row.old_price = oldP;
         var desc = v('cx-desc').trim(); if (desc || (edit && p.description)) row.description = desc;
         if (edit) return call('/rest/v1/products?id=eq.' + encodeURIComponent(p.id), { m: 'PATCH', h: { Prefer: 'return=minimal' }, body: row });
         var id = slug(name) || 'item', n = 2, base = id; while (S.prods.some(function (x) { return x.id === id; })) id = base + '-' + n++;
         row.id = id; row.stock = stock; return call('/rest/v1/products', { m: 'POST', h: { Prefer: 'return=minimal' }, body: row });
+      }).catch(function (e) {
+        if (/old_price/.test(e.message || '')) throw new Error('Run setup-pricing.sql in Supabase first to enable previous prices, then save again.');
+        throw e;
       });
     }, function (c) {
+      var eo = c.querySelector('#cx-old'), ep = c.querySelector('#cx-price'), eq = c.querySelector('#cx-pct'), pvc = c.querySelector('#cx-pvc'), qk = c.querySelector('#cx-quick');
+      function fv(e) { var x = parseFloat(e.value); return x > 0 ? x : 0; }
+      function pctOf(o, n) { return Math.round((o - n) / o * 1000) / 10; }
+      function paint() {
+        var o = fv(eo), n = fv(ep), h = '';
+        if (!n && !o) h = '<span class="meta">Enter the current price to preview how customers will see it.</span>';
+        else if (o && n && o <= n) h = '<span class="bad">Previous price must be higher than the current price.</span>';
+        else if (o && n) h = '<span class="cx-bd">-' + Math.max(1, Math.round((o - n) / o * 100)) + '%</span> <s>' + money(o) + '</s> <b>' + money(n) + '</b><div class="meta">Customers save ' + money(o - n) + '</div>';
+        else if (n) h = '<b>' + money(n) + '</b><div class="meta">No discount shown. Add a previous price or a discount %.</div>';
+        pvc.innerHTML = h;
+      }
+      function onPrices(e) {
+        var t = e && e.target, o = fv(eo), n = fv(ep), d = parseFloat(eq.value), okd = d > 0 && d < 100;
+        if (t === ep && !o && n && okd) { eo.value = Math.round(n / (1 - d / 100)); o = fv(eo); }
+        else if (t === eo && o && !n && okd) { ep.value = Math.round(o * (1 - d / 100)); n = fv(ep); }
+        eq.value = o > n && n ? pctOf(o, n) : '';
+        paint();
+      }
+      function fromPct(d) {
+        d = parseFloat(d); if (!(d > 0) || d >= 100) { paint(); return; }
+        var o = fv(eo), n = fv(ep);
+        if (o) ep.value = Math.round(o * (1 - d / 100)); else if (n) eo.value = Math.round(n / (1 - d / 100));
+        paint();
+      }
+      eo.oninput = ep.oninput = onPrices; eq.oninput = function () { fromPct(eq.value); };
+      [5, 10, 15, 20, 25, 30, 40, 50].forEach(function (d) { var b = el('button', 'cx-chip', d + '% off'); b.type = 'button'; b.onclick = function () { eq.value = d; fromPct(d); }; qk.appendChild(b); });
+      var nd = el('button', 'cx-chip alt', 'No discount'); nd.type = 'button'; nd.onclick = function () { eo.value = ''; eq.value = ''; paint(); }; qk.appendChild(nd);
+      onPrices();
       var sel = c.querySelector('#cx-cat'), th = c.querySelector('#cx-th');
       if (!S.cats.length) { sel.value = '__new'; } sel.onchange = function () { c.querySelector('#cx-newcat').hidden = sel.value !== '__new'; }; sel.onchange();
       function thumbs() {
@@ -251,7 +300,7 @@
         (p.stock === 0 ? '<span class="badge b-declined">Out of stock</span> ' : lowS ? '<span class="badge b-low">Low · ' + p.stock + ' left</span> ' : '<span class="badge b-paid">In stock</span> ') +
         (p.featured ? '<span class="badge b-ad">Advert</span> ' : '') + (p.active ? '' : '<span class="badge b-pending">Hidden</span>') + '</div></div></div>' +
         (p.description ? '<div class="meta" style="margin:.5rem 0 0;white-space:pre-line">' + esc(p.description.length > 140 ? p.description.slice(0, 140) + '…' : p.description) + '</div>' : '<div class="meta" style="margin:.5rem 0 0;color:#b45309">No description yet. Tap Edit to add one.</div>') +
-        '<div class="cx-g"><div><span>Price</span><b>' + money(p.price) + '</b></div><div><span>COGS / unit</span><b>' + money(p.cost) + '</b></div>' +
+        '<div class="cx-g"><div><span>Price</span><b>' + priceHtml(p) + '</b></div><div><span>COGS / unit</span><b>' + money(p.cost) + '</b></div>' +
         '<div><span>Left / Sold</span><b>' + p.stock + ' / ' + s.sold + '</b></div><div><span>Margin</span><b>' + margin + '%</b></div>' +
         '<div><span>Sales</span><b>' + money(s.sales) + '</b></div><div><span>COGS (sold)</span><b>' + money(s.cogs) + '</b></div>' +
         '<div><span>Profit</span><b>' + money(s.profit) + '</b></div><div><span>Loss / returns</span><b' + (s.loss ? ' style="color:var(--no)"' : '') + '>' + money(s.loss) + '</b></div></div>' +
