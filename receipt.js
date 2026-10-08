@@ -1,4 +1,4 @@
-/* Stermont Mall receipts: PDF, email (EmailJS) and WhatsApp text.
+/* Stermont Arcade receipts: PDF, email (EmailJS) and WhatsApp text.
    Public API (unchanged): STM_RECEIPT.pdf(order), .email(order), .text(order)
    A receipt is only produced for orders that have an M-Pesa payment code (order.pay_code).
    The code is printed 3 times on the PDF: hero ticket, payment panel, and the footer of every page. */
@@ -15,10 +15,10 @@
 
   /* ---- 2. Business details printed on the receipt ---- */
   var BIZ = {
-    name: 'Stermont Mall',
+    name: 'Stermont Arcade',
     tag: 'Everything you need, one trusted store.',
     phone: '+254 748 888 230',
-    email: 'stermontmall@gmail.com',
+    email: 'support@stermontarcade.co.ke',
     web: 'stermontarcade.co.ke',
     place: 'Nairobi, Kenya',
     paybill: '717777',
@@ -253,7 +253,7 @@
     var cols = [
       { t: 'BILLED TO', e: [['Customer', o.customer_name], ['Phone', o.phone], ['Email', o.email]] },
       { t: 'PAYMENT', e: [['Order reference', o.ref], ['Paid via', 'M-Pesa Paybill ' + BIZ.paybill], ['Account number', BIZ.account]] },
-      { t: delivery ? 'DELIVERY' : 'COLLECTION', e: [['Method', delivery ? 'Home delivery' : 'Store pickup'], [delivery ? 'Deliver to' : 'Pickup point', delivery ? [o.address, o.county].filter(Boolean).join(', ') : 'Stermont Mall store'], ['Order placed', when(o.created_at)]] }
+      { t: delivery ? 'DELIVERY' : 'COLLECTION', e: [['Method', delivery ? 'Home delivery' : 'Store pickup'], [delivery ? 'Deliver to' : 'Pickup point', delivery ? [o.address, o.county].filter(Boolean).join(', ') : 'Stermont Arcade store'], ['Order placed', when(o.created_at)]] }
     ];
     var maxH = 0;
     cols.forEach(function (col) {   // measure first so all three cards are the same height
@@ -408,7 +408,7 @@
     if (!QR) return null;
     try {
       var q = QR(0, 'M');
-      q.addData(['STERMONT MALL - PAYMENT RECEIPT', 'Receipt: ' + receiptNo(o), 'Order: ' + (o.ref || ''), 'M-Pesa code: ' + code(o), 'Paid: ' + money(paidAmount(o)), 'Date: ' + when(o.handled_at || o.created_at), BIZ.web].join('\n'));
+      q.addData(['STERMONT ARCADE - PAYMENT RECEIPT', 'Receipt: ' + receiptNo(o), 'Order: ' + (o.ref || ''), 'M-Pesa code: ' + code(o), 'Paid: ' + money(paidAmount(o)), 'Date: ' + when(o.handled_at || o.created_at), BIZ.web].join('\n'));
       q.make(); return q;
     } catch (e) { return null; }
   }
@@ -464,7 +464,7 @@
     if (!EMAILJS.serviceId || !EMAILJS.templateId || !EMAILJS.publicKey) return Promise.reject(new Error('Email is not set up yet'));
     if (!o.email) return Promise.reject(new Error('This order has no customer email.'));
     var params = {
-      to_email: o.email, to_name: o.customer_name || 'Customer', name: o.customer_name || 'Customer', customer_name: o.customer_name || 'Customer', user_name: o.customer_name || 'Customer', email: o.email, order_id: o.ref, order_number: o.ref, business: BIZ.name, phone: BIZ.phone, receipt_no: receiptNo(o), order_ref: o.ref,
+      to_email: o.email, reply_to: BIZ.email, from_email: BIZ.email, support_email: BIZ.email, to_name: o.customer_name || 'Customer', name: o.customer_name || 'Customer', customer_name: o.customer_name || 'Customer', user_name: o.customer_name || 'Customer', email: o.email, order_id: o.ref, order_number: o.ref, business: BIZ.name, phone: BIZ.phone, receipt_no: receiptNo(o), order_ref: o.ref,
       date: when(o.handled_at || o.created_at), items: lines(o).join('\n'), total: money(paidAmount(o)), subtotal: money(o.subtotal), balance: money(balance(o)),
       paybill: BIZ.paybill, account: BIZ.account, pay_code: code(o), amount_words: words(paidAmount(o)),
       delivery: o.method === 'delivery' ? [o.address, o.county].filter(Boolean).join(', ') : 'Store pickup'
@@ -484,7 +484,7 @@
     out_for_delivery: { label: 'On the way', head: 'Your order is on the move! \uD83D\uDE9A\uD83D\uDCA8',
       msg: 'Your package has left our store and is heading your way right now. Please keep your phone close and switched on so our rider can reach you. Get ready to unwrap something good!' },
     delivered: { label: 'Delivered', head: 'Delivered! Enjoy \uD83C\uDF81\u2728',
-      msg: 'Your order has arrived. Thank you for choosing Stermont Mall, it means the world to us. We hope you love every bit of it. Something not right? Just reply to this email or call us and we will make it right. See you again soon!' }
+      msg: 'Your order has arrived. Thank you for choosing Stermont Arcade, it means the world to us. We hope you love every bit of it. Something not right? Just reply to this email or call us and we will make it right. See you again soon!' }
   };
   function notify(o, stage) {
     var m = STATUS_MSG[stage];
@@ -494,9 +494,9 @@
     var pickup = o.method !== 'delivery', msg = m.msg;
     if (stage === 'packed') msg += pickup ? 'It is waiting for you at our store, ready to collect whenever you are.' : 'Next stop: our rider, who will bring it straight to your door.';
     if (pickup && stage === 'out_for_delivery') { msg = 'Your order is ready and waiting for you at our store. Come pick up your goodies whenever you like!'; }
-    if (pickup && stage === 'delivered') msg = 'Your order has been collected. Thank you for choosing Stermont Mall, we hope you love it! Need anything? Just reply to this email. See you again soon!';
+    if (pickup && stage === 'delivered') msg = 'Your order has been collected. Thank you for choosing Stermont Arcade, we hope you love it! Need anything? Just reply to this email. See you again soon!';
     var params = {
-      to_email: o.email, to_name: o.customer_name || 'Customer', name: o.customer_name || 'Customer', customer_name: o.customer_name || 'Customer', user_name: o.customer_name || 'Customer', email: o.email, order_id: o.ref, order_number: o.ref, business: BIZ.name, phone: BIZ.phone, web: BIZ.web,
+      to_email: o.email, reply_to: BIZ.email, from_email: BIZ.email, support_email: BIZ.email, to_name: o.customer_name || 'Customer', name: o.customer_name || 'Customer', customer_name: o.customer_name || 'Customer', user_name: o.customer_name || 'Customer', email: o.email, order_id: o.ref, order_number: o.ref, business: BIZ.name, phone: BIZ.phone, web: BIZ.web,
       order_ref: o.ref, status: m.label, subject: BIZ.name + ': ' + m.label + ' (' + o.ref + ')',
       headline: m.head, message: msg, items: lines(o).join('\n'), total: money(o.subtotal),
       delivery: o.method === 'delivery' ? [o.address, o.county].filter(Boolean).join(', ') : 'Store pickup',
