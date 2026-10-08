@@ -1466,7 +1466,12 @@
           var custEmail = ((form.email || '').trim() || (s && s.user && s.user.email) || '').toLowerCase();
           var base = { order_ref: ref, order_total: money(T.s), order_items: lines.join('\n'), customer_name: form.name.trim(), customer_phone: '+' + normPhone(form.phone),
             delivery: form.method === 'pickup' ? 'Collection: ' + where() : 'Deliver to: ' + where(), mpesa_code: (doneCode || cleanCode()), order_message: msg };
-          if (custEmail) ejs(CFG.ejsCustTpl, Object.assign({ to_email: custEmail, subject: 'We received your order ' + ref }, base));
+          /* Customer confirmation: also send the same field names the (working) staff template uses, so the styled template is filled in */
+          var custBtn = '<a href="https://wa.me/' + CFG.wa + '" style="display:inline-block;background:#7c3aed;color:#ffffff;font-weight:bold;font-size:15px;text-decoration:none;padding:13px 20px;border-radius:12px;margin:4px;">Message us on WhatsApp</a>';
+          var custMsg = 'Hello ' + form.name.trim() + ', thank you for your order. We have received your M-Pesa code ' + (doneCode || cleanCode()) + ' (KSh ' + (doneAmt || Number(form.payAmt)) + '). We will verify the payment and contact you on WhatsApp to confirm your order and delivery.';
+          if (custEmail) ejs(CFG.ejsCustTpl, Object.assign({ to_email: custEmail, subject: 'We received your order ' + ref }, base, {
+            business: 'Stermont Arcade', name: form.name.trim(), headline: 'We received your order', message: custMsg, items: lines.join('\n'), total: money(T.s),
+            phone: '+254 748 888 230', web: 'stermontarcade.co.ke', buttons: custBtn }));
           /* Styled staff alert (EmailJS). If it fails, fall back to the plain Web3Forms alert. */
           var enc = encodeURIComponent(ref);
           function mkBtn(href, label, bg, fg) { return '<a href="' + href + '" style="display:inline-block;background:' + bg + ';color:' + fg + ';font-weight:bold;font-size:15px;text-decoration:none;padding:13px 20px;border-radius:12px;margin:4px;">' + label + '</a>'; }
