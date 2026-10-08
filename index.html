@@ -1440,4 +1440,149 @@
           'WhatsApp the customer: https://wa.me/' + normPhone(form.phone),
           '', 'STATUS: PENDING VERIFICATION. Check the M-Pesa SMS for the code above, then (customer care sign-in required):',
           'APPROVE (paid): ' + adm + '?ref=' + encodeURIComponent(ref) + '&action=approve',
-          'DECLINE (not paid): ' + adm + '?ref=' + encodeURIComponent(ref) + '&action=decline'].filter(functi
+          'DECLINE (not paid): ' + adm + '?ref=' + encodeURIComponent(ref) + '&action=decline'].filter(function (l, i, a) { return l !== '' || a[i - 1] !== ''; }).join('\n');
+        /* Backup staff alert: Web3Forms plain text (only used if the styled EmailJS alert fails) */
+        function web3() {
+          try {
+            [CFG.mailKey, CFG.mailKey2].forEach(function (k) {
+              if (!k) return;
+              fetch('https://api.web3forms.com/submit', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                body: JSON.stringify({ access_key: k, subject: 'New order ' + ref + ' - ' + money(T.s), from_name: 'Stermont Arcade website', message: msg }) })
+                .then(function (r) { return r.json().catch(function () { return {}; }); })
+                .then(function (j) { if (!j || j.success !== true) console.warn('Web3Forms alert failed:', j && j.message); })
+                .catch(function (e) { console.warn('Web3Forms alert error:', e && e.message); });
+            });
+          } catch (e) {}
+        }
+        /* Alert 2 + customer confirmation: EmailJS (REST, no extra script needed) */
+        function ejs(tpl, params) {
+          if (!CFG.ejsKey || !tpl) return Promise.resolve(false);
+          return fetch('https://api.emailjs.com/api/v1.0/email/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ service_id: CFG.ejsService, template_id: tpl, user_id: CFG.ejsKey, template_params: params }) })
+            .then(function (r) { if (!r.ok) return r.text().then(function (t) { console.warn('EmailJS failed:', r.status, t); return false; }); return true; })
+            .catch(function (e) { console.warn('EmailJS error:', e && e.message); return false; });
+        }
+        try {
+          var custEmail = ((form.email || '').trim() || (s && s.user && s.user.email) || '').toLowerCase();
+          var base = { order_ref: ref, order_total: money(T.s), order_items: lines.join('\n'), customer_name: form.name.trim(), customer_phone: '+' + normPhone(form.phone),
+            delivery: form.method === 'pickup' ? 'Collection: ' + where() : 'Deliver to: ' + where(), mpesa_code: (doneCode || cleanCode()), order_message: msg };
+          if (custEmail) ejs(CFG.ejsCustTpl, Object.assign({ to_email: custEmail, subject: 'We received your order ' + ref }, base));
+          /* Styled staff alert (EmailJS). If it fails, fall back to the plain Web3Forms alert. */
+          var enc = encodeURIComponent(ref);
+          function mkBtn(href, label, bg, fg) { return '<a href="' + href + '" style="display:inline-block;background:' + bg + ';color:' + fg + ';font-weight:bold;font-size:15px;text-decoration:none;padding:13px 20px;border-radius:12px;margin:4px;">' + label + '</a>'; }
+          var buttons = mkBtn(adm + '?ref=' + enc + '&action=approve', 'Approve (paid)', '#c8f31d', '#2a0e5c') + mkBtn(adm + '?ref=' + enc + '&action=decline', 'Decline', '#d92d20', '#ffffff') + mkBtn('https://wa.me/' + normPhone(form.phone), 'WhatsApp customer', '#7c3aed', '#ffffff');
+          var staffMsg = 'Customer: ' + form.name.trim() + '\nPhone: +' + normPhone(form.phone) + (custEmail ? '\nEmail: ' + custEmail : '') + (form.notes && form.notes.trim() ? '\nNotes: ' + form.notes.trim() : '') +
+            '\n\nPayment: M-Pesa Paybill ' + CFG.paybill + ', account ' + CFG.payAcct + '\nM-Pesa code entered: ' + (doneCode || cleanCode()) + ' (says paid KSh ' + (doneAmt || Number(form.payAmt)) + ')' +
+            '\n\nSTATUS: PENDING VERIFICATION. Check the M-Pesa SMS for the code above, then approve or decline (customer care sign-in required).';
+          ejs(CFG.ejsStaffTpl, { to_email: CFG.staffEmail, subject: 'New order ' + ref + ' - ' + money(T.s), business: 'Stermont Arcade', order_ref: ref, name: 'Stermont team',
+            headline: 'New order to verify', message: staffMsg, items: lines.join('\n'), total: money(T.s), delivery: form.method === 'pickup' ? 'Collection: ' + where() : 'Deliver to: ' + where(),
+            phone: '+254 748 888 230', web: 'stermontarcade.co.ke', buttons: buttons }).then(function (ok) { if (!ok) web3(); });
+        } catch (e) { web3(); }
+      }
+      function newRef() {
+        var A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', out = '', i, b = new Uint8Array(6);
+        try { (window.crypto || window.msCrypto).getRandomValues(b); } catch (e) { for (i = 0; i < 6; i++) b[i] = Math.floor(Math.random() * 256); }
+        for (i = 0; i < 6; i++) out += A.charAt(b[i] % A.length);
+        return 'STM-' + out;
+      }
+      function place(T) {
+        if (sending) return;
+        sending = true; sendErr = ''; render();
+        doneCode = ''; doneAmt = 0;
+        var s = session(), method = form.method, code = cleanCode(), paid = Number(form.payAmt);
+        if (!codeOk() || !amtOk(T)) { sending = false; sendErr = 'Enter your M-Pesa code and the amount you paid before placing the order.'; render(); return; }
+        var row = {
+          ref: ref, user_id: s ? s.user.id : null, customer_name: form.name.trim().slice(0, 120), phone: '+' + normPhone(form.phone),
+          email: (form.email || '').trim().toLowerCase().slice(0, 150) || (s && s.user.email) || null, method: method, county: method === 'delivery' ? form.county : null,
+          address: method === 'delivery' ? form.addr.trim().slice(0, 200) : null, notes: form.notes && form.notes.trim() ? form.notes.trim().slice(0, 500) : null,
+          items: T.L.map(function (i) { return { name: i.name, qty: i.qty, price: i.price, total: i.total }; }), subtotal: T.s, pay_code: code, pay_amount: paid
+        };
+        var hd = { 'Content-Type': 'application/json', apikey: CFG.sbKey, Prefer: 'return=minimal' };
+        if (s) hd.Authorization = 'Bearer ' + s.access_token;
+        var ctl = window.AbortController ? new AbortController() : null, to = setTimeout(function () { if (ctl) ctl.abort(); }, 20000);
+        function post(rw) {
+          return fetch(CFG.sbUrl + '/rest/v1/orders', { method: 'POST', headers: hd, body: JSON.stringify(rw), signal: ctl ? ctl.signal : undefined })
+            .then(function (r) { if (r.ok) return; return r.text().then(function (t) { var e = new Error('status ' + r.status + ' ' + t); e.status = r.status; e.body = t; throw e; }); });
+        }
+        post(row)
+          .catch(function (err) {   /* payment columns not set up yet: keep the code in the order notes instead */
+            if (err && err.status === 400 && /pay_code|pay_amount/.test(err.body || '')) {
+              var r2 = Object.assign({}, row); delete r2.pay_code; delete r2.pay_amount;
+              r2.notes = ('M-Pesa code ' + code + ', paid KSh ' + paid + (row.notes ? ' | ' + row.notes : '')).slice(0, 500); return post(r2);
+            }
+            throw err;
+          })
+          .then(function () {
+            clearTimeout(to); doneCode = code; doneAmt = paid;
+            lastMsg = message(T); lastUrl = 'https://wa.me/' + CFG.wa + '?text=' + encodeURIComponent(lastMsg);
+            notify(T, s);
+            ls('stm_cust', { name: form.name.trim(), phone: form.phone, email: (form.email || '').trim(), county: form.county, addr: form.addr, method: form.method });
+            doneRef = ref; doneTotal = T.s; ref = ''; cart = {}; store(); sending = false; form.notes = ''; form.payCode = ''; form.payAmt = ''; form.payTouched = false; step = 'done'; sync(); if (!isOpen) render();
+          })
+          .catch(function (err) {
+            clearTimeout(to); sending = false;
+            try { console.error('Order failed:', err && err.message); } catch (e) {}
+            sendErr = err && err.status === 409 ? 'This M-Pesa code has already been used on another order. Check the code in your SMS, or message us on WhatsApp.' : 'We could not place your order. Check your connection and try again, or send it on WhatsApp instead.' + (err && err.status ? ' (Error ' + err.status + ')' : ' (Network)'); render();
+          });
+      }
+      function rDone(b, f) {
+        var c = h('div', 'center'); c.appendChild(h('div', 'done-ic', '✓')); c.appendChild(h('h3', null, 'Order received')); c.appendChild(h('p', 'note', 'Reference ' + doneRef));
+        c.appendChild(h('p', null, 'Thank you! We have your M-Pesa code. We will verify the payment and contact you on WhatsApp to confirm your order and delivery.')); b.appendChild(c);
+        box(b, 'Payment submitted', [['M-Pesa code', doneCode], ['Amount', money(doneAmt)]]);
+        var a = h('a', 'btn btn-main', 'Message us on WhatsApp'); a.href = lastUrl; a.target = '_blank'; a.rel = 'noopener'; f.appendChild(a);
+        btn(f, 'Copy order details', function () { try { navigator.clipboard.writeText(lastMsg).then(function () { toast('Copied'); }); } catch (e) {} }, 'btn-alt');
+        if (session()) { var mo = h('a', 'btn btn-alt', 'View my orders'); mo.href = 'account.html'; f.appendChild(mo); }
+        btn(f, 'Close', function () { step = 'cart'; closeDr(); }, 'btn-alt');
+      }
+      function render() {
+        var T = totals(), b = D.getElementById('dr-b'), f = D.getElementById('dr-f'), idx = { cart: 0, details: 1, review: 2, done: 3 }[step];
+        b.textContent = ''; f.textContent = '';
+        D.getElementById('dr-back').hidden = (step === 'cart' || step === 'done'); D.getElementById('steps').hidden = (step === 'done');
+        [].forEach.call(D.getElementById('steps').children, function (li, i) { li.className = i < idx ? 'done' : i === idx ? 'on' : ''; });
+        D.getElementById('dr-t').textContent = { cart: 'Your cart', details: 'Delivery details', review: 'Review & pay', done: 'Order received' }[step];
+        if (!T.n && step !== 'done') step = 'cart';
+        ({ cart: rCart, details: rDetails, review: rReview, done: rDone })[step](b, f, T);
+      }
+      function openDr(s) {
+        step = s || 'cart'; opener = D.activeElement; isOpen = true; D.getElementById('dr').classList.add('on'); D.body.style.overflow = 'hidden';
+        if (!(history.state && history.state.dr)) history.pushState({ dr: 1 }, ''); sync(); D.getElementById('dr-x').focus();
+      }
+      function closeDr(pop) {
+        if (!isOpen) return; isOpen = false; D.getElementById('dr').classList.remove('on'); D.body.style.overflow = ''; sync();
+        if (pop !== true && history.state && history.state.dr) history.back(); if (opener && opener.focus) opener.focus();
+      }
+      D.getElementById('cartbtn').addEventListener('click', function () { openDr('cart'); });
+      D.getElementById('cartbar').addEventListener('click', function () { openDr('cart'); });
+      D.getElementById('dr-x').addEventListener('click', function () { closeDr(); });
+      D.getElementById('dr-back').addEventListener('click', function () { go(step === 'review' ? 'details' : 'cart'); });
+      D.getElementById('dr').addEventListener('click', function (e) { if (e.target === this) closeDr(); });
+      D.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDr(); });
+      window.addEventListener('popstate', function () { if (isOpen) closeDr(true); });
+      var ob = D.querySelector('#bar a[href="#order"]');
+      if (ob) { var sp = h('span', 'cb', '0'); sp.hidden = true; ob.appendChild(sp); ob.addEventListener('click', function (e) { e.preventDefault(); openDr('cart'); }); }
+      /* Sold-out products (set by customer care in the admin page) */
+      try {
+        fetch(CFG.sbUrl + '/rest/v1/stock?select=product&in_stock=eq.false', { headers: { apikey: CFG.sbKey } })
+          .then(function (r) { return r.ok ? r.json() : []; })
+          .then(function (rows) {
+            rows.forEach(function (x) {
+              var c = D.getElementById('p-' + x.product); if (!c) return;
+              var b = c.querySelector('button.btn-main'); if (b) { b.dataset.sold = '1'; b.disabled = true; b.textContent = 'Sold out'; b.style.opacity = '.55'; }
+              var im = c.querySelector('.img'); if (im && !im.querySelector('.soldtag')) { var t = h('span', 'soldtag', 'Sold out'); t.style.cssText = 'position:absolute;top:.5rem;left:.5rem;background:#b91c1c;color:#fff;font-weight:800;font-size:.75rem;padding:.2rem .6rem;border-radius:999px'; if (getComputedStyle(im).position === 'static') im.style.position = 'relative'; im.appendChild(t); }
+              delete cart['p-' + x.product];
+            });
+            store(); sync();
+          }).catch(function () {});
+      } catch (e) {}
+      sync();
+    })();
+  </script>
+<script src="storefront-live.js" defer></script>
+<script src="account-panel.js" defer></script>
+<script src="advert-banner.js" defer></script>
+<!-- Live chat: create a free Tawk.to account, copy your Property ID and Widget ID, then uncomment and replace below.
+<script>var Tawk_API=Tawk_API||{};(function(){var s=document.createElement("script");s.async=true;s.src="https://embed.tawk.to/YOUR_PROPERTY_ID/YOUR_WIDGET_ID";s.charset="UTF-8";s.setAttribute("crossorigin","*");document.head.appendChild(s);})();</script>
+-->
+<script>if('serviceWorker' in navigator)window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})});</script>
+</body>
+</html>
