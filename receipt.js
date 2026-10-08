@@ -7,7 +7,7 @@
 
   /* ---- 1. Fill these in once (EmailJS: https://www.emailjs.com) ---- */
   var EMAILJS = {
-    serviceId: 'service_fdp81n2', // e.g. 'service_abc123'   (EmailJS > Email Services)
+    serviceId: 'service_zoho', // e.g. 'service_abc123'   (EmailJS > Email Services)
     templateId: '',         // receipt template        (EmailJS > Email Templates)
     statusTemplateId: 'template_cv2qjgm',   // order-status template   (Confirmed / Packed / On the way / Delivered)
     publicKey: 'PayiXKhM6gVQLHYAE'// EmailJS > Account > Public Key
