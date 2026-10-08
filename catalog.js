@@ -19,6 +19,30 @@
     '.cx-pvc{background:#fff;border:1px dashed #b794f6;border-radius:12px;padding:.6rem .8rem;margin-top:.5rem}.cx-pvc s{color:var(--mu)}.cx-pvc b{font-size:1.2rem;color:var(--pd)}.cx-pvc .bad{color:var(--no);font-weight:600;font-size:.9rem}' +
     '.cx-bd{display:inline-block;background:#dc2626;color:#fff;border-radius:6px;padding:.05rem .4rem;font-size:.75rem;font-weight:800}';
 
+    /* ---------- ledger + responsive KPI ---------- */
+    var LG = '.cx-k{grid-template-columns:repeat(2,1fr)}@media(min-width:700px){.cx-k{grid-template-columns:repeat(4,1fr);gap:.7rem}.cx-k div{padding:.8rem 1rem}.cx-k b{font-size:1.25rem}}' +
+    '.cx-k small{text-transform:uppercase;letter-spacing:.02em}.cx-k b{display:block;margin-top:.15rem;word-break:break-word}' +
+    '.lg{--lgb:var(--ln,#e3dff0);--lgp:var(--p,#7c3aed);--lgm:var(--mu,#6b6b6b);--lgn:var(--no,#dc2626);color:inherit;min-width:0}' +
+    '.lg-hd{display:flex;flex-wrap:wrap;gap:.3rem 1.2rem;background:#f3eefc;border:1px solid var(--lgb);border-radius:12px;padding:.6rem .8rem;margin-bottom:.8rem;font-size:.86rem;color:#2a0e5c}' +
+    '.lg-neg{color:var(--lgn)!important}.lg em{font-style:normal;font-size:.68rem;background:#fef3c7;color:#92400e;border-radius:6px;padding:.05rem .35rem;vertical-align:middle}' +
+    '.lg-desk{display:none}.lg-mob{display:block}' +
+    '.lg-scroll{overflow:auto;max-height:75vh;border:1px solid var(--lgb);border-radius:12px;background:#fff}' +
+    '.lg-t{width:100%;border-collapse:separate;border-spacing:0;font-size:.88rem;font-variant-numeric:tabular-nums}.lg-t th,.lg-t td{padding:.55rem .7rem;text-align:right;white-space:nowrap;border-bottom:1px solid var(--lgb)}' +
+    '.lg-t .l{text-align:left;white-space:normal;min-width:190px;position:sticky;left:0;background:inherit}.lg-t td.l{background:#fff}' +
+    '.lg-t thead th{position:sticky;top:0;z-index:2;background:#ece3fb;color:#3b0f8c;font-size:.72rem;text-transform:uppercase;letter-spacing:.03em}.lg-t thead th.l{z-index:3}' +
+    '.lg-t tbody tr:hover td{background:#faf7ff}.lg-t tr.lg-cat td{background:#f3eefc!important;font-weight:800;color:#2a0e5c}.lg-t tr.lg-cat small{font-weight:500;color:var(--lgm)}' +
+    '.lg-t tfoot td{position:sticky;bottom:0;background:var(--lgp);color:#fff;font-weight:800;border:0}.lg-t tfoot td.l{background:var(--lgp)}.lg-t tfoot .lg-neg{color:#fff!important}' +
+    '.lg-g{background:#fff;border:1px solid var(--lgb);border-radius:12px;margin-bottom:.7rem;overflow:hidden}.lg-g summary{display:flex;justify-content:space-between;gap:.6rem;padding:.7rem .8rem;background:#f3eefc;font-weight:800;color:#2a0e5c;cursor:pointer;list-style:none}.lg-g summary::-webkit-details-marker{display:none}' +
+    '.lg-c{padding:.7rem .8rem;border-top:1px solid var(--lgb)}.lg-c h4,.lg-tot h4{font-size:.95rem;margin:0 0 .45rem;word-break:break-word}' +
+    '.lg-kv{display:grid;grid-template-columns:1fr 1fr;gap:.35rem .9rem;font-size:.85rem}.lg-kv div{display:flex;justify-content:space-between;gap:.4rem;border-bottom:1px dotted var(--lgb);padding-bottom:.2rem;min-width:0}.lg-kv span{color:var(--lgm)}.lg-kv b{text-align:right;word-break:break-word}' +
+    '.lg-sub{padding:.7rem .8rem;background:#faf7ff;border-top:2px solid var(--lgb)}.lg-tot{background:var(--lgp);color:#fff;border-radius:12px;padding:.8rem}.lg-tot .lg-kv span{color:#e9ddff}.lg-tot .lg-kv div{border-color:rgba(255,255,255,.3)}.lg-tot .lg-neg{color:#fff!important}' +
+    '.lg-chk{background:#f7fee7;border:1px solid #bef264;border-radius:12px;padding:.7rem .8rem;margin:.8rem 0;font-size:.88rem;line-height:1.5}' +
+    '.lg-sec{background:#fff;border:1px solid var(--lgb);border-radius:12px;margin-top:.8rem}.lg-sec summary{padding:.7rem .8rem;font-weight:800;cursor:pointer}.lg-n{background:#c8f31d;color:#2a0e5c;border-radius:999px;padding:.05rem .5rem;font-size:.75rem;margin-left:.3rem}' +
+    '.lg-empty{padding:.2rem .8rem .8rem;color:var(--lgm);font-size:.88rem}.lg-lst{padding:0 .8rem .6rem}.lg-lh{display:none}' +
+    '.lg-lr{display:grid;grid-template-columns:1fr 1fr;gap:.2rem .8rem;padding:.6rem 0;border-top:1px solid var(--lgb);font-size:.86rem}.lg-lr span::before{content:attr(data-l) ": ";color:var(--lgm);font-size:.76rem}' +
+    '@media(min-width:900px){.lg-desk{display:block}.lg-mob{display:none}.lg-lh,.lg-lr{display:grid;grid-template-columns:1.3fr 1.5fr 1fr 1fr 1fr 1.4fr;gap:.6rem;align-items:center}.lg-lh{padding:.4rem 0;font-size:.72rem;text-transform:uppercase;color:var(--lgm);font-weight:700}.lg-lr span::before{content:none}.lg-lr{padding:.55rem 0}}';
+    css += LG;
+
   /* ---------- helpers ---------- */
   function $(id) { return D.getElementById(id); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -62,11 +86,15 @@
   }
   function logsCall() {
     var b = bounds(), f = b ? '&created_at=gte.' + encodeURIComponent(b[0].toISOString()) : '';
-    return call('/rest/v1/loss_logs?select=reason,loss,qty,created_at' + f + '&limit=2000').catch(function () { return []; });
+    return call('/rest/v1/loss_logs?select=product_id,reason,loss,qty,note,created_at' + f + '&order=created_at.desc&limit=2000').catch(function () { return []; });
+  }
+  function restCall() {
+    var b = bounds(), f = b ? '&created_at=gte.' + encodeURIComponent(b[0].toISOString()) : '';
+    return call('/rest/v1/stock_restocks?select=product_id,qty,unit_cost,supplier,created_at' + f + '&order=created_at.desc&limit=2000').catch(function () { return []; });
   }
   function load() {
-    return Promise.all([call('/rest/v1/categories?select=*&order=name'), call('/rest/v1/products?select=*&order=created_at.desc'), statsCall(), logsCall()])
-      .then(function (r) { S.cats = r[0]; S.prods = r[1]; S.st = {}; r[2].forEach(function (x) { S.st[x.product_id] = x; }); S.logs = r[3] || []; });
+    return Promise.all([call('/rest/v1/categories?select=*&order=name'), call('/rest/v1/products?select=*&order=created_at.desc'), statsCall(), logsCall(), restCall()])
+      .then(function (r) { S.cats = r[0]; S.prods = r[1]; S.st = {}; r[2].forEach(function (x) { S.st[x.product_id] = x; }); S.logs = r[3] || []; S.rest = r[4] || []; });
   }
   /* orders the admin declined / cancelled in the chosen period (never counted as sales) */
   function cancelled() {
@@ -286,7 +314,7 @@
       (low.length ? '<div class="err" style="background:#fef3c7;color:#92400e">⚠ ' + low.length + ' item' + (low.length > 1 ? 's' : '') + ' low on stock: ' + low.slice(0, 4).map(function (p) { return esc(p.name) + ' (' + p.stock + ')'; }).join(', ') + (low.length > 4 ? '…' : '') + '</div>' : '') +
       '<p style="margin:0 0 .7rem"><button class="btn" id="cx-add" type="button" style="width:100%">＋ Add new item</button></p>' +
       '<div class="tabs" id="cx-chips"></div><input id="cx-q" type="search" placeholder="Search items" value="' + esc(S.q) + '" style="width:100%;padding:.7rem .8rem;border:1px solid var(--ln);border-radius:10px;font:inherit;margin-bottom:.8rem">' +
-      '<div id="cx-list"></div><h2 style="font-size:1.05rem;margin:1.2rem 0 .5rem">Financial ledger' + (S.range === 'all' ? '' : ' · ' + RANGES.filter(function (r) { return r[0] === S.range; })[0][1]) + '</h2><div class="cx-w" id="cx-led"></div>';
+      '<div id="cx-list"></div><h2 style="font-size:1.05rem;margin:1.2rem 0 .5rem">Financial ledger' + (S.range === 'all' ? '' : ' · ' + RANGES.filter(function (r) { return r[0] === S.range; })[0][1]) + '</h2><div class="lg" id="cx-led"></div>';
     $('cx-add').onclick = function () { itemForm(); };
     RANGES.forEach(function (r) { var b = el('button', S.range === r[0] ? 'on' : '', r[1]); b.type = 'button'; b.onclick = function () { S.range = r[0]; load().then(render).catch(function (x) { toast(x.message + ' (run setup-catalog-2.sql?)'); }); }; $('cx-rg').appendChild(b); });
     var chips = $('cx-chips'); [{ id: 'all', name: 'All (' + all.length + ')' }].concat(S.cats.map(function (c) { return { id: String(c.id), name: c.name }; })).forEach(function (c) {
@@ -314,13 +342,68 @@
     ledger(all);
   }
   function ledger(all) {
-    var rows = '<table class="cx-t"><tr><th>Item</th><th>Left</th><th>Sold</th><th>Sales</th><th>COGS</th><th>Profit</th><th>Loss</th></tr>';
-    function line(cls, name, t) { return '<tr class="' + cls + '"><td>' + name + '</td><td>' + t.stock + '</td><td>' + t.sold + '</td><td>' + money(t.sales) + '</td><td>' + money(t.cogs) + '</td><td' + neg(t.profit) + '>' + money(t.profit) + '</td><td>' + money(t.loss) + '</td></tr>'; }
-    S.cats.concat([{ id: null, name: 'Uncategorised' }]).forEach(function (c) {
-      var ps = all.filter(function (p) { return p.category_id === c.id; }); if (!ps.length) return;
-      rows += line('sub', esc(c.name), totals(ps)); ps.forEach(function (p) { rows += line('', esc(p.name), totals([p])); });
+    var per = S.range === 'all' ? 'All time' : RANGES.filter(function (r) { return r[0] === S.range; })[0][1];
+    var X = cancelled(), G = totals(all), names = {};
+    all.forEach(function (p) { names[p.id] = p.name; });
+    function pct(a, b) { return b ? Math.round(a / b * 1000) / 10 + '%' : '0%'; }
+    function cls(n) { return n < 0 ? ' lg-neg' : ''; }
+    function row(p) {
+      var s = stat(p);
+      return { n: p.name, price: +p.price || 0, cost: +p.cost || 0, mg: p.price ? Math.round((p.price - p.cost) / p.price * 100) : 0, left: p.stock, sold: s.sold, sales: s.sales, cogs: s.cogs, profit: s.profit, loss: s.loss, net: s.profit - s.loss, val: p.stock * p.cost, hid: !p.active };
+    }
+    var groups = S.cats.concat([{ id: null, name: 'Uncategorised' }]).map(function (c) {
+      var ps = all.filter(function (p) { return p.category_id === c.id; }); if (!ps.length) return null;
+      var t = totals(ps); t.net = t.profit - t.loss; return { name: c.name, icon: c.slug ? (ICONS[c.slug] || '📦') : '📦', t: t, rows: ps.map(row) };
+    }).filter(Boolean);
+    G.net = G.profit - G.loss;
+
+    /* ---- desktop table ---- */
+    var d = '<div class="lg-desk lg-scroll"><table class="lg-t"><thead><tr><th class="l">Item</th><th>Price</th><th>Cost / unit</th><th>Margin</th><th>Left</th><th>Sold</th><th>Sales</th><th>COGS</th><th>Profit</th><th>Loss</th><th>Net</th><th>Stock value</th></tr></thead><tbody>';
+    groups.forEach(function (g) {
+      d += '<tr class="lg-cat"><td class="l">' + g.icon + ' ' + esc(g.name) + ' <small>(' + g.rows.length + ' item' + (g.rows.length > 1 ? 's' : '') + ')</small></td><td></td><td></td><td>' + pct(g.t.profit, g.t.sales) + '</td><td>' + g.t.stock + '</td><td>' + g.t.sold + '</td><td>' + money(g.t.sales) + '</td><td>' + money(g.t.cogs) + '</td><td class="' + cls(g.t.profit) + '">' + money(g.t.profit) + '</td><td>' + money(g.t.loss) + '</td><td class="' + cls(g.t.net) + '">' + money(g.t.net) + '</td><td>' + money(g.t.value) + '</td></tr>';
+      g.rows.forEach(function (r) {
+        d += '<tr><td class="l">' + esc(r.n) + (r.hid ? ' <em>hidden</em>' : '') + '</td><td>' + money(r.price) + '</td><td>' + money(r.cost) + '</td><td>' + r.mg + '%</td><td>' + r.left + '</td><td>' + r.sold + '</td><td>' + money(r.sales) + '</td><td>' + money(r.cogs) + '</td><td class="' + cls(r.profit) + '">' + money(r.profit) + '</td><td>' + (r.loss ? money(r.loss) : '–') + '</td><td class="' + cls(r.net) + '">' + money(r.net) + '</td><td>' + money(r.val) + '</td></tr>';
+      });
     });
-    $('cx-led').innerHTML = rows + line('tot', 'ALL ITEMS', totals(all)) + '</table>';
+    d += '</tbody><tfoot><tr><td class="l">ALL ITEMS</td><td></td><td></td><td>' + pct(G.profit, G.sales) + '</td><td>' + G.stock + '</td><td>' + G.sold + '</td><td>' + money(G.sales) + '</td><td>' + money(G.cogs) + '</td><td>' + money(G.profit) + '</td><td>' + money(G.loss) + '</td><td>' + money(G.net) + '</td><td>' + money(G.value) + '</td></tr></tfoot></table></div>';
+
+    /* ---- mobile cards ---- */
+    function kv(k, v, c) { return '<div><span>' + k + '</span><b class="' + (c || '') + '">' + v + '</b></div>'; }
+    var m = '<div class="lg-mob">';
+    groups.forEach(function (g) {
+      m += '<details class="lg-g" open><summary><span>' + g.icon + ' ' + esc(g.name) + '</span><b class="' + cls(g.t.net) + '">' + money(g.t.net) + '</b></summary>';
+      g.rows.forEach(function (r) {
+        m += '<div class="lg-c"><h4>' + esc(r.n) + (r.hid ? ' <em>hidden</em>' : '') + '</h4><div class="lg-kv">' +
+          kv('Price', money(r.price)) + kv('Cost / unit', money(r.cost)) + kv('Margin', r.mg + '%') + kv('Left · Sold', r.left + ' · ' + r.sold) +
+          kv('Sales', money(r.sales)) + kv('COGS', money(r.cogs)) + kv('Profit', money(r.profit), cls(r.profit)) + kv('Loss', r.loss ? money(r.loss) : '–') +
+          kv('Net', money(r.net), cls(r.net)) + kv('Stock value', money(r.val)) + '</div></div>';
+      });
+      m += '<div class="lg-sub"><div class="lg-kv">' + kv('Category sales', money(g.t.sales)) + kv('COGS', money(g.t.cogs)) + kv('Profit', money(g.t.profit), cls(g.t.profit)) + kv('Loss', money(g.t.loss)) + kv('Net', money(g.t.net), cls(g.t.net)) + kv('Stock value', money(g.t.value)) + '</div></div></details>';
+    });
+    m += '<div class="lg-tot"><h4>ALL ITEMS · ' + esc(per) + '</h4><div class="lg-kv">' + kv('Sales', money(G.sales)) + kv('COGS', money(G.cogs)) + kv('Profit', money(G.profit)) + kv('Loss', money(G.loss)) + kv('Net profit', money(G.net)) + kv('Stock value', money(G.value)) + kv('Left · Sold', G.stock + ' · ' + G.sold) + kv('Margin', pct(G.profit, G.sales)) + '</div></div></div>';
+
+    /* ---- supporting records ---- */
+    function dt(x) { return x ? new Date(x).toLocaleString('en-KE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '–'; }
+    function list(title, head, rows, empty) {
+      var h = '<details class="lg-sec" open><summary>' + title + ' <span class="lg-n">' + rows.length + '</span></summary>';
+      if (!rows.length) return h + '<div class="lg-empty">' + empty + '</div></details>';
+      h += '<div class="lg-lst"><div class="lg-lh">' + head.map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div>';
+      rows.forEach(function (r) { h += '<div class="lg-lr">' + r.map(function (x, i) { return '<span data-l="' + esc(head[i]) + '">' + x + '</span>'; }).join('') + '</div>'; });
+      return h + '</div></details>';
+    }
+    var losses = (S.logs || []).slice().sort(function (a, b) { return a.created_at < b.created_at ? 1 : -1; }).map(function (l) { return [dt(l.created_at), esc(names[l.product_id] || 'Item'), esc(l.reason || 'Other'), (+l.qty || 0) + ' pcs', '<b class="lg-neg">−' + money(l.loss) + '</b>', esc(l.note || '')]; });
+    var rests = (S.rest || []).slice().sort(function (a, b) { return a.created_at < b.created_at ? 1 : -1; }).map(function (r) { return [dt(r.created_at), esc(names[r.product_id] || 'Item'), '+' + (+r.qty || 0) + ' pcs', money(r.unit_cost), '<b>' + money((+r.qty || 0) * (+r.unit_cost || 0)) + '</b>', esc(r.supplier || '')]; });
+    var spent = (S.rest || []).reduce(function (a, r) { return a + (+r.qty || 0) * (+r.unit_cost || 0); }, 0);
+    var canc = (window.STM_orders || []).filter(function (o) { var b = bounds(); return (o.status === 'declined' || o.status === 'cancelled') && !(b && new Date(o.handled_at || o.created_at) < b[0]); })
+      .map(function (o) { return [dt(o.handled_at || o.created_at), esc(o.ref || o.order_ref || o.id || ''), esc(o.name || o.customer_name || o.customer || ''), esc(o.status), '<b class="lg-neg">' + money(o.subtotal) + '</b>']; });
+
+    $('cx-led').innerHTML =
+      '<div class="lg-hd"><div><b>Period:</b> ' + esc(per) + '</div><div><b>Items:</b> ' + all.length + '</div><div><b>Generated:</b> ' + dt(new Date()) + '</div></div>' +
+      d + m +
+      '<div class="lg-chk"><b>How it adds up</b><br>Sales ' + money(G.sales) + ' − COGS ' + money(G.cogs) + ' = Profit ' + money(G.profit) + '. Profit − Losses ' + money(G.loss) + ' = <b class="' + cls(G.net) + '">Net ' + money(G.net) + '</b>. Cancelled/declined orders (' + X.n + ') worth ' + money(X.value) + ' were never counted as sales.</div>' +
+      list('Losses &amp; returns', ['Date', 'Item', 'Reason', 'Qty', 'Loss', 'Note'], losses, 'No losses or returns logged for this period.') +
+      list('Restocks (money spent on stock · ' + money(spent) + ')', ['Date', 'Item', 'Qty', 'Unit cost', 'Total', 'Supplier'], rests, 'No restocks recorded for this period.') +
+      list('Cancelled / declined orders', ['Date', 'Order', 'Customer', 'Status', 'Value'], canc, 'No cancelled or declined orders for this period.');
   }
 
   /* ---------- Stock tab (live products: pieces left, restock, loss) ---------- */
