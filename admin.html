@@ -50,6 +50,8 @@
   .tl .st.on { color:var(--ok); } .tl .st.on b { font-weight:700; }
   [hidden] { display:none !important; }
 </style>
+<link rel="manifest" href="/admin-manifest.json">
+<link rel="apple-touch-icon" href="/icon-admin-192.png">
 </head>
 <body>
 <header>
@@ -407,5 +409,6 @@
   })();
 })();
 </script>
+<script>if('serviceWorker' in navigator)window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})});</script>
 </body>
 </html>
