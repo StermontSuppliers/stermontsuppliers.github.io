@@ -8,7 +8,8 @@
   function disc(p) { var o = Number(p.old_price), n = Number(p.price); if (!(o > n) || !(n >= 0)) return null; return { was: o, now: n, pct: Math.max(1, Math.round((o - n) / o * 100)), save: o - n }; }
   function badge(d) { return mk('span', 'dbadge', '-' + d.pct + '%'); }
   function wasEl(d) { var w = mk('div', 'was'); w.appendChild(mk('s', '', money(d.was))); w.appendChild(mk('b', '', 'Save ' + money(d.save))); return w; }
-  var PCSS = '.dbadge{background:#dc2626;color:#fff;font-weight:800;font-size:.72rem;border-radius:999px;padding:.18rem .55rem;line-height:1.2;box-shadow:0 2px 6px rgba(220,38,38,.35)}' +
+  var PCSS = '.vhide{display:none!important}#stm-pd .vopts{margin:.2rem 0 .8rem}#stm-pd .vopts b{display:block;margin-bottom:.45rem;font-size:.95rem}#stm-pd .vopts div{display:flex;flex-wrap:wrap;gap:.5rem}#stm-pd .vopts button{position:relative;border:1.5px solid #d9d2ee;background:#fff;color:#1b1230;border-radius:12px;padding:.6rem .95rem;font:inherit;font-weight:600;cursor:pointer}#stm-pd .vopts button.on{border-color:#5b21b6;box-shadow:0 0 0 1px #5b21b6 inset;color:#5b21b6}#stm-pd .vopts button.out{color:#9b96ad;background:linear-gradient(to top right,transparent calc(50% - 1px),#c9c3dc,transparent calc(50% + 1px));cursor:not-allowed}' +
+    '.dbadge{background:#dc2626;color:#fff;font-weight:800;font-size:.72rem;border-radius:999px;padding:.18rem .55rem;line-height:1.2;box-shadow:0 2px 6px rgba(220,38,38,.35)}' +
     '.pcard .img .dbadge{position:absolute;top:.5rem;left:.5rem;z-index:2}.pcard .was{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;font-size:.82rem;color:var(--muted)}.pcard .was b{color:#15803d;font-weight:700}.pcard .price.sale{color:var(--orange)}' +
     '#stm-pd .pdw{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;margin:-.1rem 0 .6rem}#stm-pd .pdw s{color:#8b86a0;font-size:1.05rem}#stm-pd .pdw .sv{color:#15803d;font-weight:700;font-size:.9rem}#stm-pd .pdw[hidden]{display:none}' +
     '#deals{padding:1.4rem 0 .2rem}#deals .dh2{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.2rem}#deals h2{font-size:1.5rem;font-weight:800;letter-spacing:-.02em}#deals h2 span{background:linear-gradient(135deg,#ef4444,#f97316);-webkit-background-clip:text;background-clip:text;color:transparent}' +
@@ -90,7 +91,7 @@
     var st = mk('style'); st.textContent = CSS; D.head.appendChild(st);
     pd = mk('div'); pd.id = 'stm-pd'; pd.setAttribute('role', 'dialog'); pd.setAttribute('aria-modal', 'true');
     pd.innerHTML = '<div class="pd"><div class="bar"><button type="button" class="back">← Back</button><b></b></div><div class="body"><div class="gal"><div class="main"></div><div class="thumbs"></div></div>' +
-      '<div class="info"><h2></h2><div class="pr"></div><div class="unit-l" hidden style="color:#6b6b6b;font-size:.9rem;margin:-.2rem 0 .5rem"></div><div class="pdw" hidden></div><span class="st"></span><div><a class="wa" target="_blank" rel="noopener">Ask about this item on WhatsApp</a></div></div>' +
+      '<div class="info"><h2></h2><div class="pr"></div><div class="vopts" hidden></div><div class="unit-l" hidden style="color:#6b6b6b;font-size:.9rem;margin:-.2rem 0 .5rem"></div><div class="pdw" hidden></div><span class="st"></span><div><a class="wa" target="_blank" rel="noopener">Ask about this item on WhatsApp</a></div></div>' +
       '<div class="full"><h3 class="dh">Product details</h3><div class="desc"></div><button type="button" class="more" hidden>Show more ▾</button></div></div>' +
       '<div class="act"><div class="q"><button type="button" class="mn" aria-label="Less">−</button><span>1</span><button type="button" class="pl" aria-label="More">+</button></div><button type="button" class="add">Add to cart</button><button type="button" class="cart">🛒 Cart</button></div></div>';
     D.body.appendChild(pd);
@@ -102,7 +103,7 @@
     q('.pl').onclick = function () { setQty(qty + 1); };
     q('.cart').onclick = function () { hide(); window.STM && STM.open(); };
     q('.add').onclick = function () {
-      if (!cur || !window.STM) return; STM.add(cur, null, qty); var b = q('.add'); b.textContent = '✓ Added to cart'; setTimeout(function () { if (cur && cur._p.stock > 0) b.textContent = 'Add to cart'; }, 1600);
+      if (!cur || !window.STM) return; var hh = cur.querySelector('h3'), h0 = hh && hh.textContent; if (hh && cur._p.variant_label) hh.textContent = cur._p.name; try { STM.add(cur, null, qty); } finally { if (hh) hh.textContent = h0; } var b = q('.add'); b.textContent = '✓ Added to cart'; setTimeout(function () { if (cur && cur._p.stock > 0) b.textContent = 'Add to cart'; }, 1600);
     };
     q('.more').onclick = function () { var d = q('.desc'), c = d.classList.toggle('clip'); this.textContent = c ? 'Show more ▾' : 'Show less ▴'; };
     var sx = 0, main = q('.main');
@@ -129,10 +130,18 @@
     });
     return box;
   }
-  function openView(c, noPush) {
+  function openView(c, noPush, keep) {
     var p = c._p; if (!p) return; build(); cur = c; var q = function (s) { return pd.querySelector(s); };
     q('.pd-h').setAttribute('data-id', c.id); paintHearts(); if (window.STM_track) window.STM_track(c.id);
-    imgs = (p.images || []).filter(Boolean); q('.bar b').textContent = p.name; q('h2').textContent = p.name; q('.pr').textContent = money(p.price); var ue = q('.unit-l'); ue.textContent = p.unit ? 'Per ' + p.unit : ''; ue.hidden = !p.unit;
+    imgs = (p.images || []).filter(Boolean); q('.bar b').textContent = p.vbase || p.name; q('h2').textContent = p.vbase || p.name; q('.pr').textContent = money(p.price); var ue = q('.unit-l'); ue.textContent = p.unit && !p.variant_label ? 'Per ' + p.unit : ''; ue.hidden = !ue.textContent;
+    var vo = q('.vopts'); vo.textContent = ''; vo.hidden = !(c._grp && c._grp.length > 1);
+    if (!vo.hidden) {
+      vo.appendChild(mk('b', '', 'Select pack size:')); var vw = mk('div');
+      c._grp.forEach(function (sc) {
+        var sp = sc._p, o = sp.stock <= 0, b = mk('button', (sp === p ? 'on ' : '') + (o ? 'out' : ''), sp.variant_label); b.type = 'button';
+        b.onclick = function () { if (!o && sp !== p) openView(sc, true, true); }; vw.appendChild(b);
+      }); vo.appendChild(vw);
+    }
     var dd = disc(p), pw = q('.pdw'); pw.textContent = ''; pw.hidden = !dd;
     if (dd) { pw.appendChild(mk('s', '', money(dd.was))); pw.appendChild(badge(dd)); pw.appendChild(mk('span', 'sv', 'You save ' + money(dd.save))); }
     var s = q('.st'), sold = p.stock <= 0; s.className = 'st' + (sold ? ' out' : p.stock <= 5 ? ' low' : '');
@@ -143,7 +152,7 @@
     var d = q('.desc'), full = q('.full'); d.textContent = ''; full.hidden = !p.description;
     if (p.description) d.appendChild(fmtDesc(p.description));
     var add = q('.add'); add.disabled = sold; add.textContent = sold ? 'Sold out' : 'Add to cart'; q('.q').style.display = sold ? 'none' : ''; setQty(1); show(0);
-    pd.classList.add('on'); D.documentElement.style.overflow = 'hidden'; q('.pd').scrollTop = 0;
+    pd.classList.add('on'); D.documentElement.style.overflow = 'hidden'; if (!keep) q('.pd').scrollTop = 0;
     var more = q('.more'); d.classList.remove('clip'); more.hidden = true;
     if (d.scrollHeight > 270) { d.classList.add('clip'); more.hidden = false; more.textContent = 'Show more ▾'; }
     if (!noPush) { try { history.pushState({ stm: p.id }, '', '#p-' + p.id); } catch (e) {} }
@@ -207,13 +216,25 @@
   })();
 
   /* ---------- put items into their category sections ---------- */
-  function bump(m) { var c = m.querySelector('.cnt'); if (c) c.textContent = m.querySelectorAll('.pcard').length; }
+  function bump(m) { var c = m.querySelector('.cnt'); if (c) c.textContent = m.querySelectorAll('.pcard:not(.vhide)').length; }
   function getProducts(sel) { return fetch(SB + '/rest/v1/products?active=eq.true&select=' + sel + '&order=created_at.asc', { headers: { apikey: KEY } }); }
-  getProducts('id,name,price,old_price,unit,stock,images,featured,description,categories(name,slug)')
+  getProducts('id,name,price,old_price,unit,variant_group,variant_label,stock,images,featured,description,categories(name,slug)')
+    .then(function (r) { return r.ok ? r : getProducts('id,name,price,old_price,unit,stock,images,featured,description,categories(name,slug)'); })
     .then(function (r) { return r.ok ? r : getProducts('id,name,price,old_price,stock,images,featured,description,categories(name,slug)'); })   /* unit column not added yet */
     .then(function (r) { return r.ok ? r : getProducts('id,name,price,stock,images,featured,description,categories(name,slug)'); })   /* old_price column not added yet: still show products */
     .then(function (r) { return r.ok ? r.json() : []; }).then(function (rows) {
-      var root = D.querySelector('#music-gear .wrap');
+      var root = D.querySelector('#music-gear .wrap'), groups = {};
+      rows.forEach(function (p) { if (p.variant_group && p.variant_label) { p.vbase = p.name; p.name = p.vbase + ' \u2013 ' + p.variant_label; (groups[p.variant_group] = groups[p.variant_group] || []).push(p); } });
+      Object.keys(groups).forEach(function (k) { var g = groups[k]; if (g.length < 2) { g[0].vbase = null; g[0].name = g[0].name; return; } g.rep = g.filter(function (x) { return x.stock > 0; })[0] || g[0]; g.forEach(function (x) { x._g = g; x._c = card(x); }); });
+      function vfix(c, p) {
+        var g = p._g, b = c.querySelector('.b'); c._grp = g.map(function (x) { return x._c; });
+        c.querySelector('h3').textContent = p.vbase; var un = c.querySelector('.unit'); if (un) un.remove(); [].forEach.call(c.querySelectorAll('.dbadge,.was'), function (n) { n.remove(); });
+        var ps = g.filter(function (x) { return x.stock > 0; }).map(function (x) { return +x.price; }), lo = Math.min.apply(null, ps.length ? ps : [+p.price]), hi = Math.max.apply(null, ps.length ? ps : [+p.price]);
+        c.querySelector('.price').textContent = (lo === hi ? '' : 'From ') + money(lo); c.querySelector('.price').classList.remove('sale');
+        var bt = c.querySelector('button.btn-main'), allOut = !ps.length; bt.disabled = allOut; bt.style.opacity = allOut ? '.55' : ''; bt.textContent = allOut ? 'Sold out' : 'Select size';
+        bt.onclick = allOut ? null : function (e) { e.stopPropagation(); openView(c); };
+        c._p = p;
+      }
       rows.forEach(function (p) {
         if (D.getElementById('p-' + p.id)) return;
         var cname = (p.categories && p.categories.name) || 'More products', cslug = (p.categories && p.categories.slug) || '', m = null, grid = null;
@@ -225,9 +246,9 @@
             var h = mk('h3', 'sub', cname); h.setAttribute('role', 'button'); h.tabIndex = 0; h.onclick = function () { m.classList.toggle('open'); };
             var sp = mk('span', 'cnt', '0'); h.appendChild(sp); grid = mk('div', 'mgrid'); m.appendChild(h); m.appendChild(grid); root.appendChild(m);
           }
-          grid = grid || m.querySelector('.mgrid'); m.classList.remove('stm-empty'); grid.appendChild(card(p)); bump(m);
+          grid = grid || m.querySelector('.mgrid'); m.classList.remove('stm-empty'); var cc = p._g ? p._c : card(p); if (p._g) { if (p._g.rep === p) vfix(cc, p); else cc.classList.add('vhide'); } grid.appendChild(cc); bump(m);
         }
-        if (p.featured) { var row = D.querySelector('#featured .row'), cta = row && row.querySelector('.cta'); if (row) row.insertBefore(card(p), cta); }
+        if ((p._g ? p._g.rep === p && p._g.some(function (x) { return x.featured; }) : p.featured)) { var row = D.querySelector('#featured .row'), cta = row && row.querySelector('.cta'); if (row) { var fc = card(p); if (p._g) { fc._p = p; fc.id = 'f-' + p.id; vfix(fc, p); fc.querySelector('.price'); } row.insertBefore(fc, cta); } }
       });
       try { buildDeals(rows); buildToolbar(); } catch (e) {}
       var hm = location.hash.match(/^#p-(.+)$/);   /* shared link straight to an item */

@@ -94,7 +94,7 @@
   }
   function load() {
     return Promise.all([call('/rest/v1/categories?select=*&order=name'), call('/rest/v1/products?select=*&order=created_at.desc'), statsCall(), logsCall(), restCall()])
-      .then(function (r) { S.cats = r[0]; S.prods = r[1]; S.st = {}; r[2].forEach(function (x) { S.st[x.product_id] = x; }); S.logs = r[3] || []; S.rest = r[4] || []; });
+      .then(function (r) { S.cats = r[0]; S.prods = r[1].map(function (p) { p.base = p.name; if (p.variant_label) p.name = p.base + ' \u2013 ' + p.variant_label; return p; }); S.st = {}; r[2].forEach(function (x) { S.st[x.product_id] = x; }); S.logs = r[3] || []; S.rest = r[4] || []; });
   }
   /* orders the admin declined / cancelled in the chosen period (never counted as sales) */
   function cancelled() {
@@ -153,8 +153,8 @@
   }
 
   /* ---------- Add / Edit item ---------- */
-  function itemForm(p) {
-    var edit = !!p, imgs = edit ? (p.images || []).slice() : [];
+  function itemForm(p, from) {
+    var edit = !!p, tpl = !edit && from ? from : null, imgs = edit ? (p.images || []).slice() : (tpl ? (tpl.images || []).slice() : []);
     var opts = S.cats.map(function (c) { return '<option value="' + c.id + '"' + (edit && p.category_id === c.id ? ' selected' : '') + '>' + (ICONS[c.slug] ? ICONS[c.slug] + ' ' : '') + esc(c.name) + '</option>'; }).join('');
     var curU = edit && p.unit ? String(p.unit) : '', knownU = UNITS.some(function (g) { return g[1].indexOf(curU) > -1; });
     var unitHtml = '<label>Unit of sale</label><select class="cx-f" id="cx-unit"><option value="">No unit (sold per item)</option>' +
@@ -162,9 +162,12 @@
       '<option value="__custom"' + (curU && !knownU ? ' selected' : '') + '>Custom…</option></select>' +
       '<input class="cx-f" id="cx-unitc" maxlength="30" placeholder="Type the unit, e.g. 250 g tin" value="' + esc(curU && !knownU ? curU : '') + '"' + (curU && !knownU ? '' : ' hidden') + ' style="margin-top:.4rem">' +
       '<div class="meta">Customers see it next to the price, e.g. "Per kg" or "Per litre".</div>';
+    var packHtml = (tpl && !tpl.variant_label ? '<div class="cx-pr" style="margin-top:.6rem"><div class="cx-pt">\ud83d\udce6 Pack size of the existing item</div><input class="cx-f" id="cx-vl0" maxlength="30" placeholder="e.g. 1 Litre"><div class="meta">The item you are copying (' + esc(tpl.name) + ') has no pack size yet. Type its size so buyers can choose between the two.</div></div>' : '') +
+      '<div class="cx-pr" style="margin-top:.6rem"><div class="cx-pt">\ud83d\udce6 Pack size (what buyers choose)</div><input class="cx-f" id="cx-vl" maxlength="30" placeholder="e.g. 1 Litre, 250 mL, 50 kg bag" value="' + esc(edit && p.variant_label ? p.variant_label : '') + '">' +
+      '<div class="meta">Leave empty if this item has only one size. To sell the same product in other sizes, save it, then tap <b>\uff0b Pack size</b> on its card. Each size has its own price, cost and stock below.</div></div>';
     var body = '<label>Category</label><select class="cx-f" id="cx-cat">' + opts + '<option value="__new">＋ Create new category…</option></select>' +
       '<input class="cx-f" id="cx-newcat" placeholder="New category name" hidden style="margin-top:.4rem">' +
-      '<label>Item name</label><input class="cx-f" id="cx-name" maxlength="120" value="' + esc(edit ? p.name : '') + '">' +
+      '<label>Item name</label><input class="cx-f" id="cx-name" maxlength="120" value="' + esc(edit ? (p.base || p.name) : '') + '">' + packHtml +
       '<label>Description (shown on the product page)</label><textarea class="cx-f" id="cx-desc" rows="9" maxlength="4000" placeholder="One point per line.\nPut a section title on its own line, e.g.\nKey Features\nSpecifications\nBrand: Hisense\nWhat is in the box?">' + esc(edit ? p.description || '' : '') + '</textarea>' +
       unitHtml + '<div class="cx-pr"><div class="cx-pt">🏷️ Pricing &amp; discount</div><div class="cx-r3">' +
       '<div><label>Previous price</label><input class="cx-f" id="cx-old" type="number" min="0" inputmode="decimal" placeholder="optional" value="' + (edit && p.old_price ? p.old_price : '') + '"></div>' +
@@ -182,6 +185,7 @@
       if ($('cx-up').textContent) throw new Error('Wait for photos to finish uploading');
       var name = v('cx-name').trim(), price = num('cx-price'), cost = num('cx-cost'), stock = edit ? p.stock : parseInt(v('cx-stock') || 0, 10);
       if (!name) throw new Error('Enter an item name'); if (!(price >= 0) || v('cx-price') === '') throw new Error('Enter the current price');
+      var vl = v('cx-vl').trim(), vl0 = tpl && !tpl.variant_label ? v('cx-vl0').trim() : ''; if (tpl && !vl) throw new Error('Type the pack size for this new item, e.g. 250 mL'); if (tpl && !tpl.variant_label && !vl0) throw new Error('Type the pack size of the existing item too');
       var unit = v('cx-unit') === '__custom' ? v('cx-unitc').trim() : v('cx-unit'); if (v('cx-unit') === '__custom' && !unit) throw new Error('Type the custom unit, or choose one from the list');
       var oldP = v('cx-old') === '' ? null : num('cx-old'); if (oldP != null && !(oldP > price)) throw new Error('Previous price must be higher than the current price (or leave it empty)');
       if (!(cost >= 0) || v('cx-cost') === '') throw new Error('Enter the cost price'); if (!(stock >= 0)) throw new Error('Enter pieces in stock');
@@ -193,16 +197,26 @@
         var row = { category_id: cid, name: name, price: price, cost: cost, low_at: parseInt(v('cx-low') || 5, 10), featured: $('cx-feat').checked, images: imgs };
         if (oldP != null || (edit && p.old_price != null)) row.old_price = oldP;
         if (unit || (edit && p.unit)) row.unit = unit || null;
+        var grp = tpl ? (tpl.variant_group || slug(tpl.base || tpl.name)) : (edit && p.variant_group) || slug(name);
+        if (vl || (edit && (p.variant_label || p.variant_group))) { row.variant_label = vl || null; row.variant_group = vl ? grp : null; }
         var desc = v('cx-desc').trim(); if (desc || (edit && p.description)) row.description = desc;
         if (edit) return call('/rest/v1/products?id=eq.' + encodeURIComponent(p.id), { m: 'PATCH', h: { Prefer: 'return=minimal' }, body: row });
-        var id = slug(name) || 'item', n = 2, base = id; while (S.prods.some(function (x) { return x.id === id; })) id = base + '-' + n++;
-        row.id = id; row.stock = stock; return call('/rest/v1/products', { m: 'POST', h: { Prefer: 'return=minimal' }, body: row });
+        var id = slug(name + (vl ? ' ' + vl : '')) || 'item', n = 2, base = id; while (S.prods.some(function (x) { return x.id === id; })) id = base + '-' + n++;
+        row.id = id; row.stock = stock;
+        var first = tpl && !tpl.variant_label ? call('/rest/v1/products?id=eq.' + encodeURIComponent(tpl.id), { m: 'PATCH', h: { Prefer: 'return=minimal' }, body: { variant_label: vl0, variant_group: grp } }) : Promise.resolve();
+        return first.then(function () { return call('/rest/v1/products', { m: 'POST', h: { Prefer: 'return=minimal' }, body: row }); });
       }).catch(function (e) {
         if (/old_price/.test(e.message || '')) throw new Error('Run setup-pricing.sql in Supabase first to enable previous prices, then save again.');
         if (/\bunit\b/.test(e.message || '')) throw new Error('Units are not set up yet. Run this once in the Supabase SQL editor, then save again: alter table products add column if not exists unit text;');
+        if (/variant_/.test(e.message || '')) throw new Error('Pack sizes are not set up yet. Run this once in the Supabase SQL editor, then save again: alter table products add column if not exists variant_group text, add column if not exists variant_label text;');
         throw e;
       });
     }, function (c) {
+      if (tpl) {
+        c.querySelector('#cx-name').value = tpl.base || tpl.name; c.querySelector('#cx-name').readOnly = true;
+        c.querySelector('#cx-desc').value = tpl.description || ''; c.querySelector('#cx-cat').value = String(tpl.category_id);
+        var u0 = c.querySelector('#cx-unit'), uc0 = c.querySelector('#cx-unitc'); if (tpl.unit) { u0.value = tpl.unit; if (u0.value !== tpl.unit) { u0.value = '__custom'; uc0.value = tpl.unit; uc0.hidden = false; } }
+      }
       var eo = c.querySelector('#cx-old'), ep = c.querySelector('#cx-price'), eq = c.querySelector('#cx-pct'), pvc = c.querySelector('#cx-pvc'), qk = c.querySelector('#cx-quick');
       function fv(e) { var x = parseFloat(e.value); return x > 0 ? x : 0; }
       function pctOf(o, n) { return Math.round((o - n) / o * 1000) / 10; }
@@ -344,9 +358,9 @@
         '<div><span>Left / Sold</span><b>' + p.stock + ' / ' + s.sold + '</b></div><div><span>Margin</span><b>' + margin + '%</b></div>' +
         '<div><span>Sales</span><b>' + money(s.sales) + '</b></div><div><span>COGS (sold)</span><b>' + money(s.cogs) + '</b></div>' +
         '<div><span>Profit</span><b>' + money(s.profit) + '</b></div><div><span>Loss / returns</span><b' + (s.loss ? ' style="color:var(--no)"' : '') + '>' + money(s.loss) + '</b></div></div>' +
-        '<div class="acts"><button class="btn ok sm" data-a="r" type="button">＋ Restock</button><button class="btn alt sm" data-a="l" type="button">Log loss</button><button class="btn alt sm" data-a="y" type="button">History</button><button class="btn alt sm" data-a="f" type="button">' + (p.featured ? 'Remove advert' : '★ Advert') + '</button><button class="btn alt sm" data-a="e" type="button">Edit</button><button class="btn alt sm" data-a="h" type="button">' + (p.active ? 'Hide' : 'Show') + '</button></div>';
+        '<div class="acts"><button class="btn ok sm" data-a="r" type="button">＋ Restock</button><button class="btn alt sm" data-a="l" type="button">Log loss</button><button class="btn alt sm" data-a="y" type="button">History</button><button class="btn alt sm" data-a="f" type="button">' + (p.featured ? 'Remove advert' : '★ Advert') + '</button><button class="btn alt sm" data-a="e" type="button">Edit</button><button class="btn alt sm" data-a="v" type="button">＋ Pack size</button><button class="btn alt sm" data-a="h" type="button">' + (p.active ? 'Hide' : 'Show') + '</button></div>';
       c.onclick = function (e) { var a = e.target.getAttribute && e.target.getAttribute('data-a'); if (!a) return;
-        if (a === 'r') restockForm(p); else if (a === 'l') lossForm(p); else if (a === 'e') itemForm(p); else if (a === 'y') history(p);
+        if (a === 'r') restockForm(p); else if (a === 'l') lossForm(p); else if (a === 'e') itemForm(p); else if (a === 'v') itemForm(null, p); else if (a === 'y') history(p);
         else if (a === 'f') { e.target.disabled = true; call('/rest/v1/products?id=eq.' + encodeURIComponent(p.id), { m: 'PATCH', h: { Prefer: 'return=minimal' }, body: { featured: !p.featured } }).then(load).then(render).catch(function (x) { toast(x.message); }); }
         else { e.target.disabled = true; call('/rest/v1/products?id=eq.' + encodeURIComponent(p.id), { m: 'PATCH', h: { Prefer: 'return=minimal' }, body: { active: !p.active } }).then(load).then(render).catch(function (x) { toast(x.message); }); } };
       L.appendChild(c);
