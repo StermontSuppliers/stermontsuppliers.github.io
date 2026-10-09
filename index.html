@@ -364,6 +364,14 @@
       .how{grid-template-columns:repeat(4,1fr)}
     }
     @media(min-width:1440px){.wrap,.slides{max-width:1360px}.mgrid{grid-template-columns:repeat(6,1fr)}}
+        /* ===== Vertical layout: items stack and scroll up/down, not sideways ===== */
+    .slides{display:grid;grid-template-columns:1fr;overflow:visible;scroll-snap-type:none}
+    .slide{flex:none;max-width:none;width:100%;scroll-snap-align:none}
+    .dots{display:none}
+    .row{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;overflow:visible;scroll-snap-type:none;padding:1rem 1rem .25rem 0}
+    .pcard{flex:none;max-width:none;width:100%;scroll-snap-align:none;min-width:0}
+    @media(min-width:760px){.slides{grid-template-columns:repeat(3,1fr)}.row{grid-template-columns:repeat(3,1fr)}}
+    @media(min-width:1024px){.row{grid-template-columns:repeat(5,1fr)}.slide{flex-basis:auto}.pcard{flex-basis:auto}}
     /* ===== Mobile view (<760px) ===== */
     @media(max-width:759px){
       .wrap{padding:0 .85rem}
