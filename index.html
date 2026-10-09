@@ -1243,8 +1243,8 @@
         /* EmailJS (backup alert to staff + confirmation email to customer). Fill these 4 from your EmailJS dashboard. */
         ejsKey: 'PayiXKhM6gVQLHYAE', ejsService: 'service_zoho', ejsAdminTpl: '', ejsCustTpl: 'template_n60yao4',
         adminEmail: 'stermontmall@gmail.com', staffEmail: 'info@stermontarcade.co.ke', ejsStaffTpl: 'template_cv2qjgm',
-        /* Delivery fee per county in KSh, e.g. { 'Nairobi': 300, 'Kiambu': 400 }. Counties not listed say the fee is confirmed on WhatsApp. */
-        fees: {} };
+        /* Delivery fee per county in KSh. It is added to the total the customer pays. Counties not listed (far north / remote) say the fee is confirmed on WhatsApp. Edit the numbers here any time. */
+        fees: { 'Nairobi': 300, 'Kiambu': 400, 'Machakos': 400, 'Kajiado': 400, 'Nakuru': 600, 'Nyeri': 600, 'Meru': 600, 'Tharaka-Nithi': 600, 'Embu': 600, 'Kirinyaga': 600, "Murang'a": 600, 'Nyandarua': 600, 'Laikipia': 600, 'Mombasa': 600, 'Kisumu': 600, 'Uasin Gishu': 600, 'Kwale': 800, 'Kilifi': 800, 'Taita-Taveta': 800, 'Garissa': 800, 'Isiolo': 800, 'Kitui': 800, 'Makueni': 800, 'Trans Nzoia': 800, 'Elgeyo-Marakwet': 800, 'Nandi': 800, 'Baringo': 800, 'Narok': 800, 'Kericho': 800, 'Bomet': 800, 'Kakamega': 800, 'Vihiga': 800, 'Bungoma': 800, 'Busia': 800, 'Siaya': 800, 'Homa Bay': 800, 'Migori': 800, 'Kisii': 800, 'Nyamira': 800 } };
       function slug(t) { return t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
       function ls(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k)); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} return null; }
       function h(t, c, x) { var e = D.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
@@ -1332,7 +1332,7 @@
           var x = h('button', 'rm', '\u2715 Remove'); x.type = 'button'; x.setAttribute('aria-label', 'Remove ' + i.name); x.onclick = function () { setQ(i.id, 0); }; rt.appendChild(x); r.appendChild(rt); b.appendChild(r);
         });
         row(f, 'Subtotal (' + T.n + (T.n === 1 ? ' item)' : ' items)'), money(T.s), 'big');
-        f.appendChild(h('p', 'note', 'Delivery fee, if any, is confirmed on WhatsApp before you pay.'));
+        f.appendChild(h('p', 'note', 'Delivery fee is added at checkout based on your county.'));
         btn(f, 'Checkout', function () { go('details'); });
         btn(f, 'Keep shopping', closeDr, 'btn-alt');
       }
@@ -1356,7 +1356,7 @@
         if (form.method === 'delivery') {
           var s = h('select'); s.appendChild(new Option('Select county', '')); counties.forEach(function (c) { s.appendChild(new Option(c, c)); });
           fld(b, 'county', 'County', s); s.value = form.county;
-          var fe = h('div', 'note'); fe.id = 'fee-note'; var showFee = function () { var f = CFG.fees[form.county]; fe.textContent = form.county ? (f ? 'Estimated delivery fee to ' + form.county + ': ' + money(f) + '. We confirm the final amount on WhatsApp.' : 'We will confirm your delivery fee to ' + form.county + ' on WhatsApp.') : ''; };
+          var fe = h('div', 'note'); fe.id = 'fee-note'; var showFee = function () { var f = CFG.fees[form.county]; fe.textContent = form.county ? (f ? 'Delivery fee to ' + form.county + ': ' + money(f) + '. It is added to your total, so you pay everything in one M-Pesa payment.' : 'We will confirm your delivery fee to ' + form.county + ' on WhatsApp.') : ''; };
           s.addEventListener('change', showFee); showFee(); s.parentNode.appendChild(fe);
           fld(b, 'addr', 'Town / area and street', inp('text', 'e.g. Nairobi CBD, Tom Mboya Street, opposite Archives', 'street-address'));
         }
@@ -1373,7 +1373,8 @@
           ref = newRef(); go('review');
         });
       }
-      function due(T) { var f = form.method === 'delivery' ? (CFG.fees[form.county] || 0) : 0; return T.s + f; }
+      function feeOf() { return form.method === 'delivery' ? (CFG.fees[form.county] || 0) : 0; }
+      function due(T) { return T.s + feeOf(); }
       function cleanCode() { return String(form.payCode || '').replace(/\s+/g, '').toUpperCase(); }
       function codeOk() { return /^[A-Z0-9]{8,12}$/.test(cleanCode()); }
       function amtOk(T) { return Number(form.payAmt) >= due(T); }
@@ -1387,7 +1388,7 @@
       function message(T) {
         var L = ['Hello Stermont Arcade, I would like to place an order.', '', '*Order ' + (ref || doneRef) + '*'];
         T.L.forEach(function (i, k) { L.push((k + 1) + '. ' + i.name + ' x' + i.qty + ' = ' + money(i.total)); });
-        L.push('', '*Subtotal:* ' + money(T.s), '*Delivery:* ' + (form.method === 'pickup' ? where() : 'Deliver to ' + where() + ' (fee to be confirmed)'), '', '*Name:* ' + form.name.trim(), '*Phone:* +' + normPhone(form.phone));
+        L.push('', '*Subtotal:* ' + money(T.s), feeOf() ? '*Delivery fee:* ' + money(feeOf()) : '', feeOf() ? '*Total to pay:* ' + money(due(T)) : '', '*Delivery:* ' + (form.method === 'pickup' ? where() : 'Deliver to ' + where() + (feeOf() ? '' : ' (fee to be confirmed)')), '', '*Name:* ' + form.name.trim(), '*Phone:* +' + normPhone(form.phone));
         if (form.notes && form.notes.trim()) L.push('*Notes:* ' + form.notes.trim());
         L.push('*Payment:* M-Pesa Paybill ' + CFG.paybill + ', account ' + CFG.payAcct, '*M-Pesa code:* ' + (doneCode || cleanCode()) + ' (paid KSh ' + (doneAmt || Number(form.payAmt)) + ')', '', 'Please confirm availability and the delivery fee. Thank you!');
         return L.join('\n');
@@ -1417,7 +1418,7 @@
         var ac = h('div', 'fld'), al = h('label', null, 'Amount you paid (KSh)'); al.htmlFor = 'payamt'; ac.appendChild(al);
         var ai = h('input'); ai.id = 'payamt'; ai.type = 'number'; ai.inputMode = 'numeric'; ai.min = '1'; ai.value = form.payAmt || ''; ac.appendChild(ai);
         var ae = h('div', 'err', ''); ac.appendChild(ae); b.appendChild(ac);
-        row(f, 'Items total', money(T.s), 'big'); f.appendChild(h('p', 'note', form.method === 'delivery' && !CFG.fees[form.county] ? 'The delivery fee is confirmed on WhatsApp and paid separately.' : 'Delivery fee, if any, is confirmed with you on WhatsApp.'));
+        if (feeOf()) { row(f, 'Items total', money(T.s)); row(f, 'Delivery to ' + form.county, money(feeOf())); row(f, 'Total to pay', money(due(T)), 'big'); } else row(f, 'Items total', money(T.s), 'big'); f.appendChild(h('p', 'note', form.method === 'delivery' && !CFG.fees[form.county] ? 'The delivery fee to your county is confirmed on WhatsApp and paid separately.' : 'Delivery is included in the total above. Pay it in one M-Pesa payment.'));
         if (sendErr) f.appendChild(h('div', 'oerr', sendErr));
         var pb = btn(f, sending ? 'Placing your order...' : 'I have paid, place order', function () { place(T); });
         function check(show) {
@@ -1434,7 +1435,8 @@
         if (!CFG.mailKey) return;
         var adm = new URL('admin.html', location.href).href;
         var lines = T.L.map(function (i, k) { return (k + 1) + '. ' + i.name + ' x' + i.qty + ' = ' + money(i.total); });
-        var msg = ['Order ' + ref, '', lines.join('\n'), '', 'Subtotal: ' + money(T.s), form.method === 'pickup' ? 'Collection: ' + where() : 'Deliver to: ' + where(),
+        if (feeOf()) lines.push('Delivery to ' + form.county + ' = ' + money(feeOf()));
+        var msg = ['Order ' + ref, '', lines.join('\n'), '', 'Subtotal: ' + money(T.s) + (feeOf() ? ' + delivery ' + money(feeOf()) + ' = TOTAL ' + money(due(T)) : ''), form.method === 'pickup' ? 'Collection: ' + where() : 'Deliver to: ' + where(),
           '', 'Customer: ' + form.name.trim(), 'Phone: +' + normPhone(form.phone), s && s.user && s.user.email ? 'Account email: ' + s.user.email : '',
           form.notes && form.notes.trim() ? 'Notes: ' + form.notes.trim() : '', '', 'Payment: M-Pesa Paybill ' + CFG.paybill + ', account ' + CFG.payAcct, 'M-Pesa CODE entered by customer: ' + (doneCode || cleanCode()) + ' (says paid KSh ' + (doneAmt || Number(form.payAmt)) + ')',
           'WhatsApp the customer: https://wa.me/' + normPhone(form.phone),
@@ -1447,7 +1449,7 @@
             [CFG.mailKey, CFG.mailKey2].forEach(function (k) {
               if (!k) return;
               fetch('https://api.web3forms.com/submit', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-                body: JSON.stringify({ access_key: k, subject: 'New order ' + ref + ' - ' + money(T.s), from_name: 'Stermont Arcade website', message: msg }) })
+                body: JSON.stringify({ access_key: k, subject: 'New order ' + ref + ' - ' + money(due(T)), from_name: 'Stermont Arcade website', message: msg }) })
                 .then(function (r) { return r.json().catch(function () { return {}; }); })
                 .then(function (j) { if (!j || j.success !== true) console.warn('Web3Forms alert failed:', j && j.message); })
                 .catch(function (e) { console.warn('Web3Forms alert error:', e && e.message); });
@@ -1464,7 +1466,7 @@
         }
         try {
           var custEmail = ((form.email || '').trim() || (s && s.user && s.user.email) || '').toLowerCase();
-          var base = { order_ref: ref, order_total: money(T.s), order_items: lines.join('\n'), customer_name: form.name.trim(), customer_phone: '+' + normPhone(form.phone),
+          var base = { order_ref: ref, order_total: money(due(T)), order_items: lines.join('\n'), customer_name: form.name.trim(), customer_phone: '+' + normPhone(form.phone),
             delivery: form.method === 'pickup' ? 'Collection: ' + where() : 'Deliver to: ' + where(), mpesa_code: (doneCode || cleanCode()), order_message: msg };
           /* Customer confirmation: also send the same field names the (working) staff template uses, so the styled template is filled in */
           var custBtn = '<a href="https://wa.me/' + CFG.wa + '" style="display:inline-block;background:#7c3aed;color:#ffffff;font-weight:800;font-size:15px;text-decoration:none;padding:14px 22px;border-radius:14px;margin:4px;">Message us on WhatsApp</a>';
@@ -1474,7 +1476,7 @@
           var itemRows = T.L.map(function (i) {
             return '<tr><td style="padding:10px 0;border-bottom:1px solid #e9e1fb;font-size:15px;color:#282828;">' + hx(i.name) + ' <span style="color:#6b6b6b;">x' + i.qty + '</span></td>' +
               '<td style="padding:10px 0;border-bottom:1px solid #e9e1fb;font-size:15px;color:#282828;text-align:right;white-space:nowrap;font-weight:bold;">' + hx(money(i.total)) + '</td></tr>';
-          }).join('');
+          }).join('') + (feeOf() ? '<tr><td style="padding:14px 0;border-bottom:1px solid #eee7fb;' + CF + 'font-size:15px;color:#1b1230;">&#128666; Delivery to ' + hx(form.county) + '</td><td align="right" style="padding:14px 0;border-bottom:1px solid #eee7fb;' + CF + 'font-size:15px;font-weight:700;color:#1b1230;white-space:nowrap;">' + hx(money(feeOf())) + '</td></tr>' : '');
           var paidCode = doneCode || cleanCode(), paidAmt = doneAmt || Number(form.payAmt);
           var CF = "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;", isPick = form.method === 'pickup';
           var cNames = isPick ? ['Received', 'Confirmed', 'Packed', 'Collected'] : ['Received', 'Confirmed', 'Packed', 'Delivered'];
@@ -1502,7 +1504,7 @@
             '<tr><td style="padding:18px 26px 6px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8f5ff;border:1px solid #e6dcfb;border-radius:18px;">' +
               '<tr><td colspan="2" style="padding:16px 18px 2px;' + CF + 'font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#7c3aed;">Your order</td></tr>' +
               '<tr><td colspan="2" style="padding:0 18px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">' + cRows + '</table></td></tr>' +
-              '<tr><td style="padding:16px 18px;' + CF + 'font-size:16px;font-weight:700;color:#1b1230;">Items total</td><td align="right" style="padding:16px 18px;' + CF + 'font-size:24px;font-weight:900;color:#5b21b6;white-space:nowrap;">' + hx(money(T.s)) + '</td></tr>' +
+              '<tr><td style="padding:16px 18px;' + CF + 'font-size:16px;font-weight:700;color:#1b1230;">' + (feeOf() ? 'Total paid' : 'Items total') + '</td><td align="right" style="padding:16px 18px;' + CF + 'font-size:24px;font-weight:900;color:#5b21b6;white-space:nowrap;">' + hx(money(due(T))) + '</td></tr>' +
             '</table></td></tr>' +
             '<tr><td style="padding:12px 20px 6px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>' +
               '<td width="50%" valign="top" style="padding:6px;"><div style="background:#f1fbd0;border-radius:16px;padding:14px 16px;"><div style="' + CF + 'font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#4d6b00;">' + (isPick ? 'Collect at' : 'Delivering to') + '</div><div style="' + CF + 'font-size:14px;font-weight:600;line-height:1.45;color:#1b1230;padding-top:6px;">' + hx(where()) + '</div></div></td>' +
@@ -1515,7 +1517,7 @@
             '</table></div>';
           if (custEmail) ejs(CFG.ejsCustTpl, Object.assign({ to_email: custEmail, subject: 'We received your order ' + ref }, base, {
             html_body: htmlBody,
-            business: 'Stermont Arcade', name: form.name.trim(), headline: 'We received your order', message: custMsg, items: lines.join('\n'), total: money(T.s),
+            business: 'Stermont Arcade', name: form.name.trim(), headline: 'We received your order', message: custMsg, items: lines.join('\n'), total: money(due(T)),
             phone: '+254 748 888 230', web: 'stermontarcade.co.ke', buttons: custBtn }));
           /* Styled staff alert (EmailJS). If it fails, fall back to the plain Web3Forms alert. */
           var enc = encodeURIComponent(ref);
@@ -1525,28 +1527,28 @@
             '\n\nPayment: M-Pesa Paybill ' + CFG.paybill + ', account ' + CFG.payAcct + '\nM-Pesa code entered: ' + (doneCode || cleanCode()) + ' (says paid KSh ' + (doneAmt || Number(form.payAmt)) + ')' +
             '\n\nSTATUS: PENDING VERIFICATION. Check the M-Pesa SMS for the code above, then approve or decline (customer care sign-in required).';
           /* Designed staff alert: uses the same working EmailJS template as the customer email (body is just {{{html_body}}}). */
-          var pcode = doneCode || cleanCode(), pamt = doneAmt || Number(form.payAmt), amtMatch = pamt === T.s;
+          var pcode = doneCode || cleanCode(), pamt = doneAmt || Number(form.payAmt), amtMatch = pamt === due(T);
           var FF = "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;";
           function tile(bg, lc, label, body) { return '<td valign="top" width="50%" style="padding:6px;"><div style="background:' + bg + ';border-radius:16px;padding:14px 16px;"><div style="' + FF + 'font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:' + lc + ';">' + label + '</div><div style="' + FF + 'font-size:14px;font-weight:600;line-height:1.5;color:#1b1230;padding-top:6px;">' + body + '</div></div></td>'; }
           function bigBtn(href, label, bg, fg, extra) { return '<a href="' + href + '" style="display:inline-block;background:' + bg + ';color:' + fg + ';' + FF + 'font-size:16px;font-weight:800;text-decoration:none;padding:15px 26px;border-radius:14px;margin:5px;' + (extra || '') + '">' + label + '</a>'; }
           var sRows = T.L.map(function (i) {
             return '<tr><td style="padding:12px 0;border-bottom:1px solid #eee7fb;' + FF + 'font-size:15px;color:#1b1230;">' + hx(i.name) + '<div style="font-size:12px;color:#8a7fa8;padding-top:2px;">Qty ' + i.qty + '</div></td>' +
               '<td align="right" style="padding:12px 0;border-bottom:1px solid #eee7fb;' + FF + 'font-size:15px;font-weight:700;color:#1b1230;white-space:nowrap;">' + hx(money(i.total)) + '</td></tr>';
-          }).join('');
+          }).join('') + (feeOf() ? '<tr><td style="padding:12px 0;border-bottom:1px solid #eee7fb;' + FF + 'font-size:15px;color:#1b1230;">&#128666; Delivery to ' + hx(form.county) + '</td><td align="right" style="padding:12px 0;border-bottom:1px solid #eee7fb;' + FF + 'font-size:15px;font-weight:700;color:#1b1230;white-space:nowrap;">' + hx(money(feeOf())) + '</td></tr>' : '');
           var staffHtml = '<div style="background:#efe7ff;padding:28px 12px;">' +
             '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;border-radius:24px;overflow:hidden;background:#ffffff;">' +
             '<tr><td align="center" bgcolor="#5b21b6" style="background:#5b21b6;background-image:linear-gradient(135deg,#9d5cff 0%,#7c3aed 45%,#3b0f8c 100%);padding:32px 24px 26px;">' +
               '<div style="' + FF + 'font-size:13px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#e9ddff;">Stermont <span style="background:#c8f31d;color:#2a0e5c;padding:1px 7px;border-radius:5px;">Arcade</span></div>' +
               '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:20px auto 12px;"><tr><td align="center" width="76" height="76" style="width:76px;height:76px;border-radius:38px;background:#c8f31d;border:6px solid rgba(255,255,255,.28);' + FF + 'font-size:36px;line-height:76px;">&#128722;</td></tr></table>' +
               '<div style="' + FF + 'font-size:28px;font-weight:900;line-height:1.15;color:#ffffff;">New order!</div>' +
-              '<div style="' + FF + 'font-size:34px;font-weight:900;color:#c8f31d;padding-top:8px;">' + hx(money(T.s)) + '</div>' +
+              '<div style="' + FF + 'font-size:34px;font-weight:900;color:#c8f31d;padding-top:8px;">' + hx(money(due(T))) + '</div>' +
               '<div style="' + FF + 'font-size:14px;color:#e9ddff;padding-top:6px;">Order <b>' + hx(ref) + '</b></div>' +
               '<div style="padding-top:14px;"><span style="display:inline-block;background:#f59e0b;color:#2a0e5c;' + FF + 'font-size:12px;font-weight:900;letter-spacing:.1em;padding:6px 14px;border-radius:20px;">&#9203; PENDING VERIFICATION</span></div>' +
             '</td></tr>' +
             '<tr><td style="padding:22px 26px 4px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8f5ff;border:1px solid #e6dcfb;border-radius:18px;">' +
               '<tr><td colspan="2" style="padding:16px 18px 2px;' + FF + 'font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#7c3aed;">Items ordered</td></tr>' +
               '<tr><td colspan="2" style="padding:0 18px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">' + sRows + '</table></td></tr>' +
-              '<tr><td style="padding:14px 18px;' + FF + 'font-size:16px;font-weight:700;color:#1b1230;">Order total</td><td align="right" style="padding:14px 18px;' + FF + 'font-size:22px;font-weight:900;color:#5b21b6;white-space:nowrap;">' + hx(money(T.s)) + '</td></tr>' +
+              '<tr><td style="padding:14px 18px;' + FF + 'font-size:16px;font-weight:700;color:#1b1230;">Order total</td><td align="right" style="padding:14px 18px;' + FF + 'font-size:22px;font-weight:900;color:#5b21b6;white-space:nowrap;">' + hx(money(due(T))) + '</td></tr>' +
             '</table></td></tr>' +
             '<tr><td style="padding:8px 20px 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>' +
               tile('#efe7ff', '#5b21b6', '&#128100; Customer', hx(form.name.trim()) + '<br><a href="tel:+' + normPhone(form.phone) + '" style="color:#5b21b6;text-decoration:none;">+' + normPhone(form.phone) + '</a>' + (custEmail ? '<br><span style="font-size:12px;color:#6b5f8a;">' + hx(custEmail) + '</span>' : '')) +
@@ -1564,8 +1566,8 @@
             '<tr><td align="center" style="padding:6px 20px 24px;">' + bigBtn('https://wa.me/' + normPhone(form.phone), '&#128172; WhatsApp customer', '#25d366', '#ffffff') + '</td></tr>' +
             '<tr><td align="center" bgcolor="#2a0e5c" style="background:#2a0e5c;padding:16px 24px;"><div style="' + FF + 'font-size:12px;color:#cdbdf3;">Stermont Arcade &middot; order alert for staff &middot; ' + hx(ref) + '</div></td></tr>' +
             '</table></div>';
-          var staffParams = { to_email: CFG.staffEmail, reply_to: custEmail || CFG.staffEmail, subject: 'New order ' + money(T.s) + ' - ' + form.name.trim() + ' (' + ref + ')', business: 'Stermont Arcade', order_ref: ref, name: 'Stermont team',
-            headline: 'New order to verify', message: staffMsg, items: lines.join('\n'), total: money(T.s), delivery: form.method === 'pickup' ? 'Collection: ' + where() : 'Deliver to: ' + where(),
+          var staffParams = { to_email: CFG.staffEmail, reply_to: custEmail || CFG.staffEmail, subject: 'New order ' + money(due(T)) + ' - ' + form.name.trim() + ' (' + ref + ')', business: 'Stermont Arcade', order_ref: ref, name: 'Stermont team',
+            headline: 'New order to verify', message: staffMsg, items: lines.join('\n'), total: money(due(T)), delivery: form.method === 'pickup' ? 'Collection: ' + where() : 'Deliver to: ' + where(),
             phone: '+254 748 888 230', web: 'stermontarcade.co.ke', buttons: buttons, html_body: staffHtml };
           ejs(CFG.ejsCustTpl, staffParams).then(function (ok) {
             if (ok) return true;
@@ -1589,7 +1591,7 @@
           ref: ref, user_id: s ? s.user.id : null, customer_name: form.name.trim().slice(0, 120), phone: '+' + normPhone(form.phone),
           email: (form.email || '').trim().toLowerCase().slice(0, 150) || (s && s.user.email) || null, method: method, county: method === 'delivery' ? form.county : null,
           address: method === 'delivery' ? form.addr.trim().slice(0, 200) : null, notes: form.notes && form.notes.trim() ? form.notes.trim().slice(0, 500) : null,
-          items: T.L.map(function (i) { return { name: i.name, qty: i.qty, price: i.price, total: i.total }; }), subtotal: T.s, pay_code: code, pay_amount: paid
+          items: T.L.map(function (i) { return { name: i.name, qty: i.qty, price: i.price, total: i.total }; }).concat(feeOf() ? [{ name: 'Delivery fee (' + form.county + ')', qty: 1, price: feeOf(), total: feeOf() }] : []), subtotal: due(T), pay_code: code, pay_amount: paid
         };
         var hd = { 'Content-Type': 'application/json', apikey: CFG.sbKey, Prefer: 'return=minimal' };
         if (s) hd.Authorization = 'Bearer ' + s.access_token;
@@ -1611,7 +1613,7 @@
             lastMsg = message(T); lastUrl = 'https://wa.me/' + CFG.wa + '?text=' + encodeURIComponent(lastMsg);
             notify(T, s);
             ls('stm_cust', { name: form.name.trim(), phone: form.phone, email: (form.email || '').trim(), county: form.county, addr: form.addr, method: form.method });
-            doneRef = ref; doneTotal = T.s; ref = ''; cart = {}; store(); sending = false; form.notes = ''; form.payCode = ''; form.payAmt = ''; form.payTouched = false; step = 'done'; sync(); if (!isOpen) render();
+            doneRef = ref; doneTotal = due(T); ref = ''; cart = {}; store(); sending = false; form.notes = ''; form.payCode = ''; form.payAmt = ''; form.payTouched = false; step = 'done'; sync(); if (!isOpen) render();
           })
           .catch(function (err) {
             clearTimeout(to); sending = false;
