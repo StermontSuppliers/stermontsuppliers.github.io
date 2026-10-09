@@ -9,7 +9,7 @@
   var EMAILJS = {
     serviceId: 'service_zoho', // e.g. 'service_abc123'   (EmailJS > Email Services)
     templateId: '',         // receipt template        (EmailJS > Email Templates)
-    statusTemplateId: 'template_cv2qjgm',   // order-status template   (Confirmed / Packed / On the way / Delivered)
+    statusTemplateId: 'template_n60yao4',   // order-status template (body is just {{{html_body}}}); template_cv2qjgm stays the staff alert
     publicKey: 'PayiXKhM6gVQLHYAE'// EmailJS > Account > Public Key
   };
 
@@ -477,8 +477,8 @@
 
   /* ---- Order status notification emails (Confirmed, Packed, On the way, Delivered) ---- */
   var STATUS_MSG = {
-    confirmed: { label: 'Order confirmed', head: 'Order confirmed! \uD83C\uDF89 We got your payment',
-      msg: 'Great news: your M-Pesa payment has landed and your order is officially confirmed. Our team is already on it. Sit back, relax and start imagining how good your new items will look. We will keep you posted at every step.' },
+    confirmed: { label: 'Payment confirmed', head: 'Payment confirmed',
+      msg: 'Good news: we have verified your M-Pesa payment and your order is officially confirmed. Our team is packing it now. We will message you on WhatsApp to arrange delivery and confirm any delivery fee.' },
     packed: { label: 'Packed', head: 'Packed with care \uD83D\uDCE6',
       msg: 'Your order has been checked, double-checked and snugly packed. Every item passed our inspection with flying colours. ' },
     out_for_delivery: { label: 'On the way', head: 'Your order is on the move! \uD83D\uDE9A\uD83D\uDCA8',
@@ -486,6 +486,60 @@
     delivered: { label: 'Delivered', head: 'Delivered! Enjoy \uD83C\uDF81\u2728',
       msg: 'Your order has arrived. Thank you for choosing Stermont Arcade, it means the world to us. We hope you love every bit of it. Something not right? Just reply to this email or call us and we will make it right. See you again soon!' }
   };
+  /* Designed HTML email for every status step. EmailJS template_n60yao4 has the body {{{html_body}}}, so all styling lives here.
+     Email-safe: tables + inline styles, solid colour behind every gradient. */
+  function hx(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function statusHtml(o, stage, msg) {
+    var F = 'font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Arial,sans-serif;';
+    var pickup = o.method !== 'delivery', idx = { confirmed: 0, packed: 1, out_for_delivery: 2, delivered: 3 }[stage] || 0;
+    var names = pickup ? ['Confirmed', 'Packed', 'Ready', 'Collected'] : ['Confirmed', 'Packed', 'On the way', 'Delivered'];
+    var icon = { confirmed: '&#10003;', packed: '&#128230;', out_for_delivery: pickup ? '&#127978;' : '&#128666;', delivered: '&#127873;' }[stage];
+    var title = { confirmed: 'Payment confirmed', packed: 'Packed with care', out_for_delivery: pickup ? 'Ready for collection' : 'Your order is on the move', delivered: pickup ? 'Collected. Enjoy!' : 'Delivered. Enjoy!' }[stage];
+    var sub = { confirmed: 'is now being prepared', packed: pickup ? 'is packed and waiting for you' : 'is packed and ready to go', out_for_delivery: pickup ? 'is ready at our store' : 'is on its way to you', delivered: pickup ? 'has been collected' : 'has arrived' }[stage];
+    var rows = (o.items || []).map(function (i) {
+      return '<tr><td style="padding:14px 0;border-bottom:1px solid #eee7fb;' + F + 'font-size:15px;color:#1b1230;">' + hx(i.name) + '<div style="font-size:12px;color:#8a7fa8;padding-top:2px;">Qty ' + hx(i.qty) + '</div></td>' +
+        '<td align="right" style="padding:14px 0;border-bottom:1px solid #eee7fb;' + F + 'font-size:15px;font-weight:700;color:#1b1230;white-space:nowrap;">' + hx(money(i.total)) + '</td></tr>';
+    }).join('');
+    function step(i) {
+      var done = i <= idx, bg = done ? '#c8f31d' : '#ffffff', fg = done ? '#2a0e5c' : '#8a7fa8', bd = done ? '#c8f31d' : '#d9ccf5';
+      var note = i < idx ? 'Done' : i === idx ? (idx === 3 ? 'Done' : 'Now') : (i === idx + 1 ? 'Next' : '');
+      return '<td align="center" valign="top" width="25%" style="padding:0 2px;">' +
+        '<table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" width="34" height="34" style="width:34px;height:34px;border-radius:17px;background:' + bg + ';border:2px solid ' + bd + ';' + F + 'font-size:16px;font-weight:800;color:' + fg + ';">' + (done ? '&#10003;' : '&middot;') + '</td></tr></table>' +
+        '<div style="' + F + 'font-size:12px;font-weight:700;color:' + (done ? '#ffffff' : '#cdbdf3') + ';padding-top:8px;line-height:1.3;">' + names[i] + '</div>' +
+        '<div style="' + F + 'font-size:11px;color:#b9a6ee;padding-top:2px;">' + note + '&nbsp;</div></td>';
+    }
+    function btn(href, label, bg, fg) { return '<a href="' + href + '" style="display:inline-block;background:' + bg + ';color:' + fg + ';' + F + 'font-size:15px;font-weight:800;text-decoration:none;padding:14px 22px;border-radius:14px;margin:4px;">' + label + '</a>'; }
+    var showPaid = stage === 'confirmed' && o.pay_code, totalLabel = showPaid ? 'Total paid' : 'Order total', totalVal = showPaid ? paidAmount(o) : Number(o.subtotal || 0);
+    var where = pickup ? 'Our store, The Sarit Centre, Westlands, Nairobi' : [o.address, o.county].filter(Boolean).join(', ');
+    var rightTile = o.pay_code
+      ? '<div style="' + F + 'font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#5b21b6;">M-Pesa code</div><div style="' + F + 'font-size:16px;font-weight:800;letter-spacing:.06em;color:#1b1230;padding-top:6px;">' + hx(code(o)) + '</div><div style="' + F + 'font-size:12px;color:#6b5f8a;padding-top:2px;">' + hx(money(paidAmount(o))) + ' &middot; Verified</div>'
+      : '<div style="' + F + 'font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#5b21b6;">Need help?</div><div style="' + F + 'font-size:15px;font-weight:700;color:#1b1230;padding-top:6px;">' + hx(BIZ.phone) + '</div><div style="' + F + 'font-size:12px;color:#6b5f8a;padding-top:2px;">Call or WhatsApp</div>';
+    return '<div style="background:#efe7ff;padding:28px 12px;">' +
+      '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;border-radius:24px;overflow:hidden;background:#ffffff;box-shadow:0 12px 40px rgba(91,33,182,.22);">' +
+      '<tr><td align="center" bgcolor="#5b21b6" style="background:#5b21b6;background-image:linear-gradient(135deg,#9d5cff 0%,#7c3aed 45%,#3b0f8c 100%);padding:34px 24px 26px;">' +
+        '<div style="' + F + 'font-size:13px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#e9ddff;">Stermont <span style="background:#c8f31d;color:#2a0e5c;padding:1px 7px;border-radius:5px;">Arcade</span></div>' +
+        '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:22px auto 14px;"><tr><td align="center" width="76" height="76" style="width:76px;height:76px;border-radius:38px;background:#c8f31d;border:6px solid rgba(255,255,255,.28);' + F + 'font-size:36px;font-weight:900;color:#2a0e5c;line-height:76px;">' + icon + '</td></tr></table>' +
+        '<div style="' + F + 'font-size:28px;font-weight:900;line-height:1.15;color:#ffffff;letter-spacing:-.01em;">' + title + '</div>' +
+        '<div style="' + F + 'font-size:15px;color:#e9ddff;padding-top:8px;">Order <b style="color:#c8f31d;">' + hx(o.ref) + '</b> ' + sub + '</div>' +
+      '</td></tr>' +
+      '<tr><td bgcolor="#2a0e5c" style="background:#2a0e5c;padding:22px 14px 20px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>' + step(0) + step(1) + step(2) + step(3) + '</tr></table></td></tr>' +
+      '<tr><td style="padding:28px 26px 8px;"><div style="' + F + 'font-size:18px;font-weight:800;color:#1b1230;">Hi ' + hx(o.customer_name || 'there') + ',</div>' +
+        '<p style="' + F + 'font-size:15px;line-height:1.65;color:#4a4163;margin:10px 0 0;">' + hx(msg) + '</p></td></tr>' +
+      '<tr><td style="padding:18px 26px 6px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8f5ff;border:1px solid #e6dcfb;border-radius:18px;">' +
+        '<tr><td colspan="2" style="padding:16px 18px 2px;' + F + 'font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#7c3aed;">Your order</td></tr>' +
+        '<tr><td colspan="2" style="padding:0 18px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">' + rows + '</table></td></tr>' +
+        '<tr><td style="padding:16px 18px;' + F + 'font-size:16px;font-weight:700;color:#1b1230;">' + totalLabel + '</td><td align="right" style="padding:16px 18px;' + F + 'font-size:24px;font-weight:900;color:#5b21b6;">' + hx(money(totalVal)) + '</td></tr>' +
+      '</table></td></tr>' +
+      '<tr><td style="padding:12px 26px 6px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>' +
+        '<td width="50%" valign="top" style="padding-right:6px;"><div style="background:#f1fbd0;border-radius:16px;padding:14px 16px;"><div style="' + F + 'font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#4d6b00;">' + (pickup ? 'Collect at' : 'Delivering to') + '</div><div style="' + F + 'font-size:14px;font-weight:600;line-height:1.45;color:#1b1230;padding-top:6px;">' + hx(where) + '</div></div></td>' +
+        '<td width="50%" valign="top" style="padding-left:6px;"><div style="background:#efe7ff;border-radius:16px;padding:14px 16px;">' + rightTile + '</div></td>' +
+      '</tr></table></td></tr>' +
+      '<tr><td align="center" style="padding:20px 26px 24px;">' + btn('https://wa.me/' + String(BIZ.phone).replace(/\D/g, '') + '?text=' + encodeURIComponent('Hello Stermont Arcade, about my order ' + o.ref), 'Chat on WhatsApp', '#7c3aed', '#ffffff') +
+        (stage === 'out_for_delivery' && !pickup ? btn('tel:' + String(BIZ.phone).replace(/[^\d+]/g, ''), 'Call us', '#c8f31d', '#2a0e5c') : btn('https://' + BIZ.web, 'Keep shopping', '#c8f31d', '#2a0e5c')) + '</td></tr>' +
+      '<tr><td align="center" bgcolor="#2a0e5c" style="background:#2a0e5c;padding:22px 24px;"><div style="' + F + 'font-size:14px;font-weight:700;color:#ffffff;">Thank you for shopping with Stermont Arcade</div>' +
+        '<div style="' + F + 'font-size:12px;line-height:1.7;color:#cdbdf3;padding-top:6px;">Faulty or wrong item? Message us on WhatsApp within 48 hours of delivery with photos.<br>Call ' + hx(BIZ.phone) + ' &middot; <a href="https://' + BIZ.web + '" style="color:#c8f31d;text-decoration:none;">' + hx(BIZ.web) + '</a><br>The Sarit Centre, Westlands, Nairobi</div></td></tr>' +
+      '</table></div>';
+  }
   function notify(o, stage) {
     var m = STATUS_MSG[stage];
     if (!m) return Promise.reject(new Error('Unknown order step'));
@@ -500,7 +554,7 @@
       order_ref: o.ref, status: m.label, subject: BIZ.name + ': ' + m.label + ' (' + o.ref + ')',
       headline: m.head, message: msg, items: lines(o).join('\n'), total: money(o.subtotal),
       delivery: o.method === 'delivery' ? [o.address, o.county].filter(Boolean).join(', ') : 'Store pickup',
-      date: when(new Date())
+      date: when(new Date()), html_body: statusHtml(o, stage, msg.trim())
     };
     return fetch('https://api.emailjs.com/api/v1.0/email/send', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },

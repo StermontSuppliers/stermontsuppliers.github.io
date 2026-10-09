@@ -102,7 +102,7 @@
   </div>
 </div>
 
-<script src="receipt.js?v=6"></script>
+<script src="receipt.js?v=7"></script>
 <script src="catalog.js"></script>
 <script>
 (function () {
@@ -311,7 +311,7 @@
             var paid = Object.assign({}, o, { status: 'paid', handled_at: new Date().toISOString(), pay_code: code, pay_amount: amt });
             if (paid.email) sendReceipt(paid); else note('Order confirmed. No email on this order, so use "Receipt on WhatsApp" instead.', true);
           }
-          if (action === 'approve' && o.email) sendStatus(paid0(o), 'confirmed');
+          if (action === 'approve' && o.email) sendStatus(Object.assign({}, o, { status: 'paid', pay_code: code, pay_amount: amt }), 'confirmed');
           if (action === 'packed' || action === 'out_for_delivery' || action === 'delivered') sendStatus(o, action);
           if (action === 'setcode') note('Payment code saved. You can now send the receipt.', true);
           return done;
