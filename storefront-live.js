@@ -54,7 +54,7 @@
     var btn = mk('button', 'btn btn-main'); btn.type = 'button';
     if (sold) { btn.textContent = 'Sold out'; btn.disabled = true; btn.dataset.sold = '1'; btn.style.opacity = '.55'; }
     else { btn.textContent = 'Add to cart'; btn.onclick = function (e) { e.stopPropagation(); window.STM && STM.add(c, btn); }; }
-    b.appendChild(h); b.appendChild(pr); if (d) b.appendChild(wasEl(d)); b.appendChild(btn); c.appendChild(img); c.appendChild(b);
+    b.appendChild(h); b.appendChild(pr); if (p.unit) b.appendChild(mk('div', 'note unit', 'Per ' + p.unit)); if (d) b.appendChild(wasEl(d)); b.appendChild(btn); c.appendChild(img); c.appendChild(b);
     c.onclick = function (e) { if (e.target.closest && e.target.closest('button,a')) return; openView(c); };
     return c;
   }
@@ -90,7 +90,7 @@
     var st = mk('style'); st.textContent = CSS; D.head.appendChild(st);
     pd = mk('div'); pd.id = 'stm-pd'; pd.setAttribute('role', 'dialog'); pd.setAttribute('aria-modal', 'true');
     pd.innerHTML = '<div class="pd"><div class="bar"><button type="button" class="back">← Back</button><b></b></div><div class="body"><div class="gal"><div class="main"></div><div class="thumbs"></div></div>' +
-      '<div class="info"><h2></h2><div class="pr"></div><div class="pdw" hidden></div><span class="st"></span><div><a class="wa" target="_blank" rel="noopener">Ask about this item on WhatsApp</a></div></div>' +
+      '<div class="info"><h2></h2><div class="pr"></div><div class="unit-l" hidden style="color:#6b6b6b;font-size:.9rem;margin:-.2rem 0 .5rem"></div><div class="pdw" hidden></div><span class="st"></span><div><a class="wa" target="_blank" rel="noopener">Ask about this item on WhatsApp</a></div></div>' +
       '<div class="full"><h3 class="dh">Product details</h3><div class="desc"></div><button type="button" class="more" hidden>Show more ▾</button></div></div>' +
       '<div class="act"><div class="q"><button type="button" class="mn" aria-label="Less">−</button><span>1</span><button type="button" class="pl" aria-label="More">+</button></div><button type="button" class="add">Add to cart</button><button type="button" class="cart">🛒 Cart</button></div></div>';
     D.body.appendChild(pd);
@@ -132,7 +132,7 @@
   function openView(c, noPush) {
     var p = c._p; if (!p) return; build(); cur = c; var q = function (s) { return pd.querySelector(s); };
     q('.pd-h').setAttribute('data-id', c.id); paintHearts(); if (window.STM_track) window.STM_track(c.id);
-    imgs = (p.images || []).filter(Boolean); q('.bar b').textContent = p.name; q('h2').textContent = p.name; q('.pr').textContent = money(p.price);
+    imgs = (p.images || []).filter(Boolean); q('.bar b').textContent = p.name; q('h2').textContent = p.name; q('.pr').textContent = money(p.price); var ue = q('.unit-l'); ue.textContent = p.unit ? 'Per ' + p.unit : ''; ue.hidden = !p.unit;
     var dd = disc(p), pw = q('.pdw'); pw.textContent = ''; pw.hidden = !dd;
     if (dd) { pw.appendChild(mk('s', '', money(dd.was))); pw.appendChild(badge(dd)); pw.appendChild(mk('span', 'sv', 'You save ' + money(dd.save))); }
     var s = q('.st'), sold = p.stock <= 0; s.className = 'st' + (sold ? ' out' : p.stock <= 5 ? ' low' : '');
@@ -209,7 +209,8 @@
   /* ---------- put items into their category sections ---------- */
   function bump(m) { var c = m.querySelector('.cnt'); if (c) c.textContent = m.querySelectorAll('.pcard').length; }
   function getProducts(sel) { return fetch(SB + '/rest/v1/products?active=eq.true&select=' + sel + '&order=created_at.asc', { headers: { apikey: KEY } }); }
-  getProducts('id,name,price,old_price,stock,images,featured,description,categories(name,slug)')
+  getProducts('id,name,price,old_price,unit,stock,images,featured,description,categories(name,slug)')
+    .then(function (r) { return r.ok ? r : getProducts('id,name,price,old_price,stock,images,featured,description,categories(name,slug)'); })   /* unit column not added yet */
     .then(function (r) { return r.ok ? r : getProducts('id,name,price,stock,images,featured,description,categories(name,slug)'); })   /* old_price column not added yet: still show products */
     .then(function (r) { return r.ok ? r.json() : []; }).then(function (rows) {
       var root = D.querySelector('#music-gear .wrap');
