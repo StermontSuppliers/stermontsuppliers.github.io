@@ -1504,9 +1504,53 @@
           var staffMsg = 'Customer: ' + form.name.trim() + '\nPhone: +' + normPhone(form.phone) + (custEmail ? '\nEmail: ' + custEmail : '') + (form.notes && form.notes.trim() ? '\nNotes: ' + form.notes.trim() : '') +
             '\n\nPayment: M-Pesa Paybill ' + CFG.paybill + ', account ' + CFG.payAcct + '\nM-Pesa code entered: ' + (doneCode || cleanCode()) + ' (says paid KSh ' + (doneAmt || Number(form.payAmt)) + ')' +
             '\n\nSTATUS: PENDING VERIFICATION. Check the M-Pesa SMS for the code above, then approve or decline (customer care sign-in required).';
-          ejs(CFG.ejsStaffTpl, { to_email: CFG.staffEmail, subject: 'New order ' + ref + ' - ' + money(T.s), business: 'Stermont Arcade', order_ref: ref, name: 'Stermont team',
+          /* Designed staff alert: uses the same working EmailJS template as the customer email (body is just {{{html_body}}}). */
+          var pcode = doneCode || cleanCode(), pamt = doneAmt || Number(form.payAmt), amtMatch = pamt === T.s;
+          var FF = "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;";
+          function tile(bg, lc, label, body) { return '<td valign="top" width="50%" style="padding:6px;"><div style="background:' + bg + ';border-radius:16px;padding:14px 16px;"><div style="' + FF + 'font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:' + lc + ';">' + label + '</div><div style="' + FF + 'font-size:14px;font-weight:600;line-height:1.5;color:#1b1230;padding-top:6px;">' + body + '</div></div></td>'; }
+          function bigBtn(href, label, bg, fg, extra) { return '<a href="' + href + '" style="display:inline-block;background:' + bg + ';color:' + fg + ';' + FF + 'font-size:16px;font-weight:800;text-decoration:none;padding:15px 26px;border-radius:14px;margin:5px;' + (extra || '') + '">' + label + '</a>'; }
+          var sRows = T.L.map(function (i) {
+            return '<tr><td style="padding:12px 0;border-bottom:1px solid #eee7fb;' + FF + 'font-size:15px;color:#1b1230;">' + hx(i.name) + '<div style="font-size:12px;color:#8a7fa8;padding-top:2px;">Qty ' + i.qty + '</div></td>' +
+              '<td align="right" style="padding:12px 0;border-bottom:1px solid #eee7fb;' + FF + 'font-size:15px;font-weight:700;color:#1b1230;white-space:nowrap;">' + hx(money(i.total)) + '</td></tr>';
+          }).join('');
+          var staffHtml = '<div style="background:#efe7ff;padding:28px 12px;">' +
+            '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;border-radius:24px;overflow:hidden;background:#ffffff;">' +
+            '<tr><td align="center" bgcolor="#5b21b6" style="background:#5b21b6;background-image:linear-gradient(135deg,#9d5cff 0%,#7c3aed 45%,#3b0f8c 100%);padding:32px 24px 26px;">' +
+              '<div style="' + FF + 'font-size:13px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#e9ddff;">Stermont <span style="background:#c8f31d;color:#2a0e5c;padding:1px 7px;border-radius:5px;">Arcade</span></div>' +
+              '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:20px auto 12px;"><tr><td align="center" width="76" height="76" style="width:76px;height:76px;border-radius:38px;background:#c8f31d;border:6px solid rgba(255,255,255,.28);' + FF + 'font-size:36px;line-height:76px;">&#128722;</td></tr></table>' +
+              '<div style="' + FF + 'font-size:28px;font-weight:900;line-height:1.15;color:#ffffff;">New order!</div>' +
+              '<div style="' + FF + 'font-size:34px;font-weight:900;color:#c8f31d;padding-top:8px;">' + hx(money(T.s)) + '</div>' +
+              '<div style="' + FF + 'font-size:14px;color:#e9ddff;padding-top:6px;">Order <b>' + hx(ref) + '</b></div>' +
+              '<div style="padding-top:14px;"><span style="display:inline-block;background:#f59e0b;color:#2a0e5c;' + FF + 'font-size:12px;font-weight:900;letter-spacing:.1em;padding:6px 14px;border-radius:20px;">&#9203; PENDING VERIFICATION</span></div>' +
+            '</td></tr>' +
+            '<tr><td style="padding:22px 26px 4px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8f5ff;border:1px solid #e6dcfb;border-radius:18px;">' +
+              '<tr><td colspan="2" style="padding:16px 18px 2px;' + FF + 'font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#7c3aed;">Items ordered</td></tr>' +
+              '<tr><td colspan="2" style="padding:0 18px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">' + sRows + '</table></td></tr>' +
+              '<tr><td style="padding:14px 18px;' + FF + 'font-size:16px;font-weight:700;color:#1b1230;">Order total</td><td align="right" style="padding:14px 18px;' + FF + 'font-size:22px;font-weight:900;color:#5b21b6;white-space:nowrap;">' + hx(money(T.s)) + '</td></tr>' +
+            '</table></td></tr>' +
+            '<tr><td style="padding:8px 20px 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>' +
+              tile('#efe7ff', '#5b21b6', '&#128100; Customer', hx(form.name.trim()) + '<br><a href="tel:+' + normPhone(form.phone) + '" style="color:#5b21b6;text-decoration:none;">+' + normPhone(form.phone) + '</a>' + (custEmail ? '<br><span style="font-size:12px;color:#6b5f8a;">' + hx(custEmail) + '</span>' : '')) +
+              tile('#f1fbd0', '#4d6b00', form.method === 'pickup' ? '&#127978; Collection' : '&#128666; Deliver to', hx(where())) +
+            '</tr></table></td></tr>' +
+            (form.notes && form.notes.trim() ? '<tr><td style="padding:6px 26px 0;"><div style="background:#f8f5ff;border-radius:14px;padding:12px 16px;' + FF + 'font-size:13px;color:#4a4163;"><b>Customer notes:</b> ' + hx(form.notes.trim()) + '</div></td></tr>' : '') +
+            '<tr><td style="padding:6px 26px 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#2a0e5c" style="background:#2a0e5c;border-radius:18px;"><tr>' +
+              '<td style="padding:16px 18px;"><div style="' + FF + 'font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#c8f31d;">M-Pesa code entered</div>' +
+              '<div style="font-family:Courier New,monospace;font-size:24px;font-weight:900;letter-spacing:.12em;color:#ffffff;padding-top:6px;">' + hx(pcode) + '</div>' +
+              '<div style="' + FF + 'font-size:12px;color:#cdbdf3;padding-top:4px;">Customer says paid ' + hx(money(pamt)) + ' &middot; Paybill ' + hx(CFG.paybill) + ' / ' + hx(CFG.payAcct) + '</div></td>' +
+              '<td align="right" valign="middle" style="padding:16px 18px;"><span style="display:inline-block;background:' + (amtMatch ? '#c8f31d' : '#f59e0b') + ';color:#2a0e5c;' + FF + 'font-size:12px;font-weight:900;padding:7px 12px;border-radius:12px;">' + (amtMatch ? '&#10003; Amount matches' : '&#9888; Check amount') + '</span></td>' +
+            '</tr></table></td></tr>' +
+            '<tr><td style="padding:16px 26px 4px;"><div style="background:#fff8e6;border:1px solid #fde4a3;border-radius:14px;padding:12px 16px;' + FF + 'font-size:13px;line-height:1.55;color:#6b4a00;"><b>Before you approve:</b> open your M-Pesa SMS and confirm the code and amount above are real. Sign-in is required on the next page.</div></td></tr>' +
+            '<tr><td align="center" style="padding:16px 20px 6px;">' + bigBtn(adm + '?ref=' + enc + '&action=approve', '&#10003; Approve (paid)', '#c8f31d', '#2a0e5c') + bigBtn(adm + '?ref=' + enc + '&action=decline', '&#10005; Decline', '#ffffff', '#dc2626', 'border:2px solid #dc2626;') + '</td></tr>' +
+            '<tr><td align="center" style="padding:6px 20px 24px;">' + bigBtn('https://wa.me/' + normPhone(form.phone), '&#128172; WhatsApp customer', '#25d366', '#ffffff') + '</td></tr>' +
+            '<tr><td align="center" bgcolor="#2a0e5c" style="background:#2a0e5c;padding:16px 24px;"><div style="' + FF + 'font-size:12px;color:#cdbdf3;">Stermont Arcade &middot; order alert for staff &middot; ' + hx(ref) + '</div></td></tr>' +
+            '</table></div>';
+          var staffParams = { to_email: CFG.staffEmail, reply_to: custEmail || CFG.staffEmail, subject: 'New order ' + money(T.s) + ' - ' + form.name.trim() + ' (' + ref + ')', business: 'Stermont Arcade', order_ref: ref, name: 'Stermont team',
             headline: 'New order to verify', message: staffMsg, items: lines.join('\n'), total: money(T.s), delivery: form.method === 'pickup' ? 'Collection: ' + where() : 'Deliver to: ' + where(),
-            phone: '+254 748 888 230', web: 'stermontarcade.co.ke', buttons: buttons }).then(function (ok) { if (!ok) web3(); });
+            phone: '+254 748 888 230', web: 'stermontarcade.co.ke', buttons: buttons, html_body: staffHtml };
+          ejs(CFG.ejsCustTpl, staffParams).then(function (ok) {
+            if (ok) return true;
+            return ejs(CFG.ejsStaffTpl, staffParams);   /* old staff template as second try */
+          }).then(function (ok) { if (!ok) web3(); });
         } catch (e) { web3(); }
       }
       function newRef() {
