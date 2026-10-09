@@ -3,6 +3,14 @@
   var SB = 'https://oewvtbnmyombbtggamor.supabase.co', KEY = 'sb_publishable_CQiZr-INuot9C4fbdJDz1Q_4OiWEQL7', SK = 'stm_admin_session';
   var S = { cats: [], prods: [], st: {}, cat: 'all', q: '', range: 'all' }, root, D = document, view = function () { render(); };
   var LIME = '#84cc16';
+  /* ---------- AUTO PRICING: change these 3 numbers to change pricing everywhere ---------- */
+  var PROFIT_PCT = 30, MIN_PROFIT = 150, ROUND_TO = 50;
+  /* selling price = cost + 30% (at least KSh 150 profit), rounded UP to the next KSh 50 so profit is never below target */
+  function autoPrice(cost) {
+    cost = Number(cost); if (!(cost > 0)) return 0;
+    var target = cost + Math.max(cost * PROFIT_PCT / 100, MIN_PROFIT);
+    return Math.ceil(target / ROUND_TO - 1e-9) * ROUND_TO;
+  }
   var css = '.cx-k{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.8rem}.cx-k div{background:#fff;border:1px solid var(--ln);border-radius:12px;padding:.6rem .8rem}.cx-k small{color:var(--mu);display:block;font-size:.74rem;font-weight:600}.cx-k b{font-size:1.05rem}' +
     '.cx-k .hi{background:var(--p);color:#fff;border-color:var(--p)}.cx-k .hi small{color:#e9ddff}.cx-k .lime{background:' + LIME + ';border-color:' + LIME + ';color:#1a2e05}.cx-k .lime small{color:#365314}' +
     '.cx-p{display:flex;gap:.8rem}.cx-p img,.cx-ph{width:72px;height:72px;border-radius:10px;object-fit:cover;background:#eceaf5;flex:none;display:flex;align-items:center;justify-content:center;font-size:1.6rem}' +
@@ -154,7 +162,9 @@
 
   /* ---------- Add / Edit item ---------- */
   function itemForm(p, from) {
-    var edit = !!p, tpl = !edit && from ? from : null, imgs = edit ? (p.images || []).slice() : (tpl ? (tpl.images || []).slice() : []);
+    var edit = !!p, tpl = !edit && from ? from : null;
+    function priceFor(c) { return edit && Number(c) === Number(p.cost) ? Number(p.price) : autoPrice(c); }
+    var imgs = edit ? (p.images || []).slice() : (tpl ? (tpl.images || []).slice() : []);
     var opts = S.cats.map(function (c) { return '<option value="' + c.id + '"' + (edit && p.category_id === c.id ? ' selected' : '') + '>' + (ICONS[c.slug] ? ICONS[c.slug] + ' ' : '') + esc(c.name) + '</option>'; }).join('');
     var curU = edit && p.unit ? String(p.unit) : '', knownU = UNITS.some(function (g) { return g[1].indexOf(curU) > -1; });
     var unitHtml = '<label>Unit of sale</label><select class="cx-f" id="cx-unit"><option value="">No unit (sold per item)</option>' +
@@ -169,22 +179,25 @@
       '<input class="cx-f" id="cx-newcat" placeholder="New category name" hidden style="margin-top:.4rem">' +
       '<label>Item name</label><input class="cx-f" id="cx-name" maxlength="120" value="' + esc(edit ? (p.base || p.name) : '') + '">' + packHtml +
       '<label>Description (shown on the product page)</label><textarea class="cx-f" id="cx-desc" rows="9" maxlength="4000" placeholder="One point per line.\nPut a section title on its own line, e.g.\nKey Features\nSpecifications\nBrand: Hisense\nWhat is in the box?">' + esc(edit ? p.description || '' : '') + '</textarea>' +
-      unitHtml + '<div class="cx-pr"><div class="cx-pt">🏷️ Pricing &amp; discount</div><div class="cx-r3">' +
+      unitHtml + '<div class="cx-pr"><div class="cx-pt">🏷️ Pricing (automatic)</div>' +
+      '<label>Cost price per unit · COGS (KSh) *</label><input class="cx-f" id="cx-cost" type="number" min="0" inputmode="decimal" placeholder="Type the cost only" value="' + (edit ? p.cost : '') + '">' +
+      '<div class="cx-pvc" id="cx-auto" style="margin-top:.5rem"></div>' +
+      '<label style="display:flex;gap:.5rem;align-items:center;font-weight:500;font-size:.85rem"><input type="checkbox" id="cx-man"> Set the selling price by hand (special cases only)</label>' +
+      '<div class="cx-r3">' +
       '<div><label>Previous price</label><input class="cx-f" id="cx-old" type="number" min="0" inputmode="decimal" placeholder="optional" value="' + (edit && p.old_price ? p.old_price : '') + '"></div>' +
-      '<div><label>Current price *</label><input class="cx-f" id="cx-price" type="number" min="0" inputmode="decimal" value="' + (edit ? p.price : '') + '"></div>' +
+      '<div><label>Selling price (auto)</label><input class="cx-f" id="cx-price" type="number" min="0" inputmode="decimal" readonly value="' + (edit ? p.price : '') + '"></div>' +
       '<div><label>Discount %</label><input class="cx-f" id="cx-pct" type="number" min="0" max="95" step="any" inputmode="decimal" placeholder="auto"></div></div>' +
       '<div class="meta" style="margin:.4rem 0 0">Fill any two and the third is worked out for you. Customers see the old price crossed out, the new price and the % off.</div>' +
       '<div class="cx-quick" id="cx-quick"></div><div class="cx-pvc" id="cx-pvc"></div></div>' +
       '<div class="cx-r">' +
-      '<div><label>Cost price per unit · COGS (KSh)</label><input class="cx-f" id="cx-cost" type="number" min="0" inputmode="decimal" value="' + (edit ? p.cost : '') + '"></div>' +
       '<div><label>' + (edit ? 'Pieces in stock' : 'Initial pieces') + '</label><input class="cx-f" id="cx-stock" type="number" min="0" inputmode="numeric" value="' + (edit ? p.stock : '') + '"' + (edit ? ' disabled' : '') + '></div>' +
       '<div><label>Low-stock alert below</label><input class="cx-f" id="cx-low" type="number" min="0" value="' + (edit ? p.low_at : 5) + '"></div></div>' +
       '<label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" id="cx-feat"' + (edit && p.featured ? ' checked' : '') + '> Feature as advert / top banner</label>' +
       '<label>Photos</label><input type="file" id="cx-file" accept="image/*" multiple><div class="cx-th" id="cx-th"></div><div class="meta" id="cx-up"></div>';
     modal(edit ? 'Edit item' : 'Add new item', body, edit ? 'Save changes' : 'Publish to website', function () {
       if ($('cx-up').textContent) throw new Error('Wait for photos to finish uploading');
-      var name = v('cx-name').trim(), price = num('cx-price'), cost = num('cx-cost'), stock = edit ? p.stock : parseInt(v('cx-stock') || 0, 10);
-      if (!name) throw new Error('Enter an item name'); if (!(price >= 0) || v('cx-price') === '') throw new Error('Enter the current price');
+      var name = v('cx-name').trim(), cost = num('cx-cost'), manual = $('cx-man').checked, price = manual ? num('cx-price') : priceFor(cost), stock = edit ? p.stock : parseInt(v('cx-stock') || 0, 10);
+      if (!name) throw new Error('Enter an item name'); if (!manual && !(cost > 0)) throw new Error('Enter the cost price and the selling price will be worked out for you'); if (!(price >= 0) || (manual && v('cx-price') === '')) throw new Error('Enter the selling price');
       var vl = v('cx-vl').trim(), vl0 = tpl && !tpl.variant_label ? v('cx-vl0').trim() : ''; if (tpl && !vl) throw new Error('Type the pack size for this new item, e.g. 250 mL'); if (tpl && !tpl.variant_label && !vl0) throw new Error('Type the pack size of the existing item too');
       var unit = v('cx-unit') === '__custom' ? v('cx-unitc').trim() : v('cx-unit'); if (v('cx-unit') === '__custom' && !unit) throw new Error('Type the custom unit, or choose one from the list');
       var oldP = v('cx-old') === '' ? null : num('cx-old'); if (oldP != null && !(oldP > price)) throw new Error('Previous price must be higher than the current price (or leave it empty)');
@@ -238,13 +251,24 @@
       function fromPct(d) {
         d = parseFloat(d); if (!(d > 0) || d >= 100) { paint(); return; }
         var o = fv(eo), n = fv(ep);
-        if (o) ep.value = Math.round(o * (1 - d / 100)); else if (n) eo.value = Math.round(n / (1 - d / 100));
+        if (n) eo.value = Math.round(n / (1 - d / 100));
         paint();
       }
-      eo.oninput = ep.oninput = onPrices; eq.oninput = function () { fromPct(eq.value); };
+      var ec = c.querySelector('#cx-cost'), em = c.querySelector('#cx-man'), ea = c.querySelector('#cx-auto');
+      function auto() {
+        var cs = parseFloat(ec.value), np = em.checked ? 0 : priceFor(cs);
+        ep.readOnly = !em.checked;
+        if (!em.checked) { ep.value = np || ''; }
+        var pr = parseFloat(ep.value), pf = pr - cs;
+        ea.innerHTML = cs > 0 && pr > 0 ? 'Cost <b>' + money(cs) + '</b> \u2192 Selling price <b>' + money(pr) + '</b><div class="meta">Profit ' + money(pf) + ' (' + Math.round(pf / cs * 100) + '% on cost)</div>'
+          : '<span class="meta">Type the cost price. The selling price is worked out automatically (cost + ' + PROFIT_PCT + '%, minimum KSh ' + MIN_PROFIT + ' profit).</span>';
+        onPrices();
+      }
+      ec.oninput = auto; em.onchange = function () { auto(); if (em.checked) ep.focus(); }; ep.oninput = function () { auto(); };
+      eo.oninput = onPrices; eq.oninput = function () { fromPct(eq.value); };
       [5, 10, 15, 20, 25, 30, 40, 50].forEach(function (d) { var b = el('button', 'cx-chip', d + '% off'); b.type = 'button'; b.onclick = function () { eq.value = d; fromPct(d); }; qk.appendChild(b); });
       var nd = el('button', 'cx-chip alt', 'No discount'); nd.type = 'button'; nd.onclick = function () { eo.value = ''; eq.value = ''; paint(); }; qk.appendChild(nd);
-      onPrices();
+      auto();
       var us = c.querySelector('#cx-unit'), uc = c.querySelector('#cx-unitc'); us.onchange = function () { uc.hidden = us.value !== '__custom'; if (!uc.hidden) uc.focus(); };
       var sel = c.querySelector('#cx-cat'), th = c.querySelector('#cx-th');
       if (!S.cats.length) { sel.value = '__new'; } sel.onchange = function () { c.querySelector('#cx-newcat').hidden = sel.value !== '__new'; }; sel.onchange();
@@ -271,7 +295,12 @@
       '<div class="cx-pv" id="cx-pv">Enter pieces to preview new stock and average cost.</div>';
     modal('Restock item', body, 'Save restock', function () {
       var q = parseInt(v('cx-q'), 10), c = num('cx-c'); if (!(q > 0)) throw new Error('Enter pieces to add'); if (!(c >= 0)) throw new Error('Enter the unit cost');
-      return call('/rest/v1/rpc/restock_product', { m: 'POST', body: { p_id: p.id, p_qty: q, p_cost: c, p_supplier: v('cx-s').trim() || null, p_date: v('cx-d') || null } });
+      return call('/rest/v1/rpc/restock_product', { m: 'POST', body: { p_id: p.id, p_qty: q, p_cost: c, p_supplier: v('cx-s').trim() || null, p_date: v('cx-d') || null } })
+        .then(function () { return call('/rest/v1/products?select=id,cost,price,old_price&id=eq.' + encodeURIComponent(p.id)); })
+        .then(function (r) {
+          var x = r && r[0]; if (!x || Number(x.old_price) > Number(x.price)) return;   /* leave discounted items alone */
+          var np = autoPrice(x.cost); if (np && np !== Number(x.price)) return call('/rest/v1/products?id=eq.' + encodeURIComponent(p.id), { m: 'PATCH', h: { Prefer: 'return=minimal' }, body: { price: np } });
+        }).catch(function () {});
     }, function () {
       function pv() { var q = parseInt(v('cx-q'), 10) || 0, c = num('cx-c') || 0; if (q < 1) return;
         var avg = (p.stock * p.cost + q * c) / (p.stock + q); $('cx-pv').innerHTML = 'New stock: <b>' + (p.stock + q) + '</b> pcs · Average cost: <b>' + money(avg) + '</b> · Outlay: <b>' + money(q * c) + '</b>'; }
@@ -339,9 +368,24 @@
       plBox(T, X) +
       (low.length ? '<div class="err" style="background:#fef3c7;color:#92400e">⚠ ' + low.length + ' item' + (low.length > 1 ? 's' : '') + ' low on stock: ' + low.slice(0, 4).map(function (p) { return esc(p.name) + ' (' + p.stock + ')'; }).join(', ') + (low.length > 4 ? '…' : '') + '</div>' : '') +
       '<p style="margin:0 0 .7rem"><button class="btn" id="cx-add" type="button" style="width:100%">＋ Add new item</button></p>' +
+      '<p style="margin:0 0 .7rem"><button class="btn alt sm" id="cx-reprice" type="button" style="width:100%">↻ Recalculate all prices (cost + ' + PROFIT_PCT + '%)</button></p>' +
       '<div class="tabs" id="cx-chips"></div><input id="cx-q" type="search" placeholder="Search items" value="' + esc(S.q) + '" style="width:100%;padding:.7rem .8rem;border:1px solid var(--ln);border-radius:10px;font:inherit;margin-bottom:.8rem">' +
       '<div id="cx-list"></div><h2 style="font-size:1.05rem;margin:1.2rem 0 .5rem">Financial ledger' + (S.range === 'all' ? '' : ' · ' + RANGES.filter(function (r) { return r[0] === S.range; })[0][1]) + '</h2><div class="lg" id="cx-led"></div>';
     $('cx-add').onclick = function () { itemForm(); };
+    $('cx-reprice').onclick = function () {
+      var todo = [], disc = 0, nocost = 0;
+      S.prods.forEach(function (p) {
+        if (!(Number(p.cost) > 0)) { nocost++; return; }
+        if (Number(p.old_price) > Number(p.price)) { disc++; return; }
+        var np = autoPrice(p.cost); if (np !== Number(p.price)) todo.push([p, np]);
+      });
+      if (!todo.length) { toast('All prices already match cost + ' + PROFIT_PCT + '%.' + (disc ? ' ' + disc + ' discounted item(s) were left alone.' : '')); return; }
+      if (!confirm('Update the selling price of ' + todo.length + ' item(s) to cost + ' + PROFIT_PCT + '% (min KSh ' + MIN_PROFIT + ' profit)?' + (disc ? '\n' + disc + ' discounted item(s) will be skipped.' : '') + (nocost ? '\n' + nocost + ' item(s) with no cost will be skipped.' : ''))) return;
+      var b = $('cx-reprice'); b.disabled = true; b.textContent = 'Updating prices\u2026';
+      todo.reduce(function (pr, t) { return pr.then(function () { return call('/rest/v1/products?id=eq.' + encodeURIComponent(t[0].id), { m: 'PATCH', h: { Prefer: 'return=minimal' }, body: { price: t[1] } }); }); }, Promise.resolve())
+        .then(load).then(render).then(function () { toast('Updated ' + todo.length + ' price(s).'); })
+        .catch(function (x) { b.disabled = false; b.textContent = '\u21bb Recalculate all prices'; toast('Could not update prices: ' + x.message); });
+    };
     RANGES.forEach(function (r) { var b = el('button', S.range === r[0] ? 'on' : '', r[1]); b.type = 'button'; b.onclick = function () { S.range = r[0]; load().then(render).catch(function (x) { toast(x.message + ' (run setup-catalog-2.sql?)'); }); }; $('cx-rg').appendChild(b); });
     var chips = $('cx-chips'); [{ id: 'all', name: 'All (' + all.length + ')' }].concat(S.cats.map(function (c) { return { id: String(c.id), name: c.name }; })).forEach(function (c) {
       var cc = S.cats.filter(function (x) { return String(x.id) === c.id; })[0], b = el('button', S.cat === c.id ? 'on' : '', (cc && ICONS[cc.slug] ? ICONS[cc.slug] + ' ' : '') + esc(c.name)); b.type = 'button'; b.onclick = function () { S.cat = c.id; render(); }; chips.appendChild(b); });
