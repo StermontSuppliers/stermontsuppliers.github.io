@@ -1467,7 +1467,7 @@
           var base = { order_ref: ref, order_total: money(T.s), order_items: lines.join('\n'), customer_name: form.name.trim(), customer_phone: '+' + normPhone(form.phone),
             delivery: form.method === 'pickup' ? 'Collection: ' + where() : 'Deliver to: ' + where(), mpesa_code: (doneCode || cleanCode()), order_message: msg };
           /* Customer confirmation: also send the same field names the (working) staff template uses, so the styled template is filled in */
-          var custBtn = '<a href="https://wa.me/' + CFG.wa + '" style="display:inline-block;background:#7c3aed;color:#ffffff;font-weight:bold;font-size:15px;text-decoration:none;padding:13px 20px;border-radius:12px;margin:4px;">Message us on WhatsApp</a>';
+          var custBtn = '<a href="https://wa.me/' + CFG.wa + '" style="display:inline-block;background:#7c3aed;color:#ffffff;font-weight:800;font-size:15px;text-decoration:none;padding:14px 22px;border-radius:14px;margin:4px;">Message us on WhatsApp</a>';
           var custMsg = 'Hello ' + form.name.trim() + ', thank you for your order. We have received your M-Pesa code ' + (doneCode || cleanCode()) + ' (KSh ' + (doneAmt || Number(form.payAmt)) + '). We will verify the payment and contact you on WhatsApp to confirm your order and delivery.';
           /* Full styled customer email. The EmailJS template body is just {{{html_body}}}, so everything is built here. */
           function hx(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]; }); }
@@ -1476,22 +1476,42 @@
               '<td style="padding:10px 0;border-bottom:1px solid #e9e1fb;font-size:15px;color:#282828;text-align:right;white-space:nowrap;font-weight:bold;">' + hx(money(i.total)) + '</td></tr>';
           }).join('');
           var paidCode = doneCode || cleanCode(), paidAmt = doneAmt || Number(form.payAmt);
-          var htmlBody = '<div style="background:#f3edff;padding:24px 12px;font-family:Arial,Helvetica,sans-serif;">' +
-            '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;">' +
-            '<tr><td style="background:#7c3aed;padding:22px 24px;"><div style="color:#ffffff;font-size:22px;font-weight:bold;">Stermont Arcade</div><div style="color:#e9ddff;font-size:14px;margin-top:4px;">Order ' + hx(ref) + '</div></td></tr>' +
-            '<tr><td style="padding:24px;">' +
-            '<p style="margin:0 0 12px;font-size:16px;color:#282828;">Hi ' + hx(form.name.trim()) + ',</p>' +
-            '<h1 style="margin:0 0 12px;font-size:22px;line-height:1.25;color:#5b21b6;">We received your order</h1>' +
-            '<p style="margin:0 0 20px;font-size:15px;line-height:1.55;color:#282828;">Thank you for shopping with us. We have your M-Pesa code and are now verifying the payment. We will contact you on WhatsApp to confirm your order and delivery. Your order is confirmed only after the payment is verified.</p>' +
-            '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8f5ff;border-radius:12px;padding:6px 16px;">' +
-            '<tr><td colspan="2" style="padding:12px 0 4px;font-size:12px;font-weight:bold;letter-spacing:.08em;text-transform:uppercase;color:#6b6b6b;">Your items</td></tr>' + itemRows +
-            '<tr><td style="padding:12px 0;font-size:17px;font-weight:bold;color:#282828;">Items total</td><td style="padding:12px 0;font-size:17px;font-weight:bold;color:#282828;text-align:right;">' + hx(money(T.s)) + '</td></tr></table>' +
-            '<p style="margin:18px 0 4px;font-size:14px;color:#6b6b6b;">Delivery</p><p style="margin:0 0 14px;font-size:15px;color:#282828;">' + hx(form.method === 'pickup' ? 'Collection: ' + where() : where()) + '</p>' +
-            '<p style="margin:0 0 4px;font-size:14px;color:#6b6b6b;">Payment submitted</p><p style="margin:0 0 14px;font-size:15px;color:#282828;">M-Pesa code <b>' + hx(paidCode) + '</b> (KSh ' + hx(paidAmt) + ')<br>Status: <b style="color:#5b21b6;">Pending verification</b></p>' +
-            '<p style="margin:0 0 6px;font-size:13px;color:#6b6b6b;">The delivery fee, if any, is confirmed with you on WhatsApp.</p>' +
-            '<div style="text-align:center;padding-top:16px;">' + custBtn + '</div>' +
+          var CF = "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;", isPick = form.method === 'pickup';
+          var cNames = isPick ? ['Received', 'Confirmed', 'Packed', 'Collected'] : ['Received', 'Confirmed', 'Packed', 'Delivered'];
+          function cStep(i) {
+            var done = i === 0, bg = done ? '#c8f31d' : '#ffffff', fg = done ? '#2a0e5c' : '#8a7fa8', bd = done ? '#c8f31d' : '#d9ccf5', note = i === 0 ? 'Done' : (i === 1 ? 'Next' : '');
+            return '<td align="center" valign="top" width="25%" style="padding:0 2px;"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" width="34" height="34" style="width:34px;height:34px;border-radius:17px;background:' + bg + ';border:2px solid ' + bd + ';' + CF + 'font-size:16px;font-weight:800;color:' + fg + ';">' + (done ? '&#10003;' : '&middot;') + '</td></tr></table>' +
+              '<div style="' + CF + 'font-size:12px;font-weight:700;color:' + (done ? '#ffffff' : '#cdbdf3') + ';padding-top:8px;line-height:1.3;">' + cNames[i] + '</div><div style="' + CF + 'font-size:11px;color:#b9a6ee;padding-top:2px;">' + note + '&nbsp;</div></td>';
+          }
+          var cRows = T.L.map(function (i) {
+            return '<tr><td style="padding:14px 0;border-bottom:1px solid #eee7fb;' + CF + 'font-size:15px;color:#1b1230;">' + hx(i.name) + '<div style="font-size:12px;color:#8a7fa8;padding-top:2px;">Qty ' + i.qty + '</div></td>' +
+              '<td align="right" style="padding:14px 0;border-bottom:1px solid #eee7fb;' + CF + 'font-size:15px;font-weight:700;color:#1b1230;white-space:nowrap;">' + hx(money(i.total)) + '</td></tr>';
+          }).join('');
+          var htmlBody = '<div style="background:#efe7ff;padding:28px 12px;">' +
+            '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;border-radius:24px;overflow:hidden;background:#ffffff;box-shadow:0 12px 40px rgba(91,33,182,.22);">' +
+            '<tr><td align="center" bgcolor="#5b21b6" style="background:#5b21b6;background-image:linear-gradient(135deg,#9d5cff 0%,#7c3aed 45%,#3b0f8c 100%);padding:34px 24px 26px;">' +
+              '<div style="' + CF + 'font-size:13px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#e9ddff;">Stermont <span style="background:#c8f31d;color:#2a0e5c;padding:1px 7px;border-radius:5px;">Arcade</span></div>' +
+              '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:22px auto 14px;"><tr><td align="center" width="76" height="76" style="width:76px;height:76px;border-radius:38px;background:#c8f31d;border:6px solid rgba(255,255,255,.28);' + CF + 'font-size:36px;line-height:76px;">&#128737;</td></tr></table>' +
+              '<div style="' + CF + 'font-size:28px;font-weight:900;line-height:1.15;color:#ffffff;">We received your order</div>' +
+              '<div style="' + CF + 'font-size:15px;color:#e9ddff;padding-top:8px;">Order <b style="color:#c8f31d;">' + hx(ref) + '</b> is being verified</div>' +
+              '<div style="padding-top:14px;"><span style="display:inline-block;background:#f59e0b;color:#2a0e5c;' + CF + 'font-size:12px;font-weight:900;letter-spacing:.1em;padding:6px 14px;border-radius:20px;">&#9203; PENDING VERIFICATION</span></div>' +
             '</td></tr>' +
-            '<tr><td style="background:#2a0e5c;padding:16px 24px;text-align:center;font-size:13px;color:#e9ddff;">Questions? Call +254 748 888 230 or reply to this email.<br><a href="https://stermontarcade.co.ke" style="color:#c8f31d;">stermontarcade.co.ke</a></td></tr>' +
+            '<tr><td bgcolor="#2a0e5c" style="background:#2a0e5c;padding:22px 14px 20px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>' + cStep(0) + cStep(1) + cStep(2) + cStep(3) + '</tr></table></td></tr>' +
+            '<tr><td style="padding:28px 26px 8px;"><div style="' + CF + 'font-size:18px;font-weight:800;color:#1b1230;">Hi ' + hx(form.name.trim()) + ',</div>' +
+              '<p style="' + CF + 'font-size:15px;line-height:1.65;color:#4a4163;margin:10px 0 0;">Thank you for shopping with us. We have your M-Pesa code and are now verifying the payment. We will contact you on WhatsApp to confirm your order and ' + (isPick ? 'collection' : 'delivery') + '. Your order is confirmed only after the payment is verified.</p></td></tr>' +
+            '<tr><td style="padding:18px 26px 6px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8f5ff;border:1px solid #e6dcfb;border-radius:18px;">' +
+              '<tr><td colspan="2" style="padding:16px 18px 2px;' + CF + 'font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#7c3aed;">Your order</td></tr>' +
+              '<tr><td colspan="2" style="padding:0 18px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">' + cRows + '</table></td></tr>' +
+              '<tr><td style="padding:16px 18px;' + CF + 'font-size:16px;font-weight:700;color:#1b1230;">Items total</td><td align="right" style="padding:16px 18px;' + CF + 'font-size:24px;font-weight:900;color:#5b21b6;white-space:nowrap;">' + hx(money(T.s)) + '</td></tr>' +
+            '</table></td></tr>' +
+            '<tr><td style="padding:12px 20px 6px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>' +
+              '<td width="50%" valign="top" style="padding:6px;"><div style="background:#f1fbd0;border-radius:16px;padding:14px 16px;"><div style="' + CF + 'font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#4d6b00;">' + (isPick ? 'Collect at' : 'Delivering to') + '</div><div style="' + CF + 'font-size:14px;font-weight:600;line-height:1.45;color:#1b1230;padding-top:6px;">' + hx(where()) + '</div></div></td>' +
+              '<td width="50%" valign="top" style="padding:6px;"><div style="background:#efe7ff;border-radius:16px;padding:14px 16px;"><div style="' + CF + 'font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#5b21b6;">M-Pesa code</div><div style="font-family:Courier New,monospace;font-size:16px;font-weight:900;letter-spacing:.06em;color:#1b1230;padding-top:6px;">' + hx(paidCode) + '</div><div style="' + CF + 'font-size:12px;color:#6b5f8a;padding-top:2px;">' + hx(money(paidAmt)) + ' &middot; Awaiting check</div></div></td>' +
+            '</tr></table></td></tr>' +
+            '<tr><td style="padding:0 26px;"><p style="' + CF + 'font-size:13px;line-height:1.55;color:#6b5f8a;margin:6px 0 0;">The delivery fee, if any, is confirmed with you on WhatsApp.</p></td></tr>' +
+            '<tr><td align="center" style="padding:18px 26px 24px;">' + custBtn + '</td></tr>' +
+            '<tr><td align="center" bgcolor="#2a0e5c" style="background:#2a0e5c;padding:22px 24px;"><div style="' + CF + 'font-size:14px;font-weight:700;color:#ffffff;">Thank you for shopping with Stermont Arcade</div>' +
+              '<div style="' + CF + 'font-size:12px;line-height:1.7;color:#cdbdf3;padding-top:6px;">Questions? Call +254 748 888 230 or reply to this email.<br><a href="https://stermontarcade.co.ke" style="color:#c8f31d;text-decoration:none;">stermontarcade.co.ke</a></div></td></tr>' +
             '</table></div>';
           if (custEmail) ejs(CFG.ejsCustTpl, Object.assign({ to_email: custEmail, subject: 'We received your order ' + ref }, base, {
             html_body: htmlBody,
